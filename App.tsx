@@ -13,12 +13,17 @@ const Dashboard = () => {
     setTournaments(getAllTournaments());
   }, []);
 
+  const formatDate = (timestamp?: number) => {
+    if (!timestamp) return '';
+    return new Date(timestamp).toLocaleString();
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <header className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Tournament Master</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Tournaments</h1>
             <p className="text-slate-400">Manage your competitions efficiently.</p>
           </div>
           <button
@@ -58,10 +63,19 @@ const Dashboard = () => {
                   </span>
                 </div>
                 <p className="text-slate-400 text-sm mb-4">{t.title}</p>
-                <div className="flex items-center gap-4 text-sm text-slate-500">
+                <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">
                   <span>{t.participants.length} Players</span>
                   <span>•</span>
                   <span>{t.eliminationType === 'SINGLE_ELIMINATION' ? 'Bracket' : '2nd Round Robin'}</span>
+                </div>
+                <div className="text-xs text-slate-500 border-t border-slate-700/50 pt-2 flex gap-2">
+                     <span>Started: {formatDate(t.startedAt)}</span>
+                     {t.completedAt && (
+                         <>
+                            <span>•</span>
+                            <span className="text-emerald-500/80">Finished: {formatDate(t.completedAt)}</span>
+                         </>
+                     )}
                 </div>
               </div>
             ))}

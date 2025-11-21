@@ -5,10 +5,11 @@ interface Props {
   match: Match;
   participants: Participant[];
   onSave: (matchId: string, scoreA: number, scoreB: number) => void;
+  onReset?: () => void;
   onClose: () => void;
 }
 
-export const MatchModal: React.FC<Props> = ({ match, participants, onSave, onClose }) => {
+export const MatchModal: React.FC<Props> = ({ match, participants, onSave, onReset, onClose }) => {
   const [sA, setSA] = useState<string>(match.scoreA?.toString() || '');
   const [sB, setSB] = useState<string>(match.scoreB?.toString() || '');
   
@@ -112,6 +113,16 @@ export const MatchModal: React.FC<Props> = ({ match, participants, onSave, onClo
             )}
 
             <div className="flex gap-3">
+                {match.isCompleted && onReset && (
+                    <button 
+                        type="button"
+                        onClick={onReset}
+                        className="px-4 py-3 rounded-lg bg-red-900/20 text-red-400 font-bold hover:bg-red-900/40 border border-red-900/50 transition-colors"
+                        title="Reset Match Result"
+                    >
+                        Reset
+                    </button>
+                )}
                 <button type="button" onClick={onClose} className="flex-1 py-3 rounded-lg bg-slate-700 text-slate-300 font-bold hover:bg-slate-600 transition-colors">
                     Cancel
                 </button>

@@ -27,6 +27,7 @@ export const Setup: React.FC = () => {
   
   // UI State
   const [activeGroupModal, setActiveGroupModal] = useState<string | null>(null);
+  const [tempAssignments, setTempAssignments] = useState<Record<number, string>>({});
   const [error, setError] = useState('');
 
   // Initialize defaults
@@ -100,8 +101,43 @@ export const Setup: React.FC = () => {
       setGroups(groups.map(g => g.id === gid ? { ...g, name: val } : g));
   };
 
+  // Open modal and buffer current assignments
+  const openGroupModal = (gid: string) => {
+      setTempAssignments({ ...assignments });
+      setActiveGroupModal(gid);
+  };
+
+  // Commit changes from modal
+  const saveGroupModal = () => {
+      setAssignments({ ...tempAssignments });
+      setActiveGroupModal(null);
+  };
+
+  // Close modal without saving
+  const closeGroupModal = () => {
+      setActiveGroupModal(null);
+      setTempAssignments({}); // Clear temp
+  };
+
   const toggleAssignment = (pIndex: number, gid: string) => {
-      setAssignments(prev => ({ ...prev, [pIndex]: gid }));
+      setTempAssignments(prev => {
+          const currentGroup = prev[pIndex];
+          const defaultGroup = groups[0].id;
+
+          // If currently in this group, check if we can remove (move to default)
+          if (currentGroup === gid) {
+              // If this is the default group, we can't "uncheck" because they must be somewhere.
+              // They must be moved to another group by checking them there.
+              if (gid === defaultGroup) {
+                  return prev; // No change
+              }
+              // Otherwise, move back to default group
+              return { ...prev, [pIndex]: defaultGroup };
+          } else {
+              // Move into this group
+              return { ...prev, [pIndex]: gid };
+          }
+      });
   };
 
   const handleSubmit = () => {
@@ -168,7 +204,8 @@ export const Setup: React.FC = () => {
       status: TournamentStatus.STARTED,
       participants,
       matches,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      startedAt: Date.now()
     };
 
     saveTournament(newTournament);
@@ -358,7 +395,7 @@ export const Setup: React.FC = () => {
                             </div>
 
                             <button 
-                                onClick={() => setActiveGroupModal(g.id)}
+                                onClick={() => openGroupModal(g.id)}
                                 className="w-full py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs text-blue-400 font-medium transition-colors"
                             >
                                 Select Participants ({memberIndices.length})
@@ -399,11 +436,12 @@ export const Setup: React.FC = () => {
                         <h3 className="font-bold text-white">
                             Manage <span className="text-blue-400">{groups.find(g => g.id === activeGroupModal)?.name}</span> Players
                         </h3>
-                        <button onClick={() => setActiveGroupModal(null)} className="text-slate-400 hover:text-white">✕</button>
+                        <button onClick={closeGroupModal} className="text-slate-400 hover:text-white">✕</button>
                 </div>
                 <div className="p-2 overflow-y-auto flex-1 space-y-1">
                     {names.map((pName, i) => {
-                        const assignedGid = assignments[i];
+                        // Use tempAssignments to show state inside modal
+                        const assignedGid = tempAssignments[i];
                         const isAssignedToThis = assignedGid === activeGroupModal;
                         const otherGroup = groups.find(g => g.id === assignedGid);
                         
@@ -431,8 +469,11 @@ export const Setup: React.FC = () => {
                         )
                     })}
                 </div>
-                <div className="p-4 border-t border-slate-700 bg-slate-900/30 rounded-b-xl">
-                    <button onClick={() => setActiveGroupModal(null)} className="w-full py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-500 shadow-lg shadow-blue-900/20">
+                <div className="p-4 border-t border-slate-700 bg-slate-900/30 rounded-b-xl flex gap-3">
+                    <button onClick={closeGroupModal} className="flex-1 py-2 rounded border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                        Cancel
+                    </button>
+                    <button onClick={saveGroupModal} className="flex-1 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-colors">
                         Done
                     </button>
                 </div>
