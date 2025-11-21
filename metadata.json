@@ -1,0 +1,5 @@
+{
+  "name": "Tournament Master",
+  "description": "A professional PWA for managing sports tournaments with Round Robin and Elimination stages.",
+  "requestFramePermissions": []
+}
