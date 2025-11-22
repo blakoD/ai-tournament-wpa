@@ -70,7 +70,7 @@ export const MatchModal: React.FC<Props> = ({ match, participants, onSave, onRes
         <form onSubmit={handleSubmit} className="p-6">
             <div className="flex justify-between items-center gap-4 mb-8">
                 <div className="flex-1 text-center">
-                    <div className="text-xl font-bold text-blue-400 mb-2 truncate">{pA.name}</div>
+                    <div className="text-xl font-bold text-blue-400 mb-2 text-wrap truncate">{pA.name}</div>
                     <input 
                         type="number" 
                         autoFocus
@@ -82,7 +82,7 @@ export const MatchModal: React.FC<Props> = ({ match, participants, onSave, onRes
                 </div>
                 <div className="text-slate-500 font-bold text-xl">VS</div>
                 <div className="flex-1 text-center">
-                    <div className="text-xl font-bold text-red-400 mb-2 truncate">{pB.name}</div>
+                    <div className="text-xl font-bold text-red-400 mb-2 text-wrap truncate">{pB.name}</div>
                      <input 
                         type="number" 
                         min="0"

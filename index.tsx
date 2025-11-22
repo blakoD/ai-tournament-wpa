@@ -1,6 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { loadInitialData } from './services/initialData';
+
+// Initialize sample data if storage is empty
+loadInitialData();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

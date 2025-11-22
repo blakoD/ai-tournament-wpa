@@ -45,7 +45,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                         `}
                     >
                         <div className="flex justify-between items-center mb-2">
-                            <span className={`font-medium truncate max-w-[120px] ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-300'}`}>
+                            <span className={`font-medium truncate ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-300'}`}>
                                 {nameA}
                             </span>
                             <span className={`font-mono text-lg font-bold ${m.isCompleted ? 'text-white' : 'text-slate-600'}`}>
@@ -53,7 +53,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                             </span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className={`font-medium truncate max-w-[120px] ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-300'}`}>
+                            <span className={`font-medium truncate ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-300'}`}>
                                 {nameB}
                             </span>
                             <span className={`font-mono text-lg font-bold ${m.isCompleted ? 'text-white' : 'text-slate-600'}`}>
