@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { generateId, generateRoundRobinMatches } from '../services/tournamentLogic';
+import { generateId, generateRoundRobinMatches, generateBracket } from '../services/tournamentLogic';
 import { saveTournament, checkSlugExists } from '../services/storageService';
 import { Tournament, TournamentStatus, EliminationType, StageType, Participant } from '../types';
 
@@ -16,9 +16,9 @@ export const Setup: React.FC = () => {
   const [slug, setSlug] = useState('');
   const [desc, setDesc] = useState('');
   
-  const [pCount, setPCount] = useState<8 | 12 | 16>(8);
-  const [qCount, setQCount] = useState(4);
-  const [elimType, setElimType] = useState<EliminationType>(EliminationType.SINGLE_ELIMINATION);
+  const [pCount, setPCount] = useState<number>(8);
+  const [qCount, setQCount] = useState(2);
+  const [elimType, setElimType] = useState<EliminationType>(EliminationType.ROUND_ROBIN_2);
   
   // Participants & Groups State
   const [names, setNames] = useState<string[]>([]);
@@ -37,10 +37,10 @@ export const Setup: React.FC = () => {
 
   // Update qCount options when elimType or pCount changes
   useEffect(() => {
-    // If Bracket (Single Elimination) is selected, enforce powers of 2 (4, 8, 16)
+    // If Bracket (Single Elimination) is selected, enforce multiples of 2 for pCount
     if (elimType === EliminationType.SINGLE_ELIMINATION) {
-        if (qCount !== 4 && qCount !== 8 && qCount !== 16) {
-            setQCount(4);
+        if (pCount % 2 !== 0) {
+            setPCount(prev => prev + (prev % 2));
         }
     }
   }, [elimType, pCount]);
@@ -60,11 +60,11 @@ export const Setup: React.FC = () => {
     setAssignments(newAssignments);
   };
 
-  const handlePCountChange = (c: 8 | 12 | 16) => {
+  const handlePCountChange = (c: number) => {
     setPCount(c);
     initializeParticipants(c);
     // Reset Q count to a safe default
-    setQCount(4);
+    setQCount(2);
   };
 
   const handleNameChange = (idx: number, val: string) => {
@@ -178,7 +178,7 @@ export const Setup: React.FC = () => {
     const participants: Participant[] = names.map((n, i) => ({
       id: generateId(),
       name: n.trim(),
-      group: groups.find(g => g.id === assignments[i])?.name || 'A',
+      group: elimType === EliminationType.SINGLE_ELIMINATION ? 'A' : (groups.find(g => g.id === assignments[i])?.name || 'A'),
       wins: 0,
       matchesPlayed: 0,
       pointsFor: 0,
@@ -190,7 +190,12 @@ export const Setup: React.FC = () => {
       isDropped: false,
     }));
 
-    const matches = generateRoundRobinMatches(tId, participants, StageType.RR1);
+    let matches = [];
+    if (elimType === EliminationType.SINGLE_ELIMINATION) {
+        matches = generateBracket(tId, participants, 1);
+    } else {
+        matches = generateRoundRobinMatches(tId, participants, StageType.RR, 1);
+    }
 
     const newTournament: Tournament = {
       id: tId,
@@ -199,7 +204,7 @@ export const Setup: React.FC = () => {
       urlSlug: slug,
       description: desc,
       participantCount: pCount,
-      qualificationCount: qCount,
+      qualifiesByGroup: qCount,
       eliminationType: elimType,
       status: TournamentStatus.STARTED,
       participants,
@@ -210,19 +215,6 @@ export const Setup: React.FC = () => {
 
     saveTournament(newTournament);
     navigate(`/tournament/${slug}`);
-  };
-
-  // Determine valid Q counts
-  const getQOptions = () => {
-      if (elimType === EliminationType.SINGLE_ELIMINATION) {
-          // Powers of 2 only
-          const opts = [4, 8, 16];
-          return opts.filter(n => n <= pCount);
-      } else {
-          // RR2: Any reasonable even number
-          const opts = [4, 6, 8, 10, 12, 14, 16];
-          return opts.filter(n => n <= pCount);
-      }
   };
 
   return (
@@ -277,14 +269,14 @@ export const Setup: React.FC = () => {
         {/* Configuration */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
           <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Step 2 Format</label>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Next Format</label>
             <select 
               className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
               value={elimType}
               onChange={e => setElimType(e.target.value as EliminationType)}
             >
-              <option value={EliminationType.SINGLE_ELIMINATION}>Bracket (Tree)</option>
-              <option value={EliminationType.ROUND_ROBIN_2}>2nd Round Robin</option>
+              <option value={EliminationType.SINGLE_ELIMINATION}>Bracket</option>
+              <option value={EliminationType.ROUND_ROBIN_2}>Round-Robin</option>
             </select>
           </div>
           <div>
@@ -292,25 +284,30 @@ export const Setup: React.FC = () => {
             <select 
               className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
               value={pCount}
-              onChange={e => handlePCountChange(parseInt(e.target.value) as 8|12|16)}
+              onChange={e => handlePCountChange(parseInt(e.target.value))}
             >
-              <option value={8}>8 Players</option>
-              <option value={12}>12 Players</option>
-              <option value={16}>16 Players</option>
+              {Array.from({ length: 49 }, (_, i) => i + 2)
+                .filter(n => elimType !== EliminationType.SINGLE_ELIMINATION || n % 2 === 0)
+                .map(n => (
+                  <option key={n} value={n}>{n} Players</option>
+                ))
+              }
             </select>
           </div>
-          <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Qualify to Step 2</label>
-            <select 
-              className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
-              value={qCount}
-              onChange={e => setQCount(parseInt(e.target.value))}
-            >
-              {getQOptions().map(opt => (
-                  <option key={opt} value={opt}>Top {opt} Total</option>
-              ))}
-            </select>
-          </div>
+          {elimType !== EliminationType.SINGLE_ELIMINATION && (
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Qualifies by Group</label>
+              <select 
+                className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
+                value={qCount}
+                onChange={e => setQCount(parseInt(e.target.value))}
+              >
+                {[1, 2, 3, 4, 5, 6, 8].map(opt => (
+                    <option key={opt} value={opt}>Top {opt} per Group</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Participants Input */}
@@ -345,66 +342,68 @@ export const Setup: React.FC = () => {
         </div>
 
         {/* Groups Section */}
-        <div className="pt-4 border-t border-slate-700">
-             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-bold text-slate-400">Group Configuration</h3>
-                <button 
-                    onClick={addGroup}
-                    className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded font-medium transition-colors"
-                >
-                    + Add Group
-                </button>
-             </div>
+        {elimType !== EliminationType.SINGLE_ELIMINATION && (
+          <div className="pt-4 border-t border-slate-700">
+               <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-sm font-bold text-slate-400">Group Configuration</h3>
+                  <button 
+                      onClick={addGroup}
+                      className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded font-medium transition-colors"
+                  >
+                      + Add Group
+                  </button>
+               </div>
 
-             <div className="space-y-3">
-                 {groups.map((g) => {
-                     const memberIndices = Object.entries(assignments)
-                        .filter(([_, gid]) => gid === g.id)
-                        .map(([idx]) => parseInt(idx));
-                     
-                     return (
-                        <div key={g.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
-                            <div className="flex items-center gap-3 mb-2">
-                                <input 
-                                    className="bg-transparent text-white font-bold text-sm border-b border-transparent focus:border-blue-500 outline-none w-full"
-                                    value={g.name}
-                                    onChange={e => updateGroupName(g.id, e.target.value)}
-                                    placeholder="Group Name"
-                                />
-                                {groups.length > 1 && (
-                                    <button 
-                                        onClick={() => removeGroup(g.id)}
-                                        className="text-slate-500 hover:text-red-400 text-xs"
-                                        title="Remove Group"
-                                    >
-                                        Delete
-                                    </button>
-                                )}
-                            </div>
-                            
-                            <div className="flex flex-wrap gap-2 mb-3">
-                                {memberIndices.length === 0 ? (
-                                    <span className="text-xs text-slate-600 italic">No players assigned</span>
-                                ) : (
-                                    memberIndices.map(idx => (
-                                        <span key={idx} className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700">
-                                            {names[idx]}
-                                        </span>
-                                    ))
-                                )}
-                            </div>
+               <div className="space-y-3">
+                   {groups.map((g) => {
+                       const memberIndices = Object.entries(assignments)
+                          .filter(([_, gid]) => gid === g.id)
+                          .map(([idx]) => parseInt(idx));
+                       
+                       return (
+                          <div key={g.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
+                              <div className="flex items-center gap-3 mb-2">
+                                  <input 
+                                      className="bg-transparent text-white font-bold text-sm border-b border-transparent focus:border-blue-500 outline-none w-full"
+                                      value={g.name}
+                                      onChange={e => updateGroupName(g.id, e.target.value)}
+                                      placeholder="Group Name"
+                                  />
+                                  {groups.length > 1 && (
+                                      <button 
+                                          onClick={() => removeGroup(g.id)}
+                                          className="text-slate-500 hover:text-red-400 text-xs"
+                                          title="Remove Group"
+                                      >
+                                          Delete
+                                      </button>
+                                  )}
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                  {memberIndices.length === 0 ? (
+                                      <span className="text-xs text-slate-600 italic">No players assigned</span>
+                                  ) : (
+                                      memberIndices.map(idx => (
+                                          <span key={idx} className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700">
+                                              {names[idx]}
+                                          </span>
+                                      ))
+                                  )}
+                              </div>
 
-                            <button 
-                                onClick={() => openGroupModal(g.id)}
-                                className="w-full py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs text-blue-400 font-medium transition-colors"
-                            >
-                                Select Participants ({memberIndices.length})
-                            </button>
-                        </div>
-                     );
-                 })}
-             </div>
-        </div>
+                              <button 
+                                  onClick={() => openGroupModal(g.id)}
+                                  className="w-full py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs text-blue-400 font-medium transition-colors"
+                              >
+                                  Select Participants ({memberIndices.length})
+                              </button>
+                          </div>
+                       );
+                   })}
+               </div>
+          </div>
+        )}
 
         {error && (
           <div className="p-3 bg-red-900/50 border border-red-700 text-red-200 rounded text-sm">

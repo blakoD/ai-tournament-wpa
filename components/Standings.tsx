@@ -3,13 +3,27 @@ import { Participant } from '../types';
 
 interface Props {
   participants: Participant[];
-  qualificationCount: number;
+  qualifiesByGroup: number;
   onReplaceParticipant: (oldId: string, newName: string) => void;
   onUpdateRankManual: (id: string, val: number) => void;
   allowEdits: boolean;
 }
 
-export const Standings: React.FC<Props> = ({ participants, qualificationCount }) => {
+export const Standings: React.FC<Props> = ({ 
+  participants, 
+  qualifiesByGroup, 
+  onReplaceParticipant, 
+  onUpdateRankManual, 
+  allowEdits 
+}) => {
+  if (!participants || participants.length === 0) {
+    return (
+      <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 text-center text-slate-500 italic">
+        No participants found in this tournament.
+      </div>
+    );
+  }
+
   // Group participants
   const groups: Record<string, Participant[]> = {};
   participants.forEach(p => {
@@ -21,6 +35,13 @@ export const Standings: React.FC<Props> = ({ participants, qualificationCount })
   const groupKeys = Object.keys(groups).sort();
   const showGroups = groupKeys.length > 1;
 
+  const handleReplace = (id: string) => {
+    const newName = prompt("Enter replacement player name:");
+    if (newName && newName.trim()) {
+      onReplaceParticipant(id, newName.trim());
+    }
+  };
+
   return (
     <div className="space-y-8">
       {groupKeys.map(gKey => {
@@ -29,7 +50,7 @@ export const Standings: React.FC<Props> = ({ participants, qualificationCount })
           <div key={gKey} className="overflow-hidden rounded-xl border border-slate-700 bg-slate-800 shadow-sm">
              {showGroups && (
                  <div className="bg-slate-900/50 px-4 py-2 border-b border-slate-700 font-bold text-blue-400">
-                     Group {gKey}
+                     {gKey.startsWith('Group') ? gKey : `Group ${gKey}`}
                  </div>
              )}
             <div className="overflow-x-auto">
@@ -48,13 +69,10 @@ export const Standings: React.FC<Props> = ({ participants, qualificationCount })
                 </thead>
                 <tbody className="divide-y divide-slate-700">
                     {groupParticipants.map((p, idx) => {
-                    // Use the total qualification count directly as requested
-                    const qualifiedLimit = qualificationCount;
-                    // Check against Global Rank if available (for Total count)
-                    const isQualified = (p.globalRank || 999) <= qualifiedLimit;
+                    const isQualified = p.rank <= qualifiesByGroup;
                     
                     return (
-                        <tr key={p.id} className={`hover:bg-slate-700/50 transition-colors ${isQualified ? 'bg-emerald-900/10' : ''}`}>
+                        <tr key={p.id} className={`hover:bg-slate-700/50 transition-colors group ${isQualified ? 'bg-emerald-900/10' : ''}`}>
                         <td className="px-4 py-3 font-mono text-slate-500">
                             {p.rank}
                             {isQualified && <span className="ml-1 text-emerald-500 text-xs">●</span>}
@@ -65,9 +83,19 @@ export const Standings: React.FC<Props> = ({ participants, qualificationCount })
                             </td>
                         )}
                         <td className="px-4 py-3">
-                            <div className="font-medium text-white flex items-center gap-2">
-                                {p.name}
-                                {p.isDropped && <span className="text-[10px] bg-red-900 text-red-200 px-1 rounded">DROPPED</span>}
+                            <div className="font-medium text-white flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                    {p.name}
+                                    {p.isDropped && <span className="text-[10px] bg-red-900 text-red-200 px-1 rounded">DROPPED</span>}
+                                </div>
+                                {allowEdits && (
+                                    <button 
+                                        onClick={() => handleReplace(p.id)}
+                                        className="text-[10px] text-blue-400 hover:text-blue-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        Replace
+                                    </button>
+                                )}
                             </div>
                             {p.originalId && <div className="text-xs text-slate-500">Replaced prev. player</div>}
                         </td>
@@ -89,7 +117,7 @@ export const Standings: React.FC<Props> = ({ participants, qualificationCount })
       })}
       <div className="bg-slate-900 px-4 py-2 text-xs text-slate-500 flex justify-between">
          <span>Sorting: Wins &gt; Diff &gt; Points For &gt; Manual</span>
-         <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Qualified Zone (Top {qualificationCount} Global)</span>
+         <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Qualified Zone (Top {qualifiesByGroup} per Group)</span>
       </div>
     </div>
   );

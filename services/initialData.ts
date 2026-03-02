@@ -10,26 +10,13 @@ export const loadInitialData = () => {
   console.log("Loading initial demo data...");
 
   const tId = generateId();
-  const pCount = 12;
+  const pCount = 8;
   
   // Create 8 participants split into 2 groups
-  const participants: Participant[] = [
-    'Mario Álvez - Gabriel',
-    'Diego Macias - Pablo Picorel',
-    'Fabricio Siutto - Alejandro Pais',
-    'Esteban Cortes - Richard Da Silva',
-    'Eduardo Viera - Richard Castaño',
-    'Oscar Gahn - Gonzalo Villanueva',
-    'Marcelo Sanchez - Daniel',
-    'William Mockford - Ezequiel',
-    'Diego Duarte - Hugo Duthil',
-    'Martin Duarte - Antony',
-    'Mauro Ferrari - Ricardo Zucklevicius',
-    'Diego Costa - Ruben Da Rosa'
-  ].map((name, i) => ({
+  const participants: Participant[] = Array.from({ length: pCount }).map((_, i) => ({
     id: generateId(),
-    name: `${name}`,
-    group: i < 4 ? 'A' : (i < 8 ? 'B' : 'C'),
+    name: `Player ${i + 1}`,
+    group: i < 4 ? 'A' : 'B',
     wins: 0,
     matchesPlayed: 0,
     pointsFor: 0,
@@ -42,16 +29,16 @@ export const loadInitialData = () => {
   }));
 
   // Generate matches for Stage 1 (Round Robin)
-  const matches = generateRoundRobinMatches(tId, participants, StageType.RR1);
+  const matches = generateRoundRobinMatches(tId, participants, StageType.RR, 1);
 
   const sampleTournament: Tournament = {
     id: tId,
-    name: "CEVVEN - Campeonato Pelota Olimpica",
-    title: "CEVVEN 2025",
-    urlSlug: "cevven-202511",
-    description: "",
+    name: "Demo Cup",
+    title: "2024 Demo Championship",
+    urlSlug: "demo-cup-2024",
+    description: "A sample tournament with 2 groups of 4 players to demonstrate the application features.",
     participantCount: pCount,
-    qualificationCount: 8, // Top 4 advance
+    qualifiesByGroup: 2, // Top 2 per group advance
     eliminationType: EliminationType.SINGLE_ELIMINATION,
     status: TournamentStatus.STARTED,
     participants,

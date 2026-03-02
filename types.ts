@@ -5,9 +5,8 @@ export enum TournamentStatus {
 }
 
 export enum StageType {
-  RR1 = 'RR1', // Round Robin 1
-  SE = 'SE',   // Single Elimination
-  RR2 = 'RR2'  // Round Robin 2
+  RR = 'RR', // Round Robin
+  SE = 'SE', // Single Elimination
 }
 
 export enum EliminationType {
@@ -36,6 +35,7 @@ export interface Match {
   id: string;
   tournamentId: string;
   stage: StageType;
+  stageNumber: number; // 1, 2, 3...
   round: number; // For sorting/display grouping
   participantAId: string | null; // null if TBD in bracket
   participantBId: string | null;
@@ -43,6 +43,7 @@ export interface Match {
   scoreB: number | null;
   winnerId: string | null;
   isCompleted: boolean;
+  group?: string; // For Round Robin stage grouping
   nextMatchId?: string; // For bracket progression
   nextMatchSlot?: 'A' | 'B'; // Which slot in the next match
 }
@@ -53,8 +54,8 @@ export interface Tournament {
   title: string;
   urlSlug: string;
   description: string;
-  participantCount: 8 | 12 | 16;
-  qualificationCount: number;
+  participantCount: number;
+  qualifiesByGroup: number;
   eliminationType: EliminationType;
   status: TournamentStatus;
   participants: Participant[];

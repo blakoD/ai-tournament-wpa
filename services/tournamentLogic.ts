@@ -1,4 +1,4 @@
-import { Tournament, Participant, Match, StageType, EliminationType, Match as MatchType } from '../types';
+import { Tournament, Participant, Match, StageType, EliminationType, Match as MatchType, TournamentStatus } from '../types';
 
 // --- Helper: UUID ---
 export const generateId = (): string => {
@@ -9,7 +9,8 @@ export const generateId = (): string => {
 export const generateRoundRobinMatches = (
   tournamentId: string,
   participants: Participant[],
-  stage: StageType
+  stage: StageType,
+  stageNumber: number
 ): Match[] => {
   // Group participants first
   const groups: Record<string, Participant[]> = {};
@@ -22,30 +23,39 @@ export const generateRoundRobinMatches = (
   let allMatches: Match[] = [];
 
   Object.values(groups).forEach(groupParticipants => {
-    const n = groupParticipants.length;
-    if (n < 2) return; // Need at least 2 to play
+    let playerIds = groupParticipants.map(p => p.id);
+    
+    // If odd number of players, add a dummy player for "Bye"
+    if (playerIds.length % 2 !== 0) {
+      playerIds.push('BYE');
+    }
 
+    const n = playerIds.length;
     const rounds = n - 1;
     const half = n / 2;
-    const playerIds = groupParticipants.map(p => p.id);
 
     for (let r = 0; r < rounds; r++) {
       for (let i = 0; i < half; i++) {
         const p1 = playerIds[i];
         const p2 = playerIds[n - 1 - i];
 
-        allMatches.push({
-          id: generateId(),
-          tournamentId,
-          stage,
-          round: r + 1,
-          participantAId: p1,
-          participantBId: p2,
-          scoreA: null,
-          scoreB: null,
-          winnerId: null,
-          isCompleted: false
-        });
+        // Skip matches involving the "Bye" player
+        if (p1 !== 'BYE' && p2 !== 'BYE') {
+          allMatches.push({
+            id: generateId(),
+            tournamentId,
+            stage,
+            stageNumber,
+            round: r + 1,
+            participantAId: p1,
+            participantBId: p2,
+            scoreA: null,
+            scoreB: null,
+            winnerId: null,
+            isCompleted: false,
+            group: groupParticipants[0].group || 'A'
+          });
+        }
       }
       // Rotate
       playerIds.splice(1, 0, playerIds.pop()!);
@@ -56,12 +66,25 @@ export const generateRoundRobinMatches = (
 };
 
 // --- Standings Calculation ---
-export const calculateStandings = (participants: Participant[], matches: Match[], stage: StageType): Participant[] => {
+export const calculateStandings = (participants: Participant[], matches: Match[], stage?: StageType, stageNumber?: number): Participant[] => {
   const statsMap = new Map<string, Participant>();
   
+  // If we are looking at a specific stage, we might need to override the group property
+  // based on the matches in that stage.
+  const stageGroups = new Map<string, string>();
+  if (stage && stageNumber !== undefined) {
+    matches.forEach(m => {
+      if (m.stage === stage && m.stageNumber === stageNumber && m.group) {
+        if (m.participantAId) stageGroups.set(m.participantAId, m.group);
+        if (m.participantBId) stageGroups.set(m.participantBId, m.group);
+      }
+    });
+  }
+
   participants.forEach(p => {
     statsMap.set(p.id, {
       ...p,
+      group: stageGroups.get(p.id) || p.group, // Use stage-specific group if available
       wins: 0,
       matchesPlayed: 0,
       pointsFor: 0,
@@ -69,7 +92,14 @@ export const calculateStandings = (participants: Participant[], matches: Match[]
     });
   });
 
-  matches.filter(m => m.stage === stage && m.isCompleted).forEach(m => {
+  const filteredMatches = matches.filter(m => {
+    if (!m.isCompleted) return false;
+    if (stage && m.stage !== stage) return false;
+    if (stageNumber !== undefined && m.stageNumber !== stageNumber) return false;
+    return true;
+  });
+
+  filteredMatches.forEach(m => {
     const pA = statsMap.get(m.participantAId!);
     const pB = statsMap.get(m.participantBId!);
 
@@ -90,7 +120,7 @@ export const calculateStandings = (participants: Participant[], matches: Match[]
 
   const updatedParticipants = Array.from(statsMap.values());
 
-  // Sort function
+  // Sort function: Wins > Diff > Points > Manual
   const sortFn = (a: Participant, b: Participant) => {
     if (b.wins !== a.wins) return b.wins - a.wins;
     const diffA = a.pointsFor - a.pointsAgainst;
@@ -127,160 +157,93 @@ export const calculateStandings = (participants: Participant[], matches: Match[]
 // --- Bracket Generation (Single Elimination) ---
 export const generateBracket = (
   tournamentId: string,
-  qualifiedParticipants: Participant[]
+  qualifiedParticipants: Participant[],
+  stageNumber: number,
+  round: number = 1
 ): Match[] => {
-  // qualifiedParticipants expected to be sorted by Seed (rank 1 to N)
   const seeds = [...qualifiedParticipants];
   const count = seeds.length;
-  
-  // Calculate Rounds
-  const rounds = Math.log2(count);
-  if (!Number.isInteger(rounds)) {
-    console.warn("Bracket generation currently supports power of 2 sizes better.");
-  }
+  if (count === 0) return [];
 
-  // Generate Match IDs first so we can link them
   const matches: Match[] = [];
-
-  // Helper to create specific match order for Visual Tree
-  // Standard Seeds Order for 4: 1v4, 2v3
-  // Standard Seeds Order for 8: 1v8, 4v5, 3v6, 2v7  <-- Visual order often: 1v8 (Top), 4v5 (Top-Mid), 2v7 (Bot), 3v6 (Bot-Mid)?
-  // Actually, standard bracket visual top-down:
-  // M1: 1 vs 8
-  // M2: 4 vs 5
-  // M3: 3 vs 6
-  // M4: 2 vs 7
-  // Winner M1 vs Winner M2 -> Semi 1
-  // Winner M3 vs Winner M4 -> Semi 2
+  // We pair participants: 1st vs Last, 2nd vs 2nd Last, etc.
+  // This handles any even number of participants as requested.
+  const numMatches = Math.floor(count / 2);
   
-  let round1Indices: number[][] = [];
-
-  if (count === 4) {
-      // 1 vs 4, 2 vs 3
-      round1Indices = [[0, 3], [1, 2]];
-  } else if (count === 8) {
-      // Visual Order: (1,8), (4,5), (3,6), (2,7)
-      // Note: Indices are 0-based from sorted seeds
-      round1Indices = [
-          [0, 7], // 1 vs 8
-          [3, 4], // 4 vs 5
-          [2, 5], // 3 vs 6
-          [1, 6]  // 2 vs 7
-      ];
-  } else if (count === 16) {
-      // 1vs16, 8vs9, 5vs12, 4vs13, 6vs11, 3vs14, 7vs10, 2vs15
-      round1Indices = [
-          [0, 15], [7, 8],   // Q1
-          [4, 11], [3, 12],  // Q2
-          [5, 10], [2, 13],  // Q3
-          [6, 9],  [1, 14]   // Q4
-      ];
-  } else {
-      // Generic fold
-      for(let i=0; i<count/2; i++) {
-          round1Indices.push([i, count-1-i]);
-      }
-  }
-
-  // Generate Round 1 Matches
-  const r1Matches: Match[] = round1Indices.map(pair => ({
+  for (let i = 0; i < numMatches; i++) {
+    const pA = seeds[i];
+    const pB = seeds[count - 1 - i];
+    
+    matches.push({
       id: generateId(),
       tournamentId,
       stage: StageType.SE,
-      round: 1,
-      participantAId: seeds[pair[0]].id,
-      participantBId: seeds[pair[1]].id,
+      stageNumber,
+      round: round,
+      participantAId: pA.id,
+      participantBId: pB.id,
       scoreA: null,
       scoreB: null,
       winnerId: null,
       isCompleted: false
-  }));
-
-  matches.push(...r1Matches);
-
-  // Generate subsequent rounds
-  let currentRoundMatches = r1Matches;
-  let roundNum = 2;
-
-  while (currentRoundMatches.length > 1) {
-      const nextRoundMatches: Match[] = [];
-      
-      for (let i = 0; i < currentRoundMatches.length; i += 2) {
-          const m1 = currentRoundMatches[i];
-          const m2 = currentRoundMatches[i+1];
-          
-          const nextMatch: Match = {
-              id: generateId(),
-              tournamentId,
-              stage: StageType.SE,
-              round: roundNum,
-              participantAId: null, // TBD
-              participantBId: null, // TBD
-              scoreA: null,
-              scoreB: null,
-              winnerId: null,
-              isCompleted: false
-          };
-          
-          // Link previous matches to this one
-          // Mutating the objects already pushed to 'matches' array works because they are references?
-          // Yes, but we need to find them in the 'matches' array or modify 'm1'/'m2' directly if they are the same refs.
-          // They are.
-          m1.nextMatchId = nextMatch.id;
-          m1.nextMatchSlot = 'A';
-          
-          m2.nextMatchId = nextMatch.id;
-          m2.nextMatchSlot = 'B';
-          
-          nextRoundMatches.push(nextMatch);
-      }
-      
-      matches.push(...nextRoundMatches);
-      currentRoundMatches = nextRoundMatches;
-      roundNum++;
+    });
   }
 
   return matches;
 };
 
 // --- Advance Tournament ---
-export const advanceToStep2 = (tournament: Tournament): Tournament => {
-  // 1. Calculate standings (Ranked within groups)
-  const standings = calculateStandings(tournament.participants, tournament.matches, StageType.RR1);
+export const startNextStage = (
+  tournament: Tournament, 
+  nextFormat: EliminationType, 
+  qualifiedParticipantIds: string[],
+  groupAssignments?: Record<string, string>
+): Tournament => {
+  const qualified = tournament.participants.filter(p => qualifiedParticipantIds.includes(p.id));
   
-  // 2. Global Qualification Logic
-  // We want exactly 'qualificationCount' players.
-  // Sort purely by Global Rank (which is based on Wins > Diff > Points > Manual)
-  // Ignore group boundaries for the cut-off to strictly respect the limit.
-  
-  const sortedByGlobal = [...standings].sort((a, b) => (a.globalRank || 999) - (b.globalRank || 999));
-  
-  const limit = tournament.qualificationCount;
-  const qualified = sortedByGlobal.slice(0, limit);
-  const eliminated = sortedByGlobal.slice(limit);
-
   // Mark status in participant list
-  const qualifiedIds = new Set(qualified.map(p => p.id));
-  const newParticipants = standings.map(p => ({
+  const newParticipants = tournament.participants.map(p => ({
       ...p,
-      isQualified: qualifiedIds.has(p.id)
+      isQualified: qualifiedParticipantIds.includes(p.id)
   }));
 
   let newMatches: Match[] = [];
+  const lastMatch = tournament.matches[tournament.matches.length - 1];
+  const currentStageType = lastMatch?.stage || StageType.RR;
+  const currentStageNumber = lastMatch?.stageNumber || 1;
+  const nextStageType = nextFormat === EliminationType.SINGLE_ELIMINATION ? StageType.SE : StageType.RR;
 
-  if (tournament.eliminationType === EliminationType.SINGLE_ELIMINATION) {
-    // For bracket, we pass the qualified players sorted by rank 1..N
-    // They are already sorted by global rank above.
-    newMatches = generateBracket(tournament.id, qualified);
+  // Logic: If current is Bracket and next is Bracket, show in same stage.
+  // Otherwise, increment stageNumber.
+  let nextStageNumber = currentStageNumber;
+  if (!(currentStageType === StageType.SE && nextStageType === StageType.SE)) {
+      nextStageNumber++;
+  }
+
+  if (nextFormat === EliminationType.SINGLE_ELIMINATION) {
+    // For bracket, we pass the qualified players sorted by global rank
+    const standings = calculateStandings(qualified, tournament.matches);
+    const sortedQualified = [...standings].sort((a, b) => (a.globalRank || 999) - (b.globalRank || 999));
+    
+    // Determine next round number for SE stage
+    const seMatches = tournament.matches.filter(m => m.stage === StageType.SE && m.stageNumber === nextStageNumber);
+    const nextRound = seMatches.length > 0 ? Math.max(...seMatches.map(m => m.round)) + 1 : 1;
+    
+    newMatches = generateBracket(tournament.id, sortedQualified, nextStageNumber, nextRound);
   } else {
-    // RR2: One big group
-    const rr2Participants = qualified.map(p => ({ ...p, group: 'Finals' }));
-    newMatches = generateRoundRobinMatches(tournament.id, rr2Participants, StageType.RR2);
+    // RR: Use group assignments if provided
+    const rrParticipants = qualified.map(p => ({ 
+      ...p, 
+      group: groupAssignments?.[p.id] || `Stage ${nextStageNumber}` 
+    }));
+    newMatches = generateRoundRobinMatches(tournament.id, rrParticipants, StageType.RR, nextStageNumber);
   }
 
   return {
     ...tournament,
     participants: newParticipants,
     matches: [...tournament.matches, ...newMatches],
+    status: TournamentStatus.STARTED,
+    eliminationType: nextFormat // Update default for next stage
   };
 };
