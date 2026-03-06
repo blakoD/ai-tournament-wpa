@@ -27,8 +27,8 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
   }
 
   return (
-    <div className="overflow-x-auto pb-28">
-      <div className="flex gap-12 min-w-max px-4 py-8">
+    <div className="overflow-x-auto min-h-[400px]">
+      <div className="flex gap-12 justify-center min-w-max px-4 py-8">
           {rounds.map((roundMatches, rIndex) => {
               const isFinalRound = roundMatches.some(m => m.isFinal);
               return (
@@ -97,7 +97,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                         };
 
                         const positionClass = isFinalRound 
-                            ? (m.isFinal ? 'relative mb-4' : 'absolute mt-[400px] ml-[35px]') 
+                            ? (m.isFinal ? 'relative mb-9' : 'absolute mt-[350px] w-full') 
                             : 'relative';
 
                         return (
