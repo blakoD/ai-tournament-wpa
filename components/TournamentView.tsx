@@ -16,7 +16,7 @@ interface Props {
 
 export const TournamentView: React.FC<Props> = ({ tournament, onUpdate }) => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>('stage-1');
+  const [activeTab, setActiveTab] = useState<string>('global-standings');
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
   
@@ -211,8 +211,14 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate }) => {
     );
   };
 
-  const handleNextStage = (nextFormat: EliminationType, qualifiedIds: string[], groupAssignments?: Record<string, string>) => {
-    const updated = startNextStage(tournament, nextFormat, qualifiedIds, groupAssignments);
+  const handleNextStage = (nextFormat: EliminationType, qualifiedIds: string[], groupAssignments?: Record<string, string>, manualFinals?: Record<string, string>) => {
+    // Updated Global Rank
+    tournament.participants = tournament.participants.map(p => ({
+        ...p,
+        globalRank: standings.find(s => s.id === p.id)?.globalRank
+    }));
+
+    const updated = startNextStage(tournament, nextFormat, qualifiedIds, groupAssignments, manualFinals);
     updateWithHistory(updated);
     setIsNextStageModalOpen(false);
     
@@ -321,19 +327,87 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate }) => {
     );
   };
 
+    const handleParticipantSwap = (matchId: string, slot: 'A' | 'B', newParticipantId: string) => {
+    const targetMatch = tournament.matches.find(m => m.id === matchId);
+    if (!targetMatch) return;
+
+    const stageNum = targetMatch.stageNumber;
+    const oldParticipantId = slot === 'A' ? targetMatch.participantAId : targetMatch.participantBId;
+
+    // Find if the new participant is already in this stage
+    const sourceMatch = tournament.matches.find(m => 
+        m.stageNumber === stageNum && 
+        (m.participantAId === newParticipantId || m.participantBId === newParticipantId)
+    );
+
+    let newMatches = [...tournament.matches];
+
+    if (sourceMatch) {
+        // Swap logic
+        newMatches = newMatches.map(m => {
+            if (m.id === sourceMatch.id) {
+                // If it's the same match, we might be swapping A and B
+                if (sourceMatch.id === targetMatch.id) {
+                    // If we are swapping within the same match
+                    return {
+                        ...m,
+                        participantAId: slot === 'A' ? newParticipantId : oldParticipantId,
+                        participantBId: slot === 'B' ? newParticipantId : oldParticipantId
+                    };
+                }
+                // Different matches
+                return {
+                    ...m,
+                    participantAId: m.participantAId === newParticipantId ? oldParticipantId : m.participantAId,
+                    participantBId: m.participantBId === newParticipantId ? oldParticipantId : m.participantBId
+                };
+            }
+            if (m.id === targetMatch.id) {
+                return {
+                    ...m,
+                    participantAId: slot === 'A' ? newParticipantId : m.participantAId,
+                    participantBId: slot === 'B' ? newParticipantId : m.participantBId
+                };
+            }
+            return m;
+        });
+    } else {
+        // Just replace
+        newMatches = newMatches.map(m => {
+            if (m.id === targetMatch.id) {
+                return {
+                    ...m,
+                    participantAId: slot === 'A' ? newParticipantId : m.participantAId,
+                    participantBId: slot === 'B' ? newParticipantId : m.participantBId
+                };
+            }
+            return m;
+        });
+    }
+
+    updateWithHistory({ ...tournament, matches: newMatches });
+  };
+
   const handleClearStage = (stageNum: number) => {
     openConfirm(
         `Reset Stage ${stageNum} Results?`,
         `This will reset all scores in Stage ${stageNum} to unplayed. All current progress in this stage will be lost.`,
         () => {
+            const stageMatches = tournament.matches.filter(m => m.stageNumber === stageNum);
+            const minRound = stageMatches.length > 0 ? Math.min(...stageMatches.map(m => m.round)) : 1;
+            const isSE = stageMatches[0]?.stage === StageType.SE;
+
             const newMatches = tournament.matches.map(m => {
                 if (m.stageNumber === stageNum) {
+                    const isSubsequentRound = isSE && m.round > minRound;
                     return {
                         ...m,
                         scoreA: null,
                         scoreB: null,
                         winnerId: null,
-                        isCompleted: false
+                        isCompleted: false,
+                        participantAId: isSubsequentRound ? null : m.participantAId,
+                        participantBId: isSubsequentRound ? null : m.participantBId
                     };
                 }
                 return m;
@@ -371,7 +445,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate }) => {
                         className="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded text-sm flex items-center gap-2 border border-slate-600"
                         title="Undo last action"
                     >
-                        ↩ Undo
+                        ↩
                     </button>
                 )}
                 {isCurrentStageComplete && !isFinalStage && (
@@ -382,17 +456,23 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate }) => {
                         Next Stage
                     </button>
                 )}
-                <button 
-                  onClick={() => navigator.share ? navigator.share({ title: tournament.title, url: window.location.href }) : alert("URL copied!")}
-                  className="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded text-sm"
-                >
-                  Share
-                </button>
              </div>
           </div>
 
           {/* Tabs */}
           <div className="flex gap-6 text-sm font-medium overflow-x-auto">
+            <button 
+                onClick={() => setActiveTab('global-standings')}
+                className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'global-standings' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+            >
+                Global Standings
+            </button>
+            <button 
+                onClick={() => setActiveTab('standings')}
+                className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'standings' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+            >
+                Group Standings
+            </button>
             {Array.from(new Set(tournament.matches.map(m => m.stageNumber))).sort((a, b) => a - b).map(stageNum => {
                 const stageMatches = tournament.matches.filter(m => m.stageNumber === stageNum);
                 const stageType = stageMatches[0]?.stage;
@@ -407,18 +487,23 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate }) => {
                     </button>
                 );
             })}
-            <button 
-                onClick={() => setActiveTab('standings')}
-                className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'standings' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
-            >
-                Standings
-            </button>
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-5xl mx-auto px-4 py-8">
+        {activeTab === 'global-standings' && (
+            <Standings 
+                participants={standings} 
+                qualifiesByGroup={tournament.qualifiesByGroup}
+                onReplaceParticipant={handleReplaceParticipant}
+                onUpdateRankManual={handleManualRank}
+                allowEdits={hasStep2}
+                mode="global"
+            />
+        )}
+
         {activeTab === 'standings' && (
             <Standings 
                 participants={standings} 
@@ -450,9 +535,9 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate }) => {
                                     ⚡ Simulate Results
                                 </button>
                             )}
-                            {stageNum === 1 && !hasStep2 && (
+                            {isLastStage && (
                                 <button
-                                     onClick={() => handleClearStage(1)}
+                                     onClick={() => handleClearStage(stageNum)}
                                      className="text-xs bg-slate-800 hover:bg-red-900/30 border border-slate-600 hover:border-red-500 text-slate-400 hover:text-red-400 px-3 py-1.5 rounded transition-colors"
                                  >
                                      Reset Results
@@ -463,8 +548,12 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate }) => {
                     {stageType === StageType.SE ? (
                         <BracketView 
                             matches={stageMatches}
-                            participants={tournament.participants}
+                            participants={tournament.participants.map(p => ({
+                                ...p,
+                                globalRank: standings.find(s => s.id === p.id)?.globalRank
+                            }))}
                             onMatchClick={setSelectedMatch}
+                            onParticipantSwap={handleParticipantSwap}
                         />
                     ) : (
                         <MatchList 

@@ -131,10 +131,12 @@ export const calculateStandings = (participants: Participant[], matches: Match[]
   };
 
   // 1. Calculate Global Rank
-  const globalSorted = [...updatedParticipants].sort(sortFn);
-  globalSorted.forEach((p, i) => {
-    p.globalRank = i + 1;
-  });
+  if(updatedParticipants.every((p: Participant) => !p.globalRank)) {
+    const globalSorted = [...updatedParticipants].sort(sortFn);
+    globalSorted.forEach((p, i) => {
+      p.globalRank = i + 1;
+    });
+  }
 
   // 2. Sort for Group assignment/display (Group first, then Stats)
   updatedParticipants.sort((a, b) => {
@@ -197,7 +199,8 @@ export const startNextStage = (
   tournament: Tournament, 
   nextFormat: EliminationType, 
   qualifiedParticipantIds: string[],
-  groupAssignments?: Record<string, string>
+  groupAssignments?: Record<string, string>,
+  manualFinals?: Record<string, string>
 ): Tournament => {
   const qualified = tournament.participants.filter(p => qualifiedParticipantIds.includes(p.id));
   
@@ -221,15 +224,60 @@ export const startNextStage = (
   }
 
   if (nextFormat === EliminationType.SINGLE_ELIMINATION) {
-    // For bracket, we pass the qualified players sorted by global rank
-    const standings = calculateStandings(qualified, tournament.matches);
-    const sortedQualified = [...standings].sort((a, b) => (a.globalRank || 999) - (b.globalRank || 999));
-    
-    // Determine next round number for SE stage
-    const seMatches = tournament.matches.filter(m => m.stage === StageType.SE && m.stageNumber === nextStageNumber);
-    const nextRound = seMatches.length > 0 ? Math.max(...seMatches.map(m => m.round)) + 1 : 1;
-    
-    newMatches = generateBracket(tournament.id, sortedQualified, nextStageNumber, nextRound);
+    if (manualFinals && Object.keys(manualFinals).length > 0) {
+        const finalIds = Object.entries(manualFinals).filter(([_, v]) => v === 'Final').map(([id]) => id);
+        const thirdIds = Object.entries(manualFinals).filter(([_, v]) => v === '3rd vs 4th').map(([id]) => id);
+        
+        // Determine next round number for SE stage
+        const seMatches = tournament.matches.filter(m => m.stage === StageType.SE && m.stageNumber === nextStageNumber);
+        const nextRound = seMatches.length > 0 ? Math.max(...seMatches.map(m => m.round)) + 1 : 1;
+
+        if (finalIds.length === 2) {
+            newMatches.push({
+                id: generateId(),
+                tournamentId: tournament.id,
+                stage: StageType.SE,
+                stageNumber: nextStageNumber,
+                round: nextRound,
+                participantAId: finalIds[0],
+                participantBId: finalIds[1],
+                scoreA: null,
+                scoreB: null,
+                winnerId: null,
+                isCompleted: false,
+                label: 'Final',
+                isFinal: true
+            });
+        }
+        
+        if (thirdIds.length === 2) {
+            newMatches.push({
+                id: generateId(),
+                tournamentId: tournament.id,
+                stage: StageType.SE,
+                stageNumber: nextStageNumber,
+                round: nextRound,
+                participantAId: thirdIds[0],
+                participantBId: thirdIds[1],
+                scoreA: null,
+                scoreB: null,
+                winnerId: null,
+                isCompleted: false,
+                label: '3rd vs 4th',
+                isFinal: false
+            });
+        }
+    } else {
+        // For bracket, we pass the qualified players sorted by global rank
+        const standings = calculateStandings(qualified, tournament.matches);
+        const sortedQualified = [...standings].sort((a, b) => (a.globalRank || 999) - (b.globalRank || 999));
+        
+        // Determine next round number for SE stage
+        const seMatches = tournament.matches.filter(m => m.stage === StageType.SE && m.stageNumber === nextStageNumber);
+        const nextRound = seMatches.length > 0 ? Math.max(...seMatches.map(m => m.round)) + 1 : 1;
+        
+        newMatches = generateBracket(tournament.id, sortedQualified, nextStageNumber, nextRound);
+    }
   } else {
     // RR: Use group assignments if provided
     const rrParticipants = qualified.map(p => ({ 

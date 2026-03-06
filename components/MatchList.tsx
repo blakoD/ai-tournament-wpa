@@ -32,6 +32,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                 const pB = participants.find(p => p.id === m.participantBId);
                 const nameA = pA?.name || "TBD";
                 const nameB = pB?.name || "TBD";
+                const groupName = m.group ? (m.group.startsWith('Group') ? m.group : `Group ${m.group}`) : null;
 
                 return (
                     <div 
@@ -44,6 +45,20 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                                 : 'bg-slate-800 border-blue-900/30 hover:border-blue-500 shadow-sm hover:shadow-md hover:shadow-blue-900/20'}
                         `}
                     >
+                        {(groupName || !m.isCompleted) && (
+                            <div className="flex justify-between items-center mb-2 h-4">
+                                {groupName ? (
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase bg-slate-900/50 px-1.5 py-0.5 rounded border border-slate-700/50">
+                                        {groupName}
+                                    </span>
+                                ) : <span></span>}
+                                
+                                {!m.isCompleted && (
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                )}
+                            </div>
+                        )}
+
                         <div className="flex justify-between items-center mb-2">
                             <span className={`font-medium truncate max-w-[120px] ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-300'}`}>
                                 {nameA}
@@ -60,9 +75,6 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                                 {m.scoreB ?? '-'}
                             </span>
                         </div>
-                        {!m.isCompleted && (
-                            <div className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                        )}
                     </div>
                 );
             })}

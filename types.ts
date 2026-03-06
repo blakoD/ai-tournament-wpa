@@ -46,6 +46,8 @@ export interface Match {
   group?: string; // For Round Robin stage grouping
   nextMatchId?: string; // For bracket progression
   nextMatchSlot?: 'A' | 'B'; // Which slot in the next match
+  label?: string; // e.g., "Final", "3rd vs 4th"
+  isFinal?: boolean; // To display larger
 }
 
 export interface Tournament {
