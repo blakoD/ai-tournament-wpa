@@ -3,14 +3,29 @@ import { HashRouter, Routes, Route, Navigate, useParams, useNavigate } from 'rea
 import { Setup } from './components/Setup';
 import { TournamentView } from './components/TournamentView';
 import { Tournament } from './types';
-import { getTournament, saveTournament, getAllTournaments } from './services/storageService';
+import { getTournamentById, listTournaments, TournamentSummary, updateTournament, updateMatchResult, swapMatchParticipant } from './services/apiClient';
 
 const Dashboard = () => {
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    setTournaments(getAllTournaments());
+    const loadTournaments = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const loadedTournaments = await listTournaments();
+        setTournaments(loadedTournaments);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : 'Failed to load tournaments.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadTournaments();
   }, []);
 
   const formatDate = (timestamp?: number) => {
@@ -34,7 +49,15 @@ const Dashboard = () => {
           </button>
         </header>
 
-        {tournaments.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-20 bg-slate-800/50 rounded-xl border border-slate-700">
+            <p className="text-slate-300">Loading tournaments...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-20 bg-red-900/20 rounded-xl border border-red-700/60 px-6">
+            <p className="text-red-300 font-medium">{error}</p>
+          </div>
+        ) : tournaments.length === 0 ? (
           <div className="text-center py-20 bg-slate-800/50 rounded-xl border border-slate-700">
             <p className="text-slate-400 mb-4">No active tournaments found.</p>
             <button
@@ -64,7 +87,7 @@ const Dashboard = () => {
                 </div>
                 <p className="text-slate-400 text-sm mb-4">{t.title}</p>
                 <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">
-                  <span>{t.participants.length} Players</span>
+                  <span>{t.participantCount} Players</span>
                   <span>•</span>
                   <span>{t.eliminationType === 'SINGLE_ELIMINATION' ? 'Bracket' : '2nd Round Robin'}</span>
                 </div>
@@ -89,27 +112,69 @@ const Dashboard = () => {
 const TournamentRoute = () => {
   const { slug } = useParams<{ slug: string }>();
   const [tournament, setTournament] = useState<Tournament | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (slug) {
-      const loaded = getTournament(slug);
-      if (loaded) {
-        setTournament(loaded);
-      } else {
+    const loadTournament = async () => {
+      if (!slug) {
         navigate('/');
+        return;
       }
-    }
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const summaries = await listTournaments();
+        const summary = summaries.find((item) => item.urlSlug === slug);
+        if (!summary) {
+          navigate('/');
+          return;
+        }
+
+        const loadedTournament = await getTournamentById(summary.id);
+        setTournament(loadedTournament);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : 'Failed to load tournament.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadTournament();
   }, [slug, navigate]);
 
-  const handleUpdate = (updated: Tournament) => {
-    saveTournament(updated);
-    setTournament(updated);
+  const handleUpdate = async (updated: Tournament): Promise<Tournament> => {
+    const persisted = await updateTournament(updated.id, updated);
+    setTournament(persisted);
+    return persisted;
   };
 
-  if (!tournament) return <div className="p-8 text-center text-slate-400">Loading...</div>;
+  const handleMatchResult = async (tournamentId: string, matchId: string, scoreA: number, scoreB: number): Promise<Tournament> => {
+    const persisted = await updateMatchResult(tournamentId, matchId, { scoreA, scoreB });
+    setTournament(persisted);
+    return persisted;
+  };
 
-  return <TournamentView tournament={tournament} onUpdate={handleUpdate} />;
+  const handleSwapParticipant = async (tournamentId: string, matchId: string, slot: 'A' | 'B', newParticipantId: string): Promise<Tournament> => {
+    const persisted = await swapMatchParticipant(tournamentId, matchId, { slot, newParticipantId });
+    setTournament(persisted);
+    return persisted;
+  };
+
+  if (isLoading) return <div className="p-8 text-center text-slate-400">Loading...</div>;
+  if (error) return <div className="p-8 text-center text-red-300">{error}</div>;
+  if (!tournament) return <div className="p-8 text-center text-slate-400">Tournament not found.</div>;
+
+  return (
+    <TournamentView
+      tournament={tournament}
+      onUpdate={handleUpdate}
+      onMatchResult={handleMatchResult}
+      onSwapParticipant={handleSwapParticipant}
+    />
+  );
 };
 
 const App: React.FC = () => {

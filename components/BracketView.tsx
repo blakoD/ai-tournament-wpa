@@ -74,9 +74,9 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                             }
 
                             return (
-                                <div className={`px-3 py-2 flex justify-between items-center group/player ${slot === 'A' ? 'border-b border-slate-700/50' : ''} ${isWinner ? 'bg-emerald-900/20 text-emerald-400 font-bold' : 'text-slate-300'}`}>
+                                <div className={`px-3 py-2 flex justify-between items-center group/player ${slot === 'A' ? 'border-b border-slate-700/50' : ''} ${isWinner ? 'bg-emerald-900/20 text-emerald-400 font-bold' : 'text-slate-300 font-medium'}`}>
                                     {p?.globalRank ? (<span className="font-mono text-slate-600 leading-tight pr-2">#{p.globalRank}</span>) : ''}
-                                    <span className="flex-1 break-words pr-2 leading-tight flex items-center gap-1">
+                                    <span className="flex-1 pr-2 leading-tight flex items-center gap-1">
                                         {p?.name || 'TBD'}
                                         {onParticipantSwap && !m.isCompleted && (
                                             <button
@@ -123,7 +123,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                                     onClick={() => onMatchClick(m)}
                                     className={`
                                         rounded-lg border cursor-pointer shadow-sm transition-all z-10 relative
-                                        ${m.isFinal ? 'w-[280px] text-base border-yellow-500' : 'w-[212px] text-sm'}
+                                        ${m.isFinal ? 'w-[280px] text-base border-yellow-500' : 'w-[280px] text-sm'}
                                         ${m.isCompleted 
                                             ? 'bg-slate-800 border-slate-600 hover:border-slate-500' 
                                             : 'bg-slate-900 border-blue-900/50 hover:border-blue-500 hover:shadow-blue-900/20'}

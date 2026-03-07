@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateId, generateRoundRobinMatches, generateBracket } from '../services/tournamentLogic';
-import { saveTournament, checkSlugExists } from '../services/storageService';
 import { Tournament, TournamentStatus, EliminationType, StageType, Participant } from '../types';
+import { createTournament, listTournaments, startTournament } from '../services/apiClient';
 
 interface GroupDef {
   id: string;
@@ -29,6 +29,7 @@ export const Setup: React.FC = () => {
   const [activeGroupModal, setActiveGroupModal] = useState<string | null>(null);
   const [tempAssignments, setTempAssignments] = useState<Record<number, string>>({});
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize defaults
   useEffect(() => {
@@ -140,8 +141,10 @@ export const Setup: React.FC = () => {
       });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('');
+
+    try {
 
     if (!name || !title || !slug) {
       setError('Please fill in all required basic info.');
@@ -153,10 +156,11 @@ export const Setup: React.FC = () => {
       return;
     }
 
-    if (checkSlugExists(slug)) {
-      setError('URL Slug is already taken. Please choose another.');
-      return;
-    }
+      const existingTournaments = await listTournaments();
+      if (existingTournaments.some((tournament) => tournament.urlSlug === slug)) {
+        setError('URL Slug is already taken. Please choose another.');
+        return;
+      }
     
     // Validate Group Sizes
     for (const g of groups) {
@@ -213,8 +217,27 @@ export const Setup: React.FC = () => {
       startedAt: Date.now()
     };
 
-    saveTournament(newTournament);
-    navigate(`/tournament/${slug}`);
+      setIsSubmitting(true);
+      const created = await createTournament({
+        ...newTournament,
+        status: TournamentStatus.SETUP,
+        participants: [],
+        matches: [],
+        startedAt: undefined,
+      });
+
+      await startTournament(created.id, {
+        participants,
+        matches,
+        startedAt: Date.now(),
+      });
+
+      navigate(`/tournament/${slug}`);
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Failed to create tournament.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -420,9 +443,10 @@ export const Setup: React.FC = () => {
           </button>
           <button 
             onClick={handleSubmit}
+            disabled={isSubmitting}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded shadow-lg shadow-blue-900/20 transition-all"
           >
-            Start Tournament
+            {isSubmitting ? 'Starting...' : 'Start Tournament'}
           </button>
         </div>
       </div>

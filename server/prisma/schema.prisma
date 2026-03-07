@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TournamentStatus {
+  SETUP
+  STARTED
+  COMPLETED
+}
+
+enum StageType {
+  RR
+  SE
+}
+
+enum EliminationType {
+  SINGLE_ELIMINATION
+  ROUND_ROBIN_2
+}
+
+model Tournament {
+  id               String           @id @default(uuid()) @db.Uuid
+  name             String
+  title            String
+  urlSlug          String           @unique @map("url_slug")
+  description      String
+  participantCount Int              @map("participant_count")
+  qualifiesByGroup Int              @map("qualifies_by_group")
+  eliminationType  EliminationType  @map("elimination_type")
+  status           TournamentStatus @default(SETUP)
+  createdAt        DateTime         @default(now()) @map("created_at")
+  startedAt        DateTime?        @map("started_at")
+  completedAt      DateTime?        @map("completed_at")
+
+  participants Participant[]
+  matches      Match[]
+
+  @@map("tournaments")
+}
+
+model Participant {
+  id                   String  @id @default(uuid()) @db.Uuid
+  tournamentId         String  @map("tournament_id") @db.Uuid
+  name                 String
+  groupName            String  @default("A") @map("group_name")
+  wins                 Int     @default(0)
+  matchesPlayed        Int     @default(0) @map("matches_played")
+  pointsFor            Int     @default(0) @map("points_for")
+  pointsAgainst        Int     @default(0) @map("points_against")
+  rank                 Int     @default(0)
+  globalRank           Int?    @map("global_rank")
+  manualRankAdjustment Int     @default(0) @map("manual_rank_adjustment")
+  isQualified          Boolean @default(false) @map("is_qualified")
+  isDropped            Boolean @default(false) @map("is_dropped")
+  originalId           String? @map("original_id") @db.Uuid
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId])
+  @@index([groupName])
+  @@map("participants")
+}
+
+model Match {
+  id             String   @id @default(uuid()) @db.Uuid
+  tournamentId   String   @map("tournament_id") @db.Uuid
+  stage          StageType
+  stageNumber    Int      @map("stage_number")
+  round          Int
+  participantAId String?  @map("participant_a_id") @db.Uuid
+  participantBId String?  @map("participant_b_id") @db.Uuid
+  scoreA         Int?     @map("score_a")
+  scoreB         Int?     @map("score_b")
+  winnerId       String?  @map("winner_id") @db.Uuid
+  isCompleted    Boolean  @default(false) @map("is_completed")
+  groupName      String?  @map("group_name")
+  nextMatchId    String?  @map("next_match_id") @db.Uuid
+  nextMatchSlot  String?  @map("next_match_slot")
+  label          String?
+  isFinal        Boolean? @map("is_final")
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId])
+  @@index([stageNumber])
+  @@index([round])
+  @@map("matches")
+}

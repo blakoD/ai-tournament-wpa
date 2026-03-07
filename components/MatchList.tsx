@@ -41,14 +41,14 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                         className={`
                             relative rounded-lg border p-3 cursor-pointer transition-all
                             ${m.isCompleted 
-                                ? 'bg-slate-800 border-slate-700 opacity-80 hover:opacity-100' 
-                                : 'bg-slate-800 border-blue-900/30 hover:border-blue-500 shadow-sm hover:shadow-md hover:shadow-blue-900/20'}
+                                ? 'bg-slate-800 border-slate-600 opacity-80 hover:opacity-100' 
+                                : 'bg-slate-800/50 border-blue-900/30 hover:border-blue-500 shadow-sm hover:shadow-md hover:shadow-blue-900/20'}
                         `}
                     >
                         {(groupName || !m.isCompleted) && (
-                            <div className="flex justify-between items-center mb-2 h-4">
+                            <div className="flex justify-center items-center mb-2 h-4">
                                 {groupName ? (
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase bg-slate-900/50 px-1.5 py-0.5 rounded border border-slate-700/50">
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase bg-slate-900/50 px-1.5 py-0.5 mr-2 rounded border border-slate-700/50">
                                         {groupName}
                                     </span>
                                 ) : <span></span>}
@@ -60,18 +60,18 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                         )}
 
                         <div className="flex justify-between items-center mb-2">
-                            <span className={`font-medium truncate max-w-[120px] ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-300'}`}>
+                            <span className={`font-medium truncate ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-300'}`}>
                                 {nameA}
                             </span>
-                            <span className={`font-mono text-lg font-bold ${m.isCompleted ? 'text-white' : 'text-slate-600'}`}>
+                            <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantAId ? 'text-green-400' : 'text-white') : 'text-slate-600'}`}>
                                 {m.scoreA ?? '-'}
                             </span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className={`font-medium truncate max-w-[120px] ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-300'}`}>
+                            <span className={`font-medium truncate ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-300'}`}>
                                 {nameB}
                             </span>
-                            <span className={`font-mono text-lg font-bold ${m.isCompleted ? 'text-white' : 'text-slate-600'}`}>
+                            <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantBId ? 'text-green-400' : 'text-white') : 'text-slate-600'}`}>
                                 {m.scoreB ?? '-'}
                             </span>
                         </div>
