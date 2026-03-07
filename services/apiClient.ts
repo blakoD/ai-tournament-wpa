@@ -31,7 +31,9 @@ interface TournamentWritePayload {
   matches: Match[];
 }
 
-const API_BASE = "/api";
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, "") ?? "";
+const API_BASE = `${API_ORIGIN}/api`;
+const HEALTH_ENDPOINT = `${API_ORIGIN}/health`;
 
 const parseError = async (response: Response): Promise<string> => {
   try {
@@ -81,7 +83,7 @@ const toWritePayload = (tournament: Tournament): TournamentWritePayload => ({
 });
 
 export const getHealth = async (): Promise<{ status: string }> => {
-  const response = await fetch("/health");
+  const response = await fetch(HEALTH_ENDPOINT);
   if (!response.ok) {
     throw new Error(await parseError(response));
   }
