@@ -28,8 +28,8 @@ const getOrCreateReadOnlyParameter = async (): Promise<unknown> => {
   }
 
   await prisma.$executeRaw`
-    INSERT INTO app_parameters (key, value)
-    VALUES ('read_only', 'true'::jsonb)
+    INSERT INTO app_parameters (key, value, updated_at)
+    VALUES ('read_only', 'true'::jsonb, NOW())
     ON CONFLICT (key) DO NOTHING
   `;
 
@@ -76,8 +76,8 @@ export const registerParametersRoutes = async (app: FastifyInstance): Promise<vo
     const serializedValue = JSON.stringify(parsedBody.data.value);
 
     await prisma.$executeRaw`
-      INSERT INTO app_parameters (key, value)
-      VALUES (${parsedParams.data.key}, CAST(${serializedValue} AS jsonb))
+      INSERT INTO app_parameters (key, value, updated_at)
+      VALUES (${parsedParams.data.key}, CAST(${serializedValue} AS jsonb), NOW())
       ON CONFLICT (key)
       DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
     `;
