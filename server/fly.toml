@@ -1,15 +1,15 @@
-# Fly config for API service
-app = 'tournament-builder-api'
-primary_region = 'sjc'
+# fly.toml app configuration file generated for ai-tournament-wpa on 2026-03-07T10:50:09Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'ai-tournament-wpa'
+primary_region = 'ams'
 
 [build]
-  dockerfile = 'Dockerfile'
-
-[deploy]
-  release_command = 'npm run prisma:deploy'
 
 [http_service]
-  internal_port = 3001
+  internal_port = 8080
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
@@ -17,5 +17,7 @@ primary_region = 'sjc'
   processes = ['app']
 
 [[vm]]
-  size = 'shared-cpu-1x'
-  memory = '512mb'
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 256
