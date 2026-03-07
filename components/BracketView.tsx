@@ -6,9 +6,10 @@ interface Props {
   participants: Participant[];
   onMatchClick: (match: Match) => void;
   onParticipantSwap?: (matchId: string, slot: 'A' | 'B', newParticipantId: string) => void;
+    readOnly?: boolean;
 }
 
-export const BracketView: React.FC<Props> = ({ matches, participants, onMatchClick, onParticipantSwap }) => {
+export const BracketView: React.FC<Props> = ({ matches, participants, onMatchClick, onParticipantSwap, readOnly = false }) => {
   const [editing, setEditing] = useState<{matchId: string, slot: 'A' | 'B'} | null>(null);
   // Group by Round
   const roundsMap: Record<number, Match[]> = {};
@@ -78,7 +79,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                                     {p?.globalRank ? (<span className="font-mono text-slate-600 leading-tight pr-2">#{p.globalRank}</span>) : ''}
                                     <span className="flex-1 pr-2 leading-tight flex items-center gap-1">
                                         {p?.name || 'TBD'}
-                                        {onParticipantSwap && !m.isCompleted && (
+                                        {onParticipantSwap && !readOnly && !m.isCompleted && (
                                             <button
                                                 className="opacity-0 group-hover/player:opacity-100 text-slate-500 hover:text-blue-400 transition-opacity px-1"
                                                 onClick={(e) => {
@@ -120,9 +121,13 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
 
                                 {/* Match Card */}
                                 <div 
-                                    onClick={() => onMatchClick(m)}
+                                    onClick={() => {
+                                        if (!readOnly) {
+                                            onMatchClick(m);
+                                        }
+                                    }}
                                     className={`
-                                        rounded-lg border cursor-pointer shadow-sm transition-all z-10 relative
+                                        rounded-lg border shadow-sm transition-all z-10 relative ${readOnly ? 'cursor-default' : 'cursor-pointer'}
                                         ${m.isFinal ? 'w-[280px] text-base border-yellow-500' : 'w-[280px] text-sm'}
                                         ${m.isCompleted 
                                             ? 'bg-slate-800 border-slate-600 hover:border-slate-500' 

@@ -5,9 +5,10 @@ interface Props {
   matches: Match[];
   participants: Participant[];
   onMatchClick: (match: Match) => void;
+  readOnly?: boolean;
 }
 
-export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick }) => {
+export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick, readOnly = false }) => {
   // Group by Round
   const grouped = matches.reduce((acc, match) => {
     const r = match.round || 1;
@@ -37,9 +38,9 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                 return (
                     <div 
                         key={m.id}
-                        onClick={() => onMatchClick(m)}
+                        onClick={() => { if (!readOnly) onMatchClick(m)}}
                         className={`
-                            relative rounded-lg border p-3 cursor-pointer transition-all
+                        relative rounded-lg border p-3 transition-all ${readOnly ? 'cursor-default' : 'cursor-pointer'}
                             ${m.isCompleted 
                                 ? 'bg-slate-800 border-slate-600 opacity-80 hover:opacity-100' 
                                 : 'bg-slate-800/50 border-blue-900/30 hover:border-blue-500 shadow-sm hover:shadow-md hover:shadow-blue-900/20'}

@@ -3,12 +3,26 @@ import { HashRouter, Routes, Route, Navigate, useParams, useNavigate } from 'rea
 import { Setup } from './components/Setup';
 import { TournamentView } from './components/TournamentView';
 import { Tournament } from './types';
-import { getTournamentById, listTournaments, TournamentSummary, updateTournament, updateMatchResult, swapMatchParticipant } from './services/apiClient';
+import {
+  getTournamentById,
+  listTournaments,
+  TournamentSummary,
+  updateTournament,
+  updateMatchResult,
+  swapMatchParticipant,
+  deleteTournament,
+  getReadOnlyParameter,
+  updateReadOnlyParameter,
+} from './services/apiClient';
 
 const Dashboard = () => {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingTournamentId, setDeletingTournamentId] = useState<string | null>(null);
+  const [unlockTapTimestamps, setUnlockTapTimestamps] = useState<number[]>([]);
+  const [isTogglingReadOnly, setIsTogglingReadOnly] = useState(false);
+  const [readOnly, setReadOnly] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,8 +30,9 @@ const Dashboard = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const loadedTournaments = await listTournaments();
+        const [loadedTournaments, parameter] = await Promise.all([listTournaments(), getReadOnlyParameter()]);
         setTournaments(loadedTournaments);
+        setReadOnly(parameter.readOnly);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Failed to load tournaments.');
       } finally {
@@ -28,9 +43,57 @@ const Dashboard = () => {
     void loadTournaments();
   }, []);
 
-  const formatDate = (timestamp?: number) => {
+  const formatDate = (timestamp?: number | null) => {
     if (!timestamp) return '';
     return new Date(timestamp).toLocaleString();
+  };
+
+  const handleDeleteTournament = async (tournamentId: string, tournamentName: string) => {
+    const shouldDelete = window.confirm(`Delete tournament \"${tournamentName}\"? This action cannot be undone.`);
+    if (!shouldDelete) {
+      return;
+    }
+
+    setDeletingTournamentId(tournamentId);
+    setError(null);
+
+    try {
+      await deleteTournament(tournamentId);
+      setTournaments((previous) => previous.filter((tournament) => tournament.id !== tournamentId));
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Failed to delete tournament.');
+    } finally {
+      setDeletingTournamentId(null);
+    }
+  };
+
+  const handleToggleActionsFromTitle = async () => {
+    if (isLoading || isTogglingReadOnly || tournaments.length === 0) {
+      return;
+    }
+
+    const now = Date.now();
+    const recentTaps = [...unlockTapTimestamps, now].filter((timestamp) => now - timestamp <= 5000);
+
+    if (recentTaps.length < 10) {
+      setUnlockTapTimestamps(recentTaps);
+      return;
+    }
+
+    setUnlockTapTimestamps([]);
+    setError(null);
+    setIsTogglingReadOnly(true);
+
+    const nextReadOnly = !readOnly;
+
+    try {
+      const updated = await updateReadOnlyParameter(nextReadOnly);
+      setReadOnly(updated.readOnly);
+    } catch (toggleError) {
+      setError(toggleError instanceof Error ? toggleError.message : 'Failed to toggle actions visibility.');
+    } finally {
+      setIsTogglingReadOnly(false);
+    }
   };
 
   return (
@@ -38,7 +101,15 @@ const Dashboard = () => {
       <div className="max-w-4xl mx-auto">
         <header className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Tournaments</h1>
+            <h1
+              onClick={() => {
+                void handleToggleActionsFromTitle();
+              }}
+              className="text-3xl font-bold text-white mb-2 cursor-pointer select-none"
+              title="Tournaments"
+            >
+              Tournaments
+            </h1>
             <p className="text-slate-400">Manage your competitions efficiently.</p>
           </div>
           <button
@@ -100,6 +171,21 @@ const Dashboard = () => {
                          </>
                      )}
                 </div>
+                <div className="mt-4 pt-3 border-t border-slate-700/50 flex justify-end">
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleDeleteTournament(t.id, t.name);
+                      }}
+                      disabled={deletingTournamentId === t.id}
+                      className="text-xs bg-slate-900 hover:bg-red-900/30 border border-slate-600 hover:border-red-500 text-slate-300 hover:text-red-300 px-3 py-1.5 rounded transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {deletingTournamentId === t.id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -112,6 +198,7 @@ const Dashboard = () => {
 const TournamentRoute = () => {
   const { slug } = useParams<{ slug: string }>();
   const [tournament, setTournament] = useState<Tournament | null>(null);
+  const [readOnly, setReadOnly] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -133,8 +220,12 @@ const TournamentRoute = () => {
           return;
         }
 
-        const loadedTournament = await getTournamentById(summary.id);
+        const [loadedTournament, parameter] = await Promise.all([
+          getTournamentById(summary.id),
+          getReadOnlyParameter(),
+        ]);
         setTournament(loadedTournament);
+        setReadOnly(parameter.readOnly);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Failed to load tournament.');
       } finally {
@@ -170,6 +261,7 @@ const TournamentRoute = () => {
   return (
     <TournamentView
       tournament={tournament}
+      readOnly={readOnly}
       onUpdate={handleUpdate}
       onMatchResult={handleMatchResult}
       onSwapParticipant={handleSwapParticipant}

@@ -1,0 +1,2 @@
+ALTER TABLE "tournaments"
+ADD COLUMN "read_only" BOOLEAN NOT NULL DEFAULT TRUE;

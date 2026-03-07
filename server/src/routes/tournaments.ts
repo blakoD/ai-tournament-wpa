@@ -57,8 +57,8 @@ const tournamentWriteSchema = z.object({
   eliminationType: z.enum(["SINGLE_ELIMINATION", "ROUND_ROBIN_2"]),
   status: z.enum(["SETUP", "STARTED", "COMPLETED"]).default("SETUP"),
   createdAt: z.number().int().positive().optional(),
-  startedAt: z.number().int().positive().optional(),
-  completedAt: z.number().int().positive().optional(),
+  startedAt: z.number().int().positive().nullable().optional(),
+  completedAt: z.number().int().positive().nullable().optional(),
   participants: z.array(participantInputSchema).default([]),
   matches: z.array(matchInputSchema).default([]),
 });
@@ -96,9 +96,19 @@ type TournamentWithRelations = {
   matches: DbMatch[];
 };
 
-const toDate = (timestamp: number | undefined): Date | undefined => {
+const toOptionalDate = (timestamp: number | undefined): Date | undefined => {
   if (timestamp === undefined) {
     return undefined;
+  }
+  return new Date(timestamp);
+};
+
+const toNullableDate = (timestamp: number | null | undefined): Date | null | undefined => {
+  if (timestamp === undefined) {
+    return undefined;
+  }
+  if (timestamp === null) {
+    return null;
   }
   return new Date(timestamp);
 };
@@ -207,9 +217,9 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
             qualifiesByGroup: parsedBody.data.qualifiesByGroup,
             eliminationType: parsedBody.data.eliminationType,
             status: parsedBody.data.status,
-            createdAt: toDate(parsedBody.data.createdAt),
-            startedAt: toDate(parsedBody.data.startedAt),
-            completedAt: toDate(parsedBody.data.completedAt),
+            createdAt: toOptionalDate(parsedBody.data.createdAt),
+            startedAt: toNullableDate(parsedBody.data.startedAt),
+            completedAt: toNullableDate(parsedBody.data.completedAt),
           },
         });
 
@@ -314,9 +324,9 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
             qualifiesByGroup: parsedBody.data.qualifiesByGroup,
             eliminationType: parsedBody.data.eliminationType,
             status: parsedBody.data.status,
-            createdAt: toDate(parsedBody.data.createdAt),
-            startedAt: toDate(parsedBody.data.startedAt),
-            completedAt: toDate(parsedBody.data.completedAt),
+            createdAt: toOptionalDate(parsedBody.data.createdAt),
+            startedAt: toNullableDate(parsedBody.data.startedAt),
+            completedAt: toNullableDate(parsedBody.data.completedAt),
           },
         });
 
@@ -421,7 +431,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
           where: { id: parsedParams.data.id },
           data: {
             status: "STARTED",
-            startedAt: toDate(parsedBody.data.startedAt) ?? new Date(),
+            startedAt: toOptionalDate(parsedBody.data.startedAt) ?? new Date(),
             completedAt: null,
           },
         });
@@ -540,33 +550,6 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
           });
         }
 
-        const stageMatches = await tx.match.findMany({
-          where: {
-            tournamentId: parsedParams.data.id,
-            stageNumber: match.stageNumber,
-          },
-          select: { isCompleted: true },
-        });
-
-        const allStageMatchesCompleted = stageMatches.length > 0 && stageMatches.every((stageMatch) => stageMatch.isCompleted);
-        if (!allStageMatchesCompleted) {
-          return;
-        }
-
-        const maxStage = await tx.match.aggregate({
-          where: { tournamentId: parsedParams.data.id },
-          _max: { stageNumber: true },
-        });
-
-        if (maxStage._max.stageNumber === match.stageNumber) {
-          await tx.tournament.update({
-            where: { id: parsedParams.data.id },
-            data: {
-              status: "COMPLETED",
-              completedAt: new Date(),
-            },
-          });
-        }
       });
 
       const tournament = await getTournamentWithRelations(parsedParams.data.id);

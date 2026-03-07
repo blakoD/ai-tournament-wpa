@@ -11,18 +11,21 @@ import { NextStageModal } from './NextStageModal';
 
 interface Props {
   tournament: Tournament;
+        readOnly: boolean;
     onUpdate: (t: Tournament) => Promise<Tournament>;
     onMatchResult: (tournamentId: string, matchId: string, scoreA: number, scoreB: number) => Promise<Tournament>;
     onSwapParticipant: (tournamentId: string, matchId: string, slot: 'A' | 'B', newParticipantId: string) => Promise<Tournament>;
 }
 
-export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchResult, onSwapParticipant }) => {
+export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate, onMatchResult, onSwapParticipant }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('global-standings');
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
+    const [unlockTapTimestamps, setUnlockTapTimestamps] = useState<number[]>([]);
+    const [tournamentReadOnly, setTournamentReadOnly] = useState<boolean>(readOnly);
   
   // History for Undo functionality
   const [history, setHistory] = useState<Tournament[]>([]);
@@ -48,6 +51,39 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
     const lastMatch = tournament.matches[tournament.matches.length - 1];
     return lastMatch?.stage || StageType.RR;
   }, [tournament.matches]);
+
+    useEffect(() => {
+        const storageKey = `tournament_read_only_${tournament.id}`;
+        const stored = window.localStorage.getItem(storageKey);
+
+        if (stored === null) {
+            setTournamentReadOnly(readOnly);
+            return;
+        }
+
+        setTournamentReadOnly(stored === 'true');
+    }, [tournament.id, readOnly]);
+
+    const canEdit = !tournamentReadOnly;
+
+    const handleTitleTap = () => {
+        if (isSaving) {
+            return;
+        }
+
+        const now = Date.now();
+        const recentTaps = [...unlockTapTimestamps, now].filter((timestamp) => now - timestamp <= 5000);
+
+        if (recentTaps.length < 10) {
+            setUnlockTapTimestamps(recentTaps);
+            return;
+        }
+
+        setUnlockTapTimestamps([]);
+        const nextReadOnly = !tournamentReadOnly;
+        setTournamentReadOnly(nextReadOnly);
+        window.localStorage.setItem(`tournament_read_only_${tournament.id}`, String(nextReadOnly));
+    };
 
   const currentStageNumber = useMemo(() => {
     const lastMatch = tournament.matches[tournament.matches.length - 1];
@@ -112,6 +148,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
   };
 
     const handleUndo = async () => {
+    if (!canEdit) return;
     if (history.length === 0) return;
     const previous = history[history.length - 1];
         setIsSaving(true);
@@ -127,6 +164,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
   };
 
     const handleMatchSave = async (matchId: string, scoreA: number, scoreB: number) => {
+        if (!canEdit) return;
         setIsSaving(true);
         setSaveError(null);
         try {
@@ -142,6 +180,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
   };
 
   const handleMatchReset = () => {
+        if (!canEdit) return;
     if (!selectedMatch) return;
     
     openConfirm(
@@ -182,7 +221,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
                 const allDone = lastStageMatches.every(m => m.isCompleted);
                 if (!allDone && newStatus === TournamentStatus.COMPLETED) {
                     newStatus = TournamentStatus.STARTED;
-                    newCompletedAt = undefined;
+                    newCompletedAt = null;
                 }
             }
 
@@ -198,6 +237,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
   };
 
   const handleNextStage = (nextFormat: EliminationType, qualifiedIds: string[], groupAssignments?: Record<string, string>, manualFinals?: Record<string, string>) => {
+        if (!canEdit) return;
     // Updated Global Rank
     tournament.participants = tournament.participants.map(p => ({
         ...p,
@@ -214,7 +254,27 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
     }
   };
 
+    const handleFinalizeTournament = () => {
+        if (!canEdit) return;
+        if (!isCurrentStageComplete || tournament.status === TournamentStatus.COMPLETED) {
+            return;
+        }
+
+        openConfirm(
+            'Finalize Tournament?',
+            'This will mark the tournament as completed.',
+            () => {
+                void updateWithHistory({
+                    ...tournament,
+                    status: TournamentStatus.COMPLETED,
+                    completedAt: Date.now(),
+                });
+            }
+        );
+    };
+
   const handleReplaceParticipant = (oldId: string, newName: string) => {
+        if (!canEdit) return;
     const newId = generateId();
     const newParticipants = tournament.participants.map(p => {
         if (p.id === oldId) {
@@ -241,6 +301,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
   };
   
   const handleManualRank = (id: string, val: number) => {
+            if (!canEdit) return;
       const newParticipants = tournament.participants.map(p => 
         p.id === id ? { ...p, manualRankAdjustment: val } : p
       );
@@ -248,6 +309,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
   };
 
   const handleSimulateResults = () => {
+        if (!canEdit) return;
     const currentTabStageNumber = activeTab.startsWith('stage-') ? parseInt(activeTab.split('-')[1]) : currentStageNumber;
     const stageMatches = tournament.matches.filter(m => m.stageNumber === currentTabStageNumber);
     const stageType = stageMatches[0]?.stage || StageType.RR;
@@ -291,29 +353,16 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
                 });
             }
 
-            // Check completion
-            let newStatus = tournament.status;
-            let newCompletedAt = tournament.completedAt;
-            const lastStageMatches = newMatches.filter(m => m.stageNumber === currentStageNumber);
-            if (lastStageMatches.length > 0) {
-                 const allDone = lastStageMatches.every(m => m.isCompleted);
-                 if (allDone) {
-                     newStatus = TournamentStatus.COMPLETED;
-                     newCompletedAt = Date.now();
-                 }
-            }
-
             void updateWithHistory({ 
                 ...tournament, 
-                matches: newMatches,
-                status: newStatus,
-                completedAt: newCompletedAt
+                matches: newMatches
             });
         }
     );
   };
 
     const handleParticipantSwap = async (matchId: string, slot: 'A' | 'B', newParticipantId: string) => {
+    if (!canEdit) return;
     setIsSaving(true);
     setSaveError(null);
     try {
@@ -327,6 +376,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
   };
 
   const handleClearStage = (stageNum: number) => {
+        if (!canEdit) return;
     openConfirm(
         `Reset Stage ${stageNum} Results?`,
         `This will reset all scores in Stage ${stageNum} to unplayed. All current progress in this stage will be lost.`,
@@ -359,7 +409,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
     <div className="bg-slate-900 min-h-screen">
       {/* Header */}
       <div className="bg-slate-800 border-b border-slate-700 sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-4 py-4">
+        <div className="max-w-5xl mx-auto px-4 pt-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
              <div className="flex items-center gap-3">
                 <button 
@@ -372,29 +422,45 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
                     </svg>
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-white">{tournament.name}</h1>
+                    <h1
+                        onClick={handleTitleTap}
+                        className="text-2xl font-bold text-white cursor-pointer select-none"
+                        title="Tournament"
+                    >
+                        {tournament.name}
+                    </h1>
                     <p className="text-sm text-slate-400">{tournament.title}</p>
+                    <p className="text-xs text-slate-500 mt-1">{!tournamentReadOnly && 'Edit mode enabled (local)'}</p>
                 </div>
              </div>
              <div className="flex items-center gap-2">
                 {isSaving && <span className="text-xs text-blue-400">Saving...</span>}
-                {history.length > 0 && (
+                {canEdit && history.length > 0 && (
                     <button
                         onClick={handleUndo}
                         disabled={isSaving}
                         className="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded text-sm flex items-center gap-2 border border-slate-600"
                         title="Undo last action"
                     >
-                        ↩
+                        <span className="">↺</span>
                     </button>
                 )}
-                {isCurrentStageComplete && !isFinalStage && (
+                {canEdit && isCurrentStageComplete && !isFinalStage && tournament.status !== TournamentStatus.COMPLETED && (
                     <button 
                         onClick={() => setIsNextStageModalOpen(true)}
                         disabled={isSaving}
                         className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded font-bold shadow-lg shadow-emerald-900/20 animate-pulse"
                     >
                         Next Stage
+                    </button>
+                )}
+                {canEdit && isCurrentStageComplete && tournament.status !== TournamentStatus.COMPLETED && (
+                    <button
+                        onClick={handleFinalizeTournament}
+                        disabled={isSaving}
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold shadow-lg shadow-blue-900/20"
+                    >
+                        Finalize Tournament
                     </button>
                 )}
              </div>
@@ -438,7 +504,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
                 qualifiesByGroup={tournament.qualifiesByGroup}
                 onReplaceParticipant={handleReplaceParticipant}
                 onUpdateRankManual={handleManualRank}
-                allowEdits={hasStep2}
+                allowEdits={canEdit && hasStep2}
                 mode="global"
             />
         )}
@@ -456,7 +522,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
                             {stageType === StageType.SE ? 'Bracket' : `Stage ${stageNum} Matches`}
                         </h2>
                         <div className="flex gap-2">
-                            {isLastStage && !isCurrentStageComplete && (
+                            {canEdit && isLastStage && !isCurrentStageComplete && (
                                 <button 
                                     onClick={handleSimulateResults}
                                     className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 text-blue-400 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
@@ -464,7 +530,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
                                     ⚡ Simulate Results
                                 </button>
                             )}
-                            {isLastStage && (
+                            {canEdit && isLastStage && (
                                 <button
                                      onClick={() => handleClearStage(stageNum)}
                                      className="text-xs bg-slate-800 hover:bg-red-900/30 border border-slate-600 hover:border-red-500 text-slate-400 hover:text-red-400 px-3 py-1.5 rounded transition-colors"
@@ -483,12 +549,14 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
                             }))}
                             onMatchClick={setSelectedMatch}
                             onParticipantSwap={handleParticipantSwap}
+                            readOnly={!canEdit}
                         />
                     ) : (
                         <MatchList 
                             matches={stageMatches}
                             participants={tournament.participants}
                             onMatchClick={setSelectedMatch}
+                            readOnly={!canEdit}
                         />
                     )}
 
@@ -510,7 +578,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
                                 qualifiesByGroup={tournament.qualifiesByGroup}
                                 onReplaceParticipant={handleReplaceParticipant}
                                 onUpdateRankManual={handleManualRank}
-                                allowEdits={isLastStage && hasStep2}
+                                allowEdits={canEdit && isLastStage && hasStep2}
                             />
                         </div>
                     )}
@@ -519,7 +587,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
         })()}
       </div>
 
-      {selectedMatch && (
+            {selectedMatch && canEdit && (
         <MatchModal 
             match={selectedMatch}
             participants={tournament.participants}
@@ -529,7 +597,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, onUpdate, onMatchR
         />
       )}
 
-      {isNextStageModalOpen && (
+            {isNextStageModalOpen && canEdit && (
         <NextStageModal 
             participants={tournament.participants}
             matches={tournament.matches}

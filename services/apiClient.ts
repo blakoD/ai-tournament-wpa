@@ -11,8 +11,8 @@ export interface TournamentSummary {
   eliminationType: EliminationType;
   status: TournamentStatus;
   createdAt: number;
-  startedAt?: number;
-  completedAt?: number;
+  startedAt?: number | null;
+  completedAt?: number | null;
 }
 
 interface TournamentWritePayload {
@@ -25,8 +25,8 @@ interface TournamentWritePayload {
   eliminationType: EliminationType;
   status: TournamentStatus;
   createdAt: number;
-  startedAt?: number;
-  completedAt?: number;
+  startedAt?: number | null;
+  completedAt?: number | null;
   participants: Participant[];
   matches: Match[];
 }
@@ -43,12 +43,14 @@ const parseError = async (response: Response): Promise<string> => {
 };
 
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
+  const headers = new Headers(init?.headers);
+  if (typeof init?.body === "string" && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
     ...init,
+    headers,
   });
 
   if (!response.ok) {
@@ -87,6 +89,25 @@ export const getHealth = async (): Promise<{ status: string }> => {
 };
 
 export const listTournaments = async (): Promise<TournamentSummary[]> => request("/tournaments");
+
+export const getParameter = async <T>(key: string): Promise<{ key: string; value: T }> =>
+  request(`/parameters/${encodeURIComponent(key)}`);
+
+export const updateParameter = async <T>(key: string, value: T): Promise<{ key: string; value: T }> =>
+  request(`/parameters/${encodeURIComponent(key)}`, {
+    method: "PUT",
+    body: JSON.stringify({ value }),
+  });
+
+export const getReadOnlyParameter = async (): Promise<{ readOnly: boolean }> => {
+  const response = await getParameter<boolean>("read_only");
+  return { readOnly: Boolean(response.value) };
+};
+
+export const updateReadOnlyParameter = async (readOnly: boolean): Promise<{ readOnly: boolean }> => {
+  const response = await updateParameter<boolean>("read_only", readOnly);
+  return { readOnly: Boolean(response.value) };
+};
 
 export const getTournamentById = async (id: string): Promise<Tournament> => request(`/tournaments/${id}`);
 

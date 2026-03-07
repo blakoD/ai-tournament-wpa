@@ -44,6 +44,14 @@ model Tournament {
   @@map("tournaments")
 }
 
+model AppParameter {
+  key       String   @id @db.Text
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_parameters")
+}
+
 model Participant {
   id                   String  @id @default(uuid()) @db.Uuid
   tournamentId         String  @map("tournament_id") @db.Uuid

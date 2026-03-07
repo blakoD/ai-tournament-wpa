@@ -292,6 +292,7 @@ export const startNextStage = (
     participants: newParticipants,
     matches: [...tournament.matches, ...newMatches],
     status: TournamentStatus.STARTED,
+    completedAt: null,
     eliminationType: nextFormat // Update default for next stage
   };
 };

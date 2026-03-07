@@ -63,6 +63,6 @@ export interface Tournament {
   participants: Participant[];
   matches: Match[];
   createdAt: number;
-  startedAt?: number;
-  completedAt?: number;
+  startedAt?: number | null;
+  completedAt?: number | null;
 }
