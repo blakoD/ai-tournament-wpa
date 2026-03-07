@@ -77,12 +77,12 @@ const main = async (): Promise<void> => {
   console.log(`Seeded tournament id: ${tournamentId}`);
 };
 
-// main()
-//   .catch((error) => {
-//     console.log("Error seeding database:", error);
-//     console.error(error);
-//     process.exit(1);
-//   })
-//   .finally(async () => {
-//     await prisma.$disconnect();
-//   });
+main()
+  .catch((error) => {
+    console.log("Error seeding database:", error);
+    console.error(error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
