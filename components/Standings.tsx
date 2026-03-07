@@ -67,7 +67,7 @@ export const Standings: React.FC<Props> = ({
                 <thead className="bg-slate-900 text-slate-400 uppercase font-medium border-b border-slate-700">
                     <tr>
                     <th className="px-4 py-3 w-12" title={mode === 'global' ? "Global Rank" : "Group Rank"}>#</th>
-                    {showGroups && <th className="px-4 py-3 w-16 text-center border-l border-slate-800 text-slate-500" title="Global Rank">G.Pos</th>}
+                    {showGroups && <th className="px-4 py-3 w-16 text-center border-l border-slate-800 text-slate-500" title="Global Rank">Gp</th>}
                     <th className="px-4 py-3">Player</th>
                     {mode === 'global' && <th className="px-4 py-3 text-center w-16">Group</th>}
                     <th className="px-4 py-3 text-center w-16">G</th>
