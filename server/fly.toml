@@ -3,7 +3,7 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'ai-tournament-wpa'
+app = 'tournament-api'
 primary_region = 'ams'
 
 [build]
