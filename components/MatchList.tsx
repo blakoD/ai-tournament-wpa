@@ -112,8 +112,8 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
         </div>
       ))}
 
-      {sortMode === 'group' && orderedGroupKeys.map(groupKey => (
-        <div key={`group-${groupKey}`}>
+      {sortMode === 'group' && orderedGroupKeys.map((groupKey, ix) => (
+        <div key={`group-${groupKey}`} className={ix > 0 ? 'mt-3' : ''}>
           <h3 className="text-sm font-bold text-slate-500 uppercase mb-3 ml-1">
             {groupKey === 'ZZZ' ? 'Without Group' : `Group ${groupKey}`}
           </h3>
