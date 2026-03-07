@@ -7,6 +7,8 @@ app = 'fronton-tournament-web'
 primary_region = 'sjc'
 
 [build]
+  [build.args]
+    VITE_API_BASE_URL = "https://fronton-torneos-api.fly.dev"
 
 [http_service]
   internal_port = 8080
