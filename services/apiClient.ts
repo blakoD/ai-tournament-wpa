@@ -1,7 +1,11 @@
 import { Match, Participant, Tournament, TournamentStatus, EliminationType } from "../types";
+import { getUserRole } from "./auth";
+import { supabase } from "./supabaseClient.js";
 
 export interface TournamentSummary {
   id: string;
+  ownerId?: string;
+  ownerEmail?: string;
   name: string;
   title: string;
   urlSlug: string;
@@ -44,8 +48,23 @@ const parseError = async (response: Response): Promise<string> => {
   }
 };
 
+const attachAuthHeaders = async (headers: Headers): Promise<void> => {
+  const { data } = await supabase.auth.getSession();
+  const session = data.session;
+
+  if (!session) {
+    return;
+  }
+
+  const role = getUserRole(session);
+  headers.set("x-user-id", session.user.id);
+  headers.set("x-user-email", session.user.email ?? "");
+  headers.set("x-user-role", role);
+};
+
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const headers = new Headers(init?.headers);
+  await attachAuthHeaders(headers);
   if (typeof init?.body === "string" && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -91,6 +110,10 @@ export const getHealth = async (): Promise<{ status: string }> => {
 };
 
 export const listTournaments = async (): Promise<TournamentSummary[]> => request("/tournaments");
+
+export const listMyTournaments = async (): Promise<TournamentSummary[]> => request("/tournaments?mine=true");
+
+export const listRecentTournaments = async (): Promise<TournamentSummary[]> => request("/tournaments?limit=6");
 
 export const getParameter = async <T>(key: string): Promise<{ key: string; value: T }> =>
   request(`/parameters/${encodeURIComponent(key)}`);

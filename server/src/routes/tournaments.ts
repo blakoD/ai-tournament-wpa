@@ -45,6 +45,7 @@ const matchInputSchema = z.object({
   nextMatchSlot: z.enum(["A", "B"]).optional(),
   label: z.string().optional(),
   isFinal: z.boolean().optional(),
+  sortOrder: z.number().int().nullable().optional(),
 });
 
 const tournamentWriteSchema = z.object({
@@ -79,8 +80,15 @@ const swapParticipantBodySchema = z.object({
   newParticipantId: z.string().uuid(),
 });
 
+const listQuerySchema = z.object({
+  mine: z.coerce.boolean().optional(),
+  limit: z.coerce.number().int().positive().max(50).optional(),
+});
+
 type TournamentWithRelations = {
   id: string;
+  ownerId: string | null;
+  ownerEmail: string | null;
   name: string;
   title: string;
   urlSlug: string;
@@ -115,6 +123,8 @@ const toNullableDate = (timestamp: number | null | undefined): Date | null | und
 
 const mapTournament = (tournament: TournamentWithRelations) => ({
   id: tournament.id,
+  ownerId: tournament.ownerId ?? undefined,
+  ownerEmail: tournament.ownerEmail ?? undefined,
   name: tournament.name,
   title: tournament.title,
   urlSlug: tournament.urlSlug,
@@ -158,8 +168,41 @@ const mapTournament = (tournament: TournamentWithRelations) => ({
     nextMatchSlot: (match.nextMatchSlot as "A" | "B" | null) ?? undefined,
     label: match.label ?? undefined,
     isFinal: match.isFinal ?? undefined,
+    sortOrder: (match as DbMatch & { sortOrder?: number | null }).sortOrder ?? undefined,
   })),
 });
+
+const getHeaderValue = (value: string | string[] | undefined): string | undefined => {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
+};
+
+const getRequestContext = (request: { headers: Record<string, string | string[] | undefined> }) => {
+  const userId = getHeaderValue(request.headers["x-user-id"]);
+  const role = (getHeaderValue(request.headers["x-user-role"]) ?? "user").toLowerCase();
+
+  return {
+    userId,
+    isAdmin: role === "admin",
+  };
+};
+
+const canManageTournament = (
+  context: { userId?: string; isAdmin: boolean },
+  tournament: { ownerId: string | null; status: "SETUP" | "STARTED" | "COMPLETED" }
+): boolean => {
+  if (context.isAdmin) {
+    return true;
+  }
+
+  if (!context.userId || tournament.ownerId !== context.userId) {
+    return false;
+  }
+
+  return tournament.status !== "COMPLETED";
+};
 
 const getTournamentWithRelations = async (id: string): Promise<TournamentWithRelations | null> => {
   const tournament = await prisma.tournament.findUnique({
@@ -178,13 +221,32 @@ const getTournamentWithRelations = async (id: string): Promise<TournamentWithRel
 };
 
 export const registerTournamentRoutes = async (app: FastifyInstance): Promise<void> => {
-  app.get("/api/tournaments", async () => {
+  app.get("/api/tournaments", async (request, reply) => {
+    const parsedQuery = listQuerySchema.safeParse(request.query);
+    if (!parsedQuery.success) {
+      return reply.code(400).send({ error: "Invalid query parameters" });
+    }
+
+    const context = getRequestContext(request);
+
+    if (parsedQuery.data.mine && !context.userId) {
+      return reply.code(401).send({ error: "Authentication required" });
+    }
+
     const tournaments = await prisma.tournament.findMany({
+      where: parsedQuery.data.mine
+        ? {
+            ownerId: context.userId,
+          }
+        : undefined,
       orderBy: { createdAt: "desc" },
+      take: parsedQuery.data.limit,
     });
 
     return tournaments.map((tournament) => ({
       id: tournament.id,
+      ownerId: tournament.ownerId ?? undefined,
+      ownerEmail: tournament.ownerEmail ?? undefined,
       name: tournament.name,
       title: tournament.title,
       urlSlug: tournament.urlSlug,
@@ -200,6 +262,11 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
   });
 
   app.post("/api/tournaments", async (request, reply) => {
+    const context = getRequestContext(request);
+    if (!context.userId) {
+      return reply.code(401).send({ error: "Authentication required" });
+    }
+
     const parsedBody = tournamentWriteSchema.safeParse(request.body);
     if (!parsedBody.success) {
       return reply.code(400).send({ error: "Invalid tournament payload" });
@@ -209,6 +276,8 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
       const created = await prisma.$transaction(async (tx) => {
         const tournament = await tx.tournament.create({
           data: {
+            ownerId: context.userId,
+            ownerEmail: getHeaderValue(request.headers["x-user-email"]) ?? null,
             name: parsedBody.data.name,
             title: parsedBody.data.title,
             urlSlug: parsedBody.data.urlSlug,
@@ -263,6 +332,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
               nextMatchSlot: match.nextMatchSlot,
               label: match.label,
               isFinal: match.isFinal,
+              sortOrder: match.sortOrder ?? null,
             })),
           });
         }
@@ -301,6 +371,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
   });
 
   app.put("/api/tournaments/:id", async (request, reply) => {
+    const context = getRequestContext(request);
     const parsedParams = idParamsSchema.safeParse(request.params);
     if (!parsedParams.success) {
       return reply.code(400).send({ error: "Invalid tournament id" });
@@ -309,6 +380,19 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
     const parsedBody = tournamentWriteSchema.safeParse(request.body);
     if (!parsedBody.success) {
       return reply.code(400).send({ error: "Invalid tournament payload" });
+    }
+
+    const existing = await prisma.tournament.findUnique({
+      where: { id: parsedParams.data.id },
+      select: { ownerId: true, status: true },
+    });
+
+    if (!existing) {
+      return reply.code(404).send({ error: "Tournament not found" });
+    }
+
+    if (!canManageTournament(context, { ownerId: existing.ownerId, status: existing.status })) {
+      return reply.code(403).send({ error: "You do not have permission to edit this tournament" });
     }
 
     try {
@@ -373,6 +457,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
               nextMatchSlot: match.nextMatchSlot,
               label: match.label,
               isFinal: match.isFinal,
+              sortOrder: match.sortOrder ?? null,
             })),
           });
         }
@@ -397,9 +482,23 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
   });
 
   app.delete("/api/tournaments/:id", async (request, reply) => {
+    const context = getRequestContext(request);
     const parsedParams = idParamsSchema.safeParse(request.params);
     if (!parsedParams.success) {
       return reply.code(400).send({ error: "Invalid tournament id" });
+    }
+
+    const existing = await prisma.tournament.findUnique({
+      where: { id: parsedParams.data.id },
+      select: { ownerId: true, status: true },
+    });
+
+    if (!existing) {
+      return reply.code(404).send({ error: "Tournament not found" });
+    }
+
+    if (!canManageTournament(context, { ownerId: existing.ownerId, status: existing.status })) {
+      return reply.code(403).send({ error: "You do not have permission to delete this tournament" });
     }
 
     try {
@@ -415,6 +514,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
   });
 
   app.post("/api/tournaments/:id/start", async (request, reply) => {
+    const context = getRequestContext(request);
     const parsedParams = idParamsSchema.safeParse(request.params);
     if (!parsedParams.success) {
       return reply.code(400).send({ error: "Invalid tournament id" });
@@ -423,6 +523,19 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
     const parsedBody = startTournamentBodySchema.safeParse(request.body);
     if (!parsedBody.success) {
       return reply.code(400).send({ error: "Invalid start payload" });
+    }
+
+    const existing = await prisma.tournament.findUnique({
+      where: { id: parsedParams.data.id },
+      select: { ownerId: true, status: true },
+    });
+
+    if (!existing) {
+      return reply.code(404).send({ error: "Tournament not found" });
+    }
+
+    if (!canManageTournament(context, { ownerId: existing.ownerId, status: existing.status })) {
+      return reply.code(403).send({ error: "You do not have permission to start this tournament" });
     }
 
     try {
@@ -496,6 +609,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
   });
 
   app.post("/api/tournaments/:id/matches/:matchId/result", async (request, reply) => {
+    const context = getRequestContext(request);
     const parsedParams = matchParamsSchema.safeParse(request.params);
     if (!parsedParams.success) {
       return reply.code(400).send({ error: "Invalid path parameters" });
@@ -508,6 +622,19 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
 
     if (parsedBody.data.scoreA === parsedBody.data.scoreB) {
       return reply.code(400).send({ error: "Draws are not allowed" });
+    }
+
+    const existing = await prisma.tournament.findUnique({
+      where: { id: parsedParams.data.id },
+      select: { ownerId: true, status: true },
+    });
+
+    if (!existing) {
+      return reply.code(404).send({ error: "Tournament not found" });
+    }
+
+    if (!canManageTournament(context, { ownerId: existing.ownerId, status: existing.status })) {
+      return reply.code(403).send({ error: "You do not have permission to edit this tournament" });
     }
 
     try {
@@ -571,6 +698,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
   });
 
   app.post("/api/tournaments/:id/matches/:matchId/swap-participant", async (request, reply) => {
+    const context = getRequestContext(request);
     const parsedParams = matchParamsSchema.safeParse(request.params);
     if (!parsedParams.success) {
       return reply.code(400).send({ error: "Invalid path parameters" });
@@ -579,6 +707,19 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
     const parsedBody = swapParticipantBodySchema.safeParse(request.body);
     if (!parsedBody.success) {
       return reply.code(400).send({ error: "Invalid swap payload" });
+    }
+
+    const existing = await prisma.tournament.findUnique({
+      where: { id: parsedParams.data.id },
+      select: { ownerId: true, status: true },
+    });
+
+    if (!existing) {
+      return reply.code(404).send({ error: "Tournament not found" });
+    }
+
+    if (!canManageTournament(context, { ownerId: existing.ownerId, status: existing.status })) {
+      return reply.code(403).send({ error: "You do not have permission to edit this tournament" });
     }
 
     try {

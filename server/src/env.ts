@@ -1,5 +1,9 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import { z } from "zod";
+
+dotenv.config({
+  path: process.env.DOTENV_CONFIG_PATH ?? ".env"
+});
 
 const EnvSchema = z.object({
   DATABASE_URL: z.string().min(1),

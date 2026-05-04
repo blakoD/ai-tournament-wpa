@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Participant } from '../types';
 
 interface Props {
@@ -44,11 +44,19 @@ export const Standings: React.FC<Props> = ({
   const groupKeys = Object.keys(groups).sort();
   const showGroups = mode === 'grouped' && groupKeys.length > 1;
 
+  const [replacingId, setReplacingId] = useState<string | null>(null);
+  const [replacingName, setReplacingName] = useState('');
+
   const handleReplace = (id: string) => {
-    const newName = prompt("Enter replacement player name:");
-    if (newName && newName.trim()) {
-      onReplaceParticipant(id, newName.trim());
+    setReplacingId(id);
+    setReplacingName('');
+  };
+
+  const handleConfirmReplace = (id: string) => {
+    if (replacingName.trim()) {
+      onReplaceParticipant(id, replacingName.trim());
     }
+    setReplacingId(null);
   };
 
   return (
@@ -94,20 +102,39 @@ export const Standings: React.FC<Props> = ({
                         )}
                         <td className="px-4 py-3">
                             <div className="font-medium text-white flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2">
-                                    {p.name}
-                                    {p.isDropped && <span className="text-[10px] bg-red-900 text-red-200 px-1 rounded">DROPPED</span>}
-                                </div>
+                                {replacingId === p.id ? null : (
+                                  <div className="flex items-center gap-2">
+                                      {p.name}
+                                      {p.isDropped && <span className="text-[10px] bg-red-900 text-red-200 px-1 rounded">DROPPED</span>}
+                                  </div>
+                                )}
                                 {allowEdits && (
-                                    <button 
-                                        onClick={() => handleReplace(p.id)}
-                                        className="text-[10px] text-blue-400 hover:text-blue-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                        Replace
-                                    </button>
+                                    replacingId === p.id ? (
+                                        <div className="flex w-full items-center gap-1">
+                                            <input
+                                                autoFocus
+                                                value={replacingName}
+                                                onChange={e => setReplacingName(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') handleConfirmReplace(p.id);
+                                                    if (e.key === 'Escape') setReplacingId(null);
+                                                }}
+                                                className="text-xs w-full bg-slate-700 border border-slate-500 rounded px-2 py-0.5 text-white focus:outline-none focus:border-blue-500"
+                                                placeholder={p.name}
+                                            />
+                                            <button onClick={() => handleConfirmReplace(p.id)} className="text-[15px] text-emerald-400 px-1 hover:text-emerald-300">✓</button>
+                                            <button onClick={() => setReplacingId(null)} className="text-[15px] text-red-400 px-1 hover:text-red-300">✕</button>
+                                        </div>
+                                    ) : (
+                                        <button 
+                                            onClick={() => handleReplace(p.id)}
+                                            className="text-[10px] text-blue-400 hover:text-blue-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            Rename
+                                        </button>
+                                    )
                                 )}
                             </div>
-                            {p.originalId && <div className="text-xs text-slate-500">Replaced prev. player</div>}
                         </td>
                         {mode === 'global' && (
                             <td className="px-2 py-3 text-center text-slate-500 font-mono">
