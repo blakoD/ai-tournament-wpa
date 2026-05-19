@@ -10,6 +10,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "server:dev": "npm --prefix server run dev",
     "server:dev:local": "npm --prefix server run dev:local",
     "server:build": "npm --prefix server run build"
@@ -21,11 +23,15 @@
     "react-router-dom": "^6.22.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@vitejs/plugin-react": "^4.2.1",
     "concurrently": "^9.2.1",
+    "jsdom": "^29.1.1",
     "typescript": "^5.2.2",
-    "vite": "^5.1.6"
+    "vite": "^5.1.6",
+    "vitest": "^4.1.6"
   }
 }

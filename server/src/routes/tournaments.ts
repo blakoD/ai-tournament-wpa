@@ -27,6 +27,7 @@ const participantInputSchema = z.object({
   isQualified: z.boolean().default(false),
   isDropped: z.boolean().default(false),
   originalId: z.string().uuid().nullable().optional(),
+  groupSort: z.number().int().default(0).optional(),
 });
 
 const matchInputSchema = z.object({
@@ -140,6 +141,7 @@ const mapTournament = (tournament: TournamentWithRelations) => ({
     id: participant.id,
     name: participant.name,
     group: participant.groupName,
+    groupSort: participant.groupSort,
     wins: participant.wins,
     matchesPlayed: participant.matchesPlayed,
     pointsFor: participant.pointsFor,
@@ -209,7 +211,7 @@ const getTournamentWithRelations = async (id: string): Promise<TournamentWithRel
     where: { id },
     include: {
       participants: {
-        orderBy: [{ groupName: "asc" }, { name: "asc" }],
+        orderBy: [{ groupName: "asc" }, { groupSort: "asc" }, { name: "asc" }],
       },
       matches: {
         orderBy: [{ stageNumber: "asc" }, { round: "asc" }],
@@ -299,6 +301,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
               tournamentId: tournament.id,
               name: participant.name,
               groupName: participant.group,
+              groupSort: participant.groupSort ?? 0,
               wins: participant.wins,
               matchesPlayed: participant.matchesPlayed,
               pointsFor: participant.pointsFor,
@@ -424,6 +427,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
               tournamentId: parsedParams.data.id,
               name: participant.name,
               groupName: participant.group,
+              groupSort: participant.groupSort ?? 0,
               wins: participant.wins,
               matchesPlayed: participant.matchesPlayed,
               pointsFor: participant.pointsFor,
@@ -558,6 +562,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
             tournamentId: parsedParams.data.id,
             name: participant.name,
             groupName: participant.group,
+            groupSort: participant.groupSort ?? 0,
             wins: participant.wins,
             matchesPlayed: participant.matchesPlayed,
             pointsFor: participant.pointsFor,
@@ -676,6 +681,99 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
             data: match.nextMatchSlot === "A" ? { participantAId: winnerId } : { participantBId: winnerId },
           });
         }
+
+        // Recalculate and persist participant standings
+        const allParticipants = await tx.participant.findMany({
+          where: { tournamentId: parsedParams.data.id },
+        });
+
+        const completedMatches = await tx.match.findMany({
+          where: { tournamentId: parsedParams.data.id, isCompleted: true },
+        });
+
+        type ParticipantStats = {
+          id: string;
+          wins: number;
+          matchesPlayed: number;
+          pointsFor: number;
+          pointsAgainst: number;
+          group: string;
+          manualRankAdjustment: number;
+        };
+
+        const statsMap = new Map<string, ParticipantStats>();
+        for (const p of allParticipants) {
+          statsMap.set(p.id, {
+            id: p.id,
+            wins: 0,
+            matchesPlayed: 0,
+            pointsFor: 0,
+            pointsAgainst: 0,
+            group: p.groupName,
+            manualRankAdjustment: p.manualRankAdjustment,
+          });
+        }
+
+        for (const m of completedMatches) {
+          const pA = m.participantAId ? statsMap.get(m.participantAId) : undefined;
+          const pB = m.participantBId ? statsMap.get(m.participantBId) : undefined;
+          if (pA && pB) {
+            pA.matchesPlayed += 1;
+            pB.matchesPlayed += 1;
+            pA.pointsFor += m.scoreA ?? 0;
+            pA.pointsAgainst += m.scoreB ?? 0;
+            pB.pointsFor += m.scoreB ?? 0;
+            pB.pointsAgainst += m.scoreA ?? 0;
+            if (m.winnerId === pA.id) pA.wins += 1;
+            if (m.winnerId === pB.id) pB.wins += 1;
+          }
+        }
+
+        const sortFn = (a: ParticipantStats, b: ParticipantStats) => {
+          if (b.wins !== a.wins) return b.wins - a.wins;
+          const diffA = a.pointsFor - a.pointsAgainst;
+          const diffB = b.pointsFor - b.pointsAgainst;
+          if (diffB !== diffA) return diffB - diffA;
+          if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
+          return (b.manualRankAdjustment || 0) - (a.manualRankAdjustment || 0);
+        };
+
+        const allStats = Array.from(statsMap.values());
+
+        // Assign globalRank
+        const globalSorted = [...allStats].sort(sortFn);
+        const globalRankMap = new Map<string, number>();
+        globalSorted.forEach((p, i) => globalRankMap.set(p.id, i + 1));
+
+        // Sort by group then stats, assign rank per group
+        allStats.sort((a, b) => {
+          if (a.group !== b.group) return a.group.localeCompare(b.group);
+          return sortFn(a, b);
+        });
+
+        const groupCounts: Record<string, number> = {};
+        const rankMap = new Map<string, number>();
+        for (const p of allStats) {
+          const g = p.group || "A";
+          groupCounts[g] = (groupCounts[g] ?? 0) + 1;
+          rankMap.set(p.id, groupCounts[g]);
+        }
+
+        await Promise.all(
+          allStats.map((p) =>
+            tx.participant.update({
+              where: { id: p.id },
+              data: {
+                wins: p.wins,
+                matchesPlayed: p.matchesPlayed,
+                pointsFor: p.pointsFor,
+                pointsAgainst: p.pointsAgainst,
+                rank: rankMap.get(p.id) ?? 0,
+                globalRank: globalRankMap.get(p.id) ?? null,
+              },
+            })
+          )
+        );
 
       });
 

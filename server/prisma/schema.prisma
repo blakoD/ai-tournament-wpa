@@ -59,6 +59,7 @@ model Participant {
   tournamentId         String  @map("tournament_id") @db.Uuid
   name                 String
   groupName            String  @default("A") @map("group_name")
+  groupSort            Int     @default(0) @map("group_sort")
   wins                 Int     @default(0)
   matchesPlayed        Int     @default(0) @map("matches_played")
   pointsFor            Int     @default(0) @map("points_for")

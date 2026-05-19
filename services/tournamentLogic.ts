@@ -20,47 +20,71 @@ export const generateRoundRobinMatches = (
     groups[g].push(p);
   });
 
-  let allMatches: Match[] = [];
+  // Build per-group round schedule first, then interleave by round
+  // so Round 1 = first round of every group, Round 2 = second round, etc.
+  const groupSchedules: { group: string; rounds: { p1: string; p2: string }[][] }[] = [];
 
-  Object.values(groups).forEach(groupParticipants => {
-    let playerIds = groupParticipants.map(p => p.id);
-    
+  Object.entries(groups).forEach(([groupKey, groupParticipants]) => {
+    const sortedGroupParticipants = [...groupParticipants].sort((a, b) => (a.groupSort ?? 0) - (b.groupSort ?? 0));
+    let playerIds = sortedGroupParticipants.map(p => p.id);
+
     // If odd number of players, add a dummy player for "Bye"
     if (playerIds.length % 2 !== 0) {
       playerIds.push('BYE');
     }
 
     const n = playerIds.length;
-    const rounds = n - 1;
+    const numRounds = n - 1;
     const half = n / 2;
+    const roundPairs: { p1: string; p2: string }[][] = [];
 
-    for (let r = 0; r < rounds; r++) {
+    for (let r = 0; r < numRounds; r++) {
+      const pairs: { p1: string; p2: string }[] = [];
       for (let i = 0; i < half; i++) {
         const p1 = playerIds[i];
         const p2 = playerIds[n - 1 - i];
-
-        // Skip matches involving the "Bye" player
         if (p1 !== 'BYE' && p2 !== 'BYE') {
-          allMatches.push({
-            id: generateId(),
-            tournamentId,
-            stage,
-            stageNumber,
-            round: r + 1,
-            participantAId: p1,
-            participantBId: p2,
-            scoreA: null,
-            scoreB: null,
-            winnerId: null,
-            isCompleted: false,
-            group: groupParticipants[0].group || 'A'
-          });
+          pairs.push({ p1, p2 });
         }
       }
+      roundPairs.push(pairs);
       // Rotate
       playerIds.splice(1, 0, playerIds.pop()!);
     }
+
+    groupSchedules.push({ group: groupKey, rounds: roundPairs });
   });
+
+  // Find the maximum number of rounds across all groups
+  const maxRounds = Math.max(...groupSchedules.map(gs => gs.rounds.length), 0);
+
+  const allMatches: Match[] = [];
+
+  for (let r = 0; r < maxRounds; r++) {
+    for (const { group, rounds } of groupSchedules) {
+      const pairs = rounds[r] ?? [];
+      // Reverse round numbering: the last circle rotation (r = numRounds-1) produces
+      // adjacent-seed pairs (p1vsp2, p3vsp4) — assign those to Round 1.
+      // For n=4: r=2 → round 1, r=1 → round 2, r=0 → round 3.
+      const displayRound = rounds.length > 0 ? rounds.length - r : r + 1;
+      for (const { p1, p2 } of pairs) {
+        allMatches.push({
+          id: generateId(),
+          tournamentId,
+          stage,
+          stageNumber,
+          round: displayRound,
+          participantAId: p1,
+          participantBId: p2,
+          scoreA: null,
+          scoreB: null,
+          winnerId: null,
+          isCompleted: false,
+          group
+        });
+      }
+    }
+  }
 
   return allMatches;
 };
@@ -130,13 +154,11 @@ export const calculateStandings = (participants: Participant[], matches: Match[]
     return (b.manualRankAdjustment || 0) - (a.manualRankAdjustment || 0);
   };
 
-  // 1. Calculate Global Rank
-  if(updatedParticipants.every((p: Participant) => !p.globalRank)) {
-    const globalSorted = [...updatedParticipants].sort(sortFn);
-    globalSorted.forEach((p, i) => {
-      p.globalRank = i + 1;
-    });
-  }
+  // 1. Calculate Global Rank (always recompute from current match data)
+  const globalSorted = [...updatedParticipants].sort(sortFn);
+  globalSorted.forEach((p, i) => {
+    p.globalRank = i + 1;
+  });
 
   // 2. Sort for Group assignment/display (Group first, then Stats)
   updatedParticipants.sort((a, b) => {

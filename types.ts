@@ -18,6 +18,7 @@ export interface Participant {
   id: string;
   name: string;
   group: string; // 'A', 'B', etc. Default 'A'
+  groupSort?: number; // Original order within the group (0-based)
   // Stats for RR1 (or current stage accumulation)
   wins: number;
   matchesPlayed: number;

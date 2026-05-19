@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tournament, Match, StageType, TournamentStatus, Participant, EliminationType } from '../types';
 import { calculateStandings, startNextStage, generateId } from '../services/tournamentLogic';
 import { Standings } from './Standings';
-import { MatchList } from './MatchList';
+import { MatchList } from './MatchList/MatchList';
 import { BracketView } from './BracketView';
 import { MatchModal } from './MatchModal';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -300,14 +300,6 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
     void updateWithHistory({ ...tournament, participants: newParticipants, matches: newMatches });
   };
 
-  const handleManualRank = (id: string, val: number) => {
-    if (!canEdit) return;
-    const newParticipants = tournament.participants.map(p =>
-      p.id === id ? { ...p, manualRankAdjustment: val } : p
-    );
-    void updateWithHistory({ ...tournament, participants: newParticipants });
-  };
-
   const handleSimulateResults = () => {
     if (!canEdit) return;
     const currentTabStageNumber = activeTab.startsWith('stage-') ? parseInt(activeTab.split('-')[1]) : currentStageNumber;
@@ -532,9 +524,8 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
         {activeTab === 'global-standings' && (
           <Standings
             participants={standings}
-            qualifiesByGroup={tournament.qualifiesByGroup}
+            qualifiesByGroup={undefined}
             onReplaceParticipant={handleReplaceParticipant}
-            onUpdateRankManual={handleManualRank}
             allowEdits={canEdit && hasStep2}
             mode="global"
           />
@@ -620,7 +611,6 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                     )}
                     qualifiesByGroup={tournament.qualifiesByGroup}
                     onReplaceParticipant={handleReplaceParticipant}
-                    onUpdateRankManual={handleManualRank}
                     allowEdits={canEdit && isLastStage && hasStep2}
                   />
                 </div>

@@ -24,6 +24,11 @@ export const Setup: React.FC = () => {
   const [names, setNames] = useState<string[]>([]);
   const [groups, setGroups] = useState<GroupDef[]>([{ id: 'g1', name: 'Group A' }]);
   const [assignments, setAssignments] = useState<Record<number, string>>({}); // playerIndex -> groupID
+  const [groupMemberOrder, setGroupMemberOrder] = useState<Record<string, number[]>>({}); // groupId -> ordered playerIndices
+
+  // Drag state for group member reordering
+  const [dragInfo, setDragInfo] = useState<{ pIdx: number; groupId: string } | null>(null);
+  const [dragOverInfo, setDragOverInfo] = useState<{ pIdx: number; groupId: string } | null>(null);
   
   // UI State
   const [activeGroupModal, setActiveGroupModal] = useState<string | null>(null);
@@ -59,6 +64,7 @@ export const Setup: React.FC = () => {
         newAssignments[i] = defId;
     }
     setAssignments(newAssignments);
+    setGroupMemberOrder({ [defId]: Array.from({ length: count }, (_, i) => i) });
   };
 
   const handlePCountChange = (c: number) => {
@@ -79,6 +85,7 @@ export const Setup: React.FC = () => {
       const nextLetter = String.fromCharCode(65 + groups.length);
       const newId = generateId();
       setGroups([...groups, { id: newId, name: `Group ${nextLetter}` }]);
+      setGroupMemberOrder(prev => ({ ...prev, [newId]: [] }));
   };
 
   const removeGroup = (gid: string) => {
@@ -96,6 +103,13 @@ export const Setup: React.FC = () => {
           }
       });
       setAssignments(newAssignments);
+      setGroupMemberOrder(prev => {
+          const orphans = prev[gid] || [];
+          const next = { ...prev };
+          delete next[gid];
+          next[fallbackId] = [...(next[fallbackId] || []), ...orphans];
+          return next;
+      });
   };
 
   const updateGroupName = (gid: string, val: string) => {
@@ -110,6 +124,25 @@ export const Setup: React.FC = () => {
 
   // Commit changes from modal
   const saveGroupModal = () => {
+      setGroupMemberOrder(prev => {
+          const next: Record<string, number[]> = {};
+          // Copy existing order arrays, removing participants that moved away
+          for (const [gid, order] of Object.entries(prev)) {
+              next[gid] = order.filter(pIdx => tempAssignments[pIdx] === gid);
+          }
+          // Append participants that were newly assigned to each group
+          for (const [key, newGid] of Object.entries(tempAssignments)) {
+              const pIdx = parseInt(key);
+              const oldGid = assignments[pIdx];
+              if (oldGid !== newGid) {
+                  if (!next[newGid]) next[newGid] = [];
+                  if (!next[newGid].includes(pIdx)) {
+                      next[newGid] = [...next[newGid], pIdx];
+                  }
+              }
+          }
+          return next;
+      });
       setAssignments({ ...tempAssignments });
       setActiveGroupModal(null);
   };
@@ -139,6 +172,31 @@ export const Setup: React.FC = () => {
               return { ...prev, [pIndex]: gid };
           }
       });
+  };
+
+  const handleMemberDrop = (groupId: string) => {
+      if (
+          !dragInfo ||
+          !dragOverInfo ||
+          dragInfo.groupId !== groupId ||
+          dragOverInfo.groupId !== groupId ||
+          dragInfo.pIdx === dragOverInfo.pIdx
+      ) {
+          setDragInfo(null);
+          setDragOverInfo(null);
+          return;
+      }
+      setGroupMemberOrder(prev => {
+          const order = [...(prev[groupId] || [])];
+          const fromIdx = order.indexOf(dragInfo.pIdx);
+          const toIdx = order.indexOf(dragOverInfo.pIdx);
+          if (fromIdx === -1 || toIdx === -1) return prev;
+          const [moved] = order.splice(fromIdx, 1);
+          order.splice(toIdx, 0, moved);
+          return { ...prev, [groupId]: order };
+      });
+      setDragInfo(null);
+      setDragOverInfo(null);
   };
 
   const handleSubmit = async () => {
@@ -179,20 +237,25 @@ export const Setup: React.FC = () => {
 
     const tId = generateId();
     
-    const participants: Participant[] = names.map((n, i) => ({
-      id: generateId(),
-      name: n.trim(),
-      group: elimType === EliminationType.SINGLE_ELIMINATION ? 'A' : (groups.find(g => g.id === assignments[i])?.name || 'A'),
-      wins: 0,
-      matchesPlayed: 0,
-      pointsFor: 0,
-      pointsAgainst: 0,
-      rank: 0,
-      globalRank: 0,
-      manualRankAdjustment: 0,
-      isQualified: false,
-      isDropped: false,
-    }));
+    const participants: Participant[] = names.map((n, i) => {
+      const groupId = assignments[i];
+      const groupSort = (groupMemberOrder[groupId] || []).indexOf(i);
+      return {
+        id: generateId(),
+        name: n.trim(),
+        group: elimType === EliminationType.SINGLE_ELIMINATION ? 'A' : (groups.find(g => g.id === groupId)?.name || 'A'),
+        groupSort: groupSort >= 0 ? groupSort + 1 : 1,
+        wins: 0,
+        matchesPlayed: 0,
+        pointsFor: 0,
+        pointsAgainst: 0,
+        rank: 0,
+        globalRank: 0,
+        manualRankAdjustment: 0,
+        isQualified: false,
+        isDropped: false,
+      };
+    });
 
     let matches = [];
     if (elimType === EliminationType.SINGLE_ELIMINATION) {
@@ -379,9 +442,7 @@ export const Setup: React.FC = () => {
 
                <div className="space-y-3">
                    {groups.map((g) => {
-                       const memberIndices = Object.entries(assignments)
-                          .filter(([_, gid]) => gid === g.id)
-                          .map(([idx]) => parseInt(idx));
+                       const memberOrder = groupMemberOrder[g.id] || [];
                        
                        return (
                           <div key={g.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
@@ -404,12 +465,22 @@ export const Setup: React.FC = () => {
                               </div>
                               
                               <div className="flex flex-wrap gap-2 mb-3">
-                                  {memberIndices.length === 0 ? (
+                                  {memberOrder.length === 0 ? (
                                       <span className="text-xs text-slate-600 italic">No players assigned</span>
                                   ) : (
-                                      memberIndices.map(idx => (
-                                          <span key={idx} className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700">
-                                              {names[idx]}
+                                      memberOrder.map((pIdx) => (
+                                          <span
+                                              key={pIdx}
+                                              draggable
+                                              onDragStart={() => setDragInfo({ pIdx, groupId: g.id })}
+                                              onDragOver={(e) => { e.preventDefault(); setDragOverInfo({ pIdx, groupId: g.id }); }}
+                                              onDrop={(e) => { e.preventDefault(); handleMemberDrop(g.id); }}
+                                              onDragEnd={() => { setDragInfo(null); setDragOverInfo(null); }}
+                                              className={`text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700 cursor-grab select-none transition-all
+                                                  ${dragInfo?.pIdx === pIdx ? 'opacity-30' : ''}
+                                                  ${dragOverInfo?.pIdx === pIdx && dragInfo?.groupId === g.id && dragInfo?.pIdx !== pIdx ? 'ring-1 ring-blue-500 bg-slate-700' : ''}`}
+                                          >
+                                            <span className="text-slate-600">⠿</span> {names[pIdx]}
                                           </span>
                                       ))
                                   )}
@@ -419,7 +490,7 @@ export const Setup: React.FC = () => {
                                   onClick={() => openGroupModal(g.id)}
                                   className="w-full py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs text-blue-400 font-medium transition-colors"
                               >
-                                  Select Participants ({memberIndices.length})
+                                  Select Participants ({memberOrder.length})
                               </button>
                           </div>
                        );

@@ -279,7 +279,7 @@ const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProps) => {
               className={`text-3xl font-bold text-white mb-2 select-none ${isAdmin ? 'cursor-pointer' : ''}`}
               title="Tournaments"
             >
-              Tournaments
+              My Tournaments
             </h1>
             <p className="text-slate-400">Manage your competitions efficiently.</p>
             {userEmail && <p className="text-slate-500 text-sm mt-1">Signed in as {userEmail}</p>}

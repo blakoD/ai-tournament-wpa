@@ -3,9 +3,8 @@ import { Participant } from '../types';
 
 interface Props {
   participants: Participant[];
-  qualifiesByGroup: number;
+  qualifiesByGroup: number | undefined;
   onReplaceParticipant: (oldId: string, newName: string) => void;
-  onUpdateRankManual: (id: string, val: number) => void;
   allowEdits: boolean;
   mode?: 'grouped' | 'global';
 }
@@ -14,7 +13,6 @@ export const Standings: React.FC<Props> = ({
   participants, 
   qualifiesByGroup, 
   onReplaceParticipant, 
-  onUpdateRankManual, 
   allowEdits,
   mode = 'grouped'
 }) => {
@@ -87,7 +85,7 @@ export const Standings: React.FC<Props> = ({
                 </thead>
                 <tbody className="divide-y divide-slate-700">
                     {groupParticipants.map((p, idx) => {
-                    const isQualified = mode === 'grouped' && p.rank <= qualifiesByGroup;
+                    const isQualified = mode === 'grouped' && qualifiesByGroup && p.rank <= qualifiesByGroup;
                     
                     return (
                         <tr key={p.id} className={`hover:bg-slate-700/50 transition-colors group ${isQualified ? 'bg-emerald-900/10' : ''}`}>
@@ -160,8 +158,10 @@ export const Standings: React.FC<Props> = ({
         );
       })}
       <div className="bg-slate-900 px-4 py-2 text-xs text-slate-500 flex justify-between">
-         <span>Sorting: Wins &gt; Diff &gt; Points For &gt; Manual</span>
-         <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Qualified Zone (Top {qualifiesByGroup} per Group)</span>
+        <span>Sorting: Wins &gt; Diff &gt; Points For &gt; Manual</span>
+        { qualifiesByGroup &&
+            <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Qualified Zone (Top {qualifiesByGroup} per Group)</span>
+        }
       </div>
     </div>
   );
