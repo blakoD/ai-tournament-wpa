@@ -26,6 +26,8 @@ enum EliminationType {
 
 model Tournament {
   id               String           @id @default(uuid()) @db.Uuid
+  ownerId          String?          @map("owner_id")
+  ownerEmail       String?          @map("owner_email")
   name             String
   title            String
   urlSlug          String           @unique @map("url_slug")
@@ -57,6 +59,7 @@ model Participant {
   tournamentId         String  @map("tournament_id") @db.Uuid
   name                 String
   groupName            String  @default("A") @map("group_name")
+  groupSort            Int     @default(0) @map("group_sort")
   wins                 Int     @default(0)
   matchesPlayed        Int     @default(0) @map("matches_played")
   pointsFor            Int     @default(0) @map("points_for")
@@ -92,6 +95,7 @@ model Match {
   nextMatchSlot  String?  @map("next_match_slot")
   label          String?
   isFinal        Boolean? @map("is_final")
+  sortOrder      Int?     @map("sort_order")
 
   tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 

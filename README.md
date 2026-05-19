@@ -1,12 +1,5 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/bae4f8ea-f016-464c-8bb1-cd42fddc6f65
+# Tournament Builder App
+Can be used to create and manage tournaments, with support for single elimination, double elimination, and round robin formats. Built with Vite + React on the frontend, Fastify + Prisma on the backend, and deployed on Fly.io.
 
 ## Run Locally
 
@@ -15,9 +8,33 @@ View your app in AI Studio: https://ai.studio/apps/bae4f8ea-f016-464c-8bb1-cd42f
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+2. Install API dependencies:
+   `npm --prefix server install`
+3. Set Supabase auth env vars in `.env.local`:
+   `VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co`
+   `VITE_SUPABASE_ANON_KEY=<your-anon-key>`
+4. Run frontend + API in dev using local DB:
+   `npm run dev:local`
+
+The API local DB settings are loaded from `server/.env.local` by the `dev:local` script.
+
+Authentication routes:
+
+- `/#/signin`
+- `/#/signup`
+- `/#/dashboard` (protected)
+- `/#/profile` (protected)
+- `/#/` (home with toolbar + latest 6 readonly tournaments)
+
+Role-based access:
+
+- Authenticated users can create, edit and delete their own tournaments in dashboard.
+- Completed tournaments can only be edited/deleted by users with role `admin`.
+- Role is resolved from Supabase user metadata in this order: `app_metadata.role`, then `user_metadata.role`.
+
+Before running with ownership rules, apply latest DB migration in `server/`:
+
+- `npm run prisma:deploy:local`
 
 ## Deploy To Fly.io (Frontend + API)
 

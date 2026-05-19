@@ -1,21 +1,186 @@
-import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
-import { Setup } from './components/Setup';
-import { TournamentView } from './components/TournamentView';
-import { Tournament } from './types';
+import React, { useEffect, useMemo, useState } from "react";
+import { Session } from "@supabase/supabase-js";
+import { HashRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
+
+import { ProfilePage } from "./components/ProfilePage";
+import { Setup } from "./components/Setup";
+import { SignInPage } from "./components/SignInPage";
+import { SignUpPage } from "./components/SignUpPage";
+import { TournamentView } from "./components/TournamentView";
+import { Tournament } from "./types";
+import { getUserRole } from "./services/auth";
 import {
-  getTournamentById,
-  listTournaments,
-  TournamentSummary,
-  updateTournament,
-  updateMatchResult,
-  swapMatchParticipant,
   deleteTournament,
   getReadOnlyParameter,
+  getTournamentById,
+  listMyTournaments,
+  listRecentTournaments,
+  listTournaments,
+  swapMatchParticipant,
+  TournamentSummary,
+  updateMatchResult,
   updateReadOnlyParameter,
-} from './services/apiClient';
+  updateTournament,
+} from "./services/apiClient";
+import { supabase } from "./services/supabaseClient.js";
 
-const Dashboard = () => {
+type UserRole = "admin" | "user";
+
+const isTournamentEditable = (
+  summary: Pick<TournamentSummary, "ownerId" | "status">,
+  userId: string | undefined,
+  role: UserRole
+): boolean => {
+  if (role === "admin") {
+    return true;
+  }
+
+  if (!userId || summary.ownerId !== userId) {
+    return false;
+  }
+
+  return summary.status !== "COMPLETED";
+};
+
+interface ToolbarProps {
+  session: Session | null;
+  onSignOut: () => Promise<void>;
+}
+
+const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
+  return (
+    <header className="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-10">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <Link to="/" className="text-white font-bold tracking-wide">
+          Tournament Builder
+        </Link>
+
+        <nav className="flex items-center gap-2 text-sm">
+          <Link to="/" className="text-slate-300 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors">
+            Inicio
+          </Link>
+          {session && (
+            <>
+              <Link
+                to="/dashboard"
+                className="text-slate-300 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/profile"
+                className="text-slate-300 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors"
+              >
+                Perfil
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  void onSignOut();
+                }}
+                className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 px-3 py-1.5 rounded-md transition-colors"
+              >
+                Logout
+              </button>
+            </>
+          )}
+          {!session && (
+            <>
+              <Link
+                to="/signin"
+                className="text-slate-300 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                to="/signup"
+                className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md transition-colors"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
+        </nav>
+      </div>
+    </header>
+  );
+};
+
+interface HomePageProps {
+  session: Session | null;
+  onSignOut: () => Promise<void>;
+}
+
+const HomePage: React.FC<HomePageProps> = ({ session, onSignOut }) => {
+  const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadRecent = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const recent = await listRecentTournaments();
+        setTournaments(recent);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : "Failed to load recent tournaments.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadRecent();
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-slate-950">
+      <Toolbar session={session} onSignOut={onSignOut} />
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <section className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Ultimos torneos</h1>
+          <p className="text-slate-400">Se muestran en modo lectura. Solo puedes editarlos desde Dashboard si tienes permiso.</p>
+        </section>
+
+        {isLoading && <p className="text-slate-300">Loading tournaments...</p>}
+        {error && <p className="text-red-300">{error}</p>}
+
+        {!isLoading && !error && (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {tournaments.map((tournament) => (
+              <div key={tournament.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-white">{tournament.name}</h3>
+                  <span className="text-[11px] uppercase tracking-wide bg-slate-800 border border-slate-700 text-slate-300 px-2 py-1 rounded">
+                    Read only
+                  </span>
+                </div>
+                <p className="text-slate-400 text-sm mb-4">{tournament.title}</p>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/tournament/${tournament.urlSlug}?readonly=1`)}
+                  className="text-sm text-blue-400 hover:text-blue-300"
+                >
+                  Ver torneo
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+interface DashboardProps {
+  session: Session;
+  role: UserRole;
+  userEmail?: string;
+  onSignOut: () => Promise<void>;
+}
+
+const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProps) => {
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,13 +189,17 @@ const Dashboard = () => {
   const [isTogglingReadOnly, setIsTogglingReadOnly] = useState(false);
   const [readOnly, setReadOnly] = useState(true);
   const navigate = useNavigate();
+  const isAdmin = role === "admin";
 
   useEffect(() => {
     const loadTournaments = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const [loadedTournaments, parameter] = await Promise.all([listTournaments(), getReadOnlyParameter()]);
+        const [loadedTournaments, parameter] = await Promise.all([
+          isAdmin ? listTournaments() : listMyTournaments(),
+          getReadOnlyParameter(),
+        ]);
         setTournaments(loadedTournaments);
         setReadOnly(parameter.readOnly);
       } catch (loadError) {
@@ -41,7 +210,7 @@ const Dashboard = () => {
     };
 
     void loadTournaments();
-  }, []);
+  }, [isAdmin]);
 
   const formatDate = (timestamp?: number | null) => {
     if (!timestamp) return '';
@@ -68,7 +237,7 @@ const Dashboard = () => {
   };
 
   const handleToggleActionsFromTitle = async () => {
-    if (isLoading || isTogglingReadOnly || tournaments.length === 0) {
+    if (!isAdmin || isLoading || isTogglingReadOnly || tournaments.length === 0) {
       return;
     }
 
@@ -97,7 +266,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 p-4 md:p-8">
+    <div className="min-h-screen bg-slate-900">
+      <Toolbar session={session} onSignOut={onSignOut} />
+      <div className="p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <header className="mb-8 flex justify-between items-center">
           <div>
@@ -105,19 +276,23 @@ const Dashboard = () => {
               onClick={() => {
                 void handleToggleActionsFromTitle();
               }}
-              className="text-3xl font-bold text-white mb-2 cursor-pointer select-none"
+              className={`text-3xl font-bold text-white mb-2 select-none ${isAdmin ? 'cursor-pointer' : ''}`}
               title="Tournaments"
             >
-              Tournaments
+              My Tournaments
             </h1>
             <p className="text-slate-400">Manage your competitions efficiently.</p>
+            {userEmail && <p className="text-slate-500 text-sm mt-1">Signed in as {userEmail}</p>}
+            <p className="text-slate-500 text-xs mt-1">Role: {isAdmin ? 'admin' : 'user'}</p>
           </div>
-          <button
-            onClick={() => navigate('/create')}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-blue-900/20"
-          >
-            + New Tournament
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/create')}
+              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-blue-900/20"
+            >
+              + New Tournament
+            </button>
+          </div>
         </header>
 
         {isLoading ? (
@@ -172,6 +347,7 @@ const Dashboard = () => {
                      )}
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-700/50 flex justify-end">
+                  {/* TODO isTournamentEditable(t, session.user.id, role) */}
                   {!readOnly && (
                     <button
                       type="button"
@@ -191,12 +367,19 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+      </div>
     </div>
   );
 };
 
-const TournamentRoute = () => {
+interface TournamentRouteProps {
+  session: Session | null;
+  role: UserRole;
+}
+
+const TournamentRoute = ({ session, role }: TournamentRouteProps) => {
   const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [readOnly, setReadOnly] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -206,7 +389,7 @@ const TournamentRoute = () => {
   useEffect(() => {
     const loadTournament = async () => {
       if (!slug) {
-        navigate('/');
+        navigate('/dashboard');
         return;
       }
 
@@ -216,16 +399,20 @@ const TournamentRoute = () => {
         const summaries = await listTournaments();
         const summary = summaries.find((item) => item.urlSlug === slug);
         if (!summary) {
-          navigate('/');
+          navigate('/dashboard');
           return;
         }
+
+        const query = new URLSearchParams(location.search);
+        const forceReadOnly = query.get("readonly") === "1";
+        const canEditTournament = isTournamentEditable(summary, session?.user.id, role);
 
         const [loadedTournament, parameter] = await Promise.all([
           getTournamentById(summary.id),
           getReadOnlyParameter(),
         ]);
         setTournament(loadedTournament);
-        setReadOnly(parameter.readOnly);
+        setReadOnly(parameter.readOnly || forceReadOnly || !canEditTournament);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Failed to load tournament.');
       } finally {
@@ -234,7 +421,7 @@ const TournamentRoute = () => {
     };
 
     void loadTournament();
-  }, [slug, navigate]);
+  }, [slug, navigate, location.search, role, session?.user.id]);
 
   const handleUpdate = async (updated: Tournament): Promise<Tournament> => {
     const persisted = await updateTournament(updated.id, updated);
@@ -270,13 +457,78 @@ const TournamentRoute = () => {
 };
 
 const App: React.FC = () => {
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Failed to retrieve Supabase session', error);
+      }
+
+      if (isMounted) {
+        setSession(data.session ?? null);
+        setIsAuthLoading(false);
+      }
+    };
+
+    void initializeAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Failed to sign out user', error);
+    }
+  };
+
+  const role = getUserRole(session);
+
+  const guard = (element: React.ReactElement, requiredRole?: 'admin') => {
+    if (isAuthLoading) {
+      return <div className="min-h-screen bg-slate-900 text-slate-300 flex items-center justify-center">Checking session...</div>;
+    }
+    if (!session) {
+      return <Navigate to="/signin" replace />;
+    }
+    if (requiredRole === 'admin' && role !== 'admin') {
+      return <Navigate to="/dashboard" replace />;
+    }
+    return element;
+  };
+
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/create" element={<Setup />} />
-        <Route path="/tournament/:slug" element={<TournamentRoute />} />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/" element={<HomePage session={session} onSignOut={handleSignOut} />} />
+        <Route path="/signin" element={session ? <Navigate to="/dashboard" replace /> : <SignInPage />} />
+        <Route path="/signup" element={session ? <Navigate to="/dashboard" replace /> : <SignUpPage />} />
+        <Route
+          path="/dashboard"
+          element={
+            guard(
+              session ? <Dashboard session={session} role={role} userEmail={session.user.email} onSignOut={handleSignOut} /> : <div />
+            )
+          }
+        />
+        <Route path="/profile" element={guard(session ? <ProfilePage session={session} role={role} /> : <div />)} />
+        <Route path="/create" element={guard(<Setup />)} />
+        <Route path="/tournament/:slug" element={<TournamentRoute session={session} role={role} />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>
   );
