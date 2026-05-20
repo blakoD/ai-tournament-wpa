@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+node_modules/**
 
 # Build output
 dist/
@@ -22,7 +23,6 @@ Thumbs.db
 
 # Editor files
 .vscode/*
-!.vscode/extensions.json
 .idea/
 
 # TypeScript cache
