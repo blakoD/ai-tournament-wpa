@@ -1,14 +1,12 @@
-# fly.toml app configuration file generated for tournament-builder on 2026-03-06T02:40:17-03:00
+# fly.toml app configuration file generated for fronton-torneos-web on 2026-05-20T19:11:07Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'fronton-tournament-web'
-primary_region = 'sjc'
+app = 'fronton-torneos-web'
+primary_region = 'gru'
 
 [build]
-  [build.args]
-    VITE_API_BASE_URL = "https://fronton-torneos-api.fly.dev"
 
 [http_service]
   internal_port = 8080
@@ -21,5 +19,6 @@ primary_region = 'sjc'
 [[vm]]
   size = 'shared-cpu-1x'
   memory = '512mb'
+  cpu_kind = 'shared'
   cpus = 1
   memory_mb = 512
