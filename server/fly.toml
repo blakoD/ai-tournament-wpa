@@ -9,7 +9,7 @@ primary_region = 'gru'
 [build]
 
 [http_service]
-  internal_port = 8080
+  internal_port = 3001
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
@@ -17,7 +17,5 @@ primary_region = 'gru'
   processes = ['app']
 
 [[vm]]
-  memory = '1gb'
-  cpu_kind = 'shared'
-  cpus = 1
-  memory_mb = 512
+  size = 'shared-cpu-1x'
+  memory = '512mb'

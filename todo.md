@@ -1,5 +1,3 @@
-# TODO
-
 ## Tasks
 - [X] Remove Stage **(Only Tournament Owner)**
 - [X] Show list view matches 
@@ -31,22 +29,3 @@ Roles and permissions:
 1. Admin
 2. Tournament Owner
 3. Regular User
-
-## Fixes
-
-## Queries
-
---e5ce8cd2-53c2-4148-94f6-5919f7836661
-select * from tournaments ;
-
-select * from participants p where p.tournament_id = 'e5ce8cd2-53c2-4148-94f6-5919f7836661'
-
-select 
-	m.sort_order,
-	pa."name", pa.group_name,
-	pb."name", pb.group_name 
-from matches m 
-inner join participants pa on pa.id = m.participant_a_id
-inner join participants pb on pb.id = m.participant_b_id 
-where m.tournament_id = 'e5ce8cd2-53c2-4148-94f6-5919f7836661'
-order by m.sort_order 

@@ -7,6 +7,10 @@ app = 'fronton-torneos-web'
 primary_region = 'gru'
 
 [build]
+  [build.args]
+    VITE_API_BASE_URL = "https://fronton-torneos-api.fly.dev"
+    VITE_SUPABASE_URL = ""      # set via: flyctl secrets set VITE_SUPABASE_URL=...
+    VITE_SUPABASE_ANON_KEY = "" # set via: flyctl secrets set VITE_SUPABASE_ANON_KEY=...
 
 [http_service]
   internal_port = 8080
@@ -19,6 +23,3 @@ primary_region = 'gru'
 [[vm]]
   size = 'shared-cpu-1x'
   memory = '512mb'
-  cpu_kind = 'shared'
-  cpus = 1
-  memory_mb = 512
