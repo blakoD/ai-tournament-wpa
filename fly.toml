@@ -9,8 +9,8 @@ primary_region = 'gru'
 [build]
   [build.args]
     VITE_API_BASE_URL = "https://fronton-torneos-api.fly.dev"
-    VITE_SUPABASE_URL = ""      # set via: flyctl secrets set VITE_SUPABASE_URL=...
-    VITE_SUPABASE_ANON_KEY = "" # set via: flyctl secrets set VITE_SUPABASE_ANON_KEY=...
+    VITE_SUPABASE_URL = "https://rmssrsitwmgxyqizvkjz.supabase.co"
+    VITE_SUPABASE_ANON_KEY = "sb_publishable_HPqSIGaqGsLmX1dclfA6rg_dATwv6SH"
 
 [http_service]
   internal_port = 8080
