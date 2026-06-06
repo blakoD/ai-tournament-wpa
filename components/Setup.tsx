@@ -14,6 +14,7 @@ export const Setup: React.FC = () => {
   const [name, setName] = useState('');
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [desc, setDesc] = useState('');
   
   const [pCount, setPCount] = useState<number>(8);
@@ -35,6 +36,22 @@ export const Setup: React.FC = () => {
   const [tempAssignments, setTempAssignments] = useState<Record<number, string>>({});
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const toSlug = (val: string) =>
+    val.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+  const handleTournamentNameChange = (val: string) => {
+    setName(val);
+    if (!slugManuallyEdited) {
+      setSlug(toSlug(val));
+    }
+  };
+
+  const handleSlugChange = (val: string) => {
+    const cleaned = val.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    setSlug(cleaned);
+    setSlugManuallyEdited(cleaned !== '' && cleaned !== toSlug(name));
+  };
 
   // Initialize defaults
   useEffect(() => {
@@ -317,17 +334,22 @@ export const Setup: React.FC = () => {
               className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none"
               placeholder="e.g. Winter Cup"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={e => handleTournamentNameChange(e.target.value)}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">URL Slug</label>
+            <label className="block text-sm font-medium text-slate-400 mb-1 flex items-center gap-2">
+              URL Slug
+              {!slugManuallyEdited && slug && (
+                <span className="text-[10px] font-semibold text-blue-400 bg-blue-900/30 border border-blue-700/40 px-1.5 py-0.5 rounded">auto</span>
+              )}
+            </label>
             <input
               type="text"
               className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none"
               placeholder="e.g. winter-cup-24"
               value={slug}
-              onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+              onChange={e => handleSlugChange(e.target.value)}
             />
           </div>
         </div>
