@@ -5,12 +5,13 @@ import { Match, Participant } from '../types';
 interface Props {
   match: Match;
   participants: Participant[];
+  maxScore?: number;
   onSave: (matchId: string, scoreA: number, scoreB: number) => void;
   onReset?: () => void;
   onClose: () => void;
 }
 
-export const MatchModal: React.FC<Props> = ({ match, participants, onSave, onReset, onClose }) => {
+export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16, onSave, onReset, onClose }) => {
   const [sA, setSA] = useState<string>(match.scoreA?.toString() || '');
   const [sB, setSB] = useState<string>(match.scoreB?.toString() || '');
   const [fullscreen, setFullscreen] = useState(false);
@@ -61,7 +62,7 @@ export const MatchModal: React.FC<Props> = ({ match, participants, onSave, onRes
       return;
     }
 
-    if (!showLowScoreWarning && scoreA < 16 && scoreB < 16) {
+    if (!showLowScoreWarning && scoreA < maxScore && scoreB < maxScore) {
       setShowLowScoreWarning(true);
       return;
     }
@@ -189,14 +190,14 @@ export const MatchModal: React.FC<Props> = ({ match, participants, onSave, onRes
 
                 {showLowScoreWarning && (
                     <div className="mb-4 p-3 bg-amber-900/50 border border-amber-700 text-amber-200 text-sm text-center rounded animate-pulse">
-                    <strong>Warning:</strong> Neither player reached 16 points.<br />
+                    <strong>Warning:</strong> Neither player reached {maxScore} points.<br />
                     Click <strong>Save Result</strong> again to confirm this score.
                     </div>
                 )}
 
                 {!showLowScoreWarning && !error && (
                     <div className={'text-slate-500 text-center ' + (fullscreen ? 'text-base mb-4' : 'text-xs mb-6')}>
-                    Rule: First to 16 points wins. No ties allowed.
+                    Rule: First to {maxScore} points wins. No ties allowed.
                     </div>
                 )}
 

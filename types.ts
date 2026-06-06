@@ -69,4 +69,5 @@ export interface Tournament {
   createdAt: number;
   startedAt?: number | null;
   completedAt?: number | null;
+  maxScore?: number;
 }

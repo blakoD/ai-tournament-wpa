@@ -16,12 +16,11 @@
 - [X] Autocomplete URL Slug automatically from tournament name.
 - [X] Added tournament COMPLETED status in the TournamentView Header when the completedAt field is set.
 - [x] Show update score in fullscreen view for mobile
-- [ ] Configure tournament matches max score in settings. Update message "Rule: First to 16 points wins. No ties allowed." with the configured max score.
+- [X] Configure tournament matches max score in settings. Update message "Rule: First to 16 points wins. No ties allowed." with the configured max score.
 - [ ] Configure global sorting (Wins > Point Diff > Points For > Points Against)
 - [ ] pre-configured templates. Mode "Federacion". 
-- [ ] Add url param for each stage and match to allow sharing direct links to them. E.g `/#/tournament/123/stage/1/match/2`
 - [ ] Remove storage from localStorage
-- [ ] Bulk import players from textarea input 
+- [ ] Bulk import players from textarea input separated by new line. E.g 
 - [ ] Add support to change the language of the app to Spanish
 - [ ] Switch dark/light mode based on user preference 
 - [ ] Improve dashboard UI and add pagination for tournaments list and filter by sport category
@@ -31,6 +30,7 @@
 ## Improvements
 - [] Improve api endpoints to send only modified data to update the match score and tournament configuration instead of sending the whole tournament data.
 - [ ] Improve api endpoints to update the match score and tournament configuration in real time using websockets or server-sent events. This will allow users to see the updates without refreshing the page.
+- [ ] Add url param for each stage and match to allow sharing direct links to them. E.g `/#/tournament/123/stage/1/match/2`
 
 Roles and permissions:
 1. Admin User

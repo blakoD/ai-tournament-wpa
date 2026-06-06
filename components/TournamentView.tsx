@@ -134,12 +134,13 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
   };
 
   // Wrapper to save history before updating
-  const updateWithHistory = async (newTournament: Tournament) => {
+  const updateWithHistory = async (newTournament: Tournament): Promise<Tournament> => {
     setIsSaving(true);
     setSaveError(null);
     try {
-      await onUpdate(newTournament);
+      const updated = await onUpdate(newTournament);
       setHistory(prev => [...prev, tournament]);
+      return updated;
     } catch (updateError) {
       setSaveError(updateError instanceof Error ? updateError.message : 'Failed to save tournament changes.');
       throw updateError;
@@ -646,6 +647,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
         <MatchModal
           match={selectedMatch}
           participants={tournament.participants}
+          maxScore={tournament.maxScore ?? 16}
           onSave={handleMatchSave}
           onReset={handleMatchReset}
           onClose={() => setSelectedMatch(null)}

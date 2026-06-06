@@ -27,6 +27,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
   const [name, setName] = useState(tournament.name);
   const [title, setTitle] = useState(tournament.title);
   const [description, setDescription] = useState(tournament.description);
+  const [maxScore, setMaxScore] = useState(tournament.maxScore ?? 16);
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -37,12 +38,14 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
     setName(tournament.name);
     setTitle(tournament.title);
     setDescription(tournament.description);
+    setMaxScore(tournament.maxScore ?? 16);
   }, [tournament.id]);
 
   const isDirty =
     name !== tournament.name ||
     title !== tournament.title ||
-    description !== tournament.description;
+    description !== tournament.description ||
+    maxScore !== (tournament.maxScore ?? 16);
 
   const handleSave = async () => {
     if (readOnly || !isDirty) return;
@@ -55,6 +58,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
         name: name.trim(),
         title: title.trim(),
         description: description.trim(),
+        maxScore,
       });
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -146,6 +150,26 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
           onChange={e => setDescription(e.target.value)}
           disabled={readOnly}
         />
+      </div>
+
+      {/* Match Settings */}
+      <div className="pt-4 border-t border-slate-700">
+        <h3 className="text-sm font-bold text-slate-400 mb-3">Match Settings</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Max Score (points to win)</label>
+            <input
+              type="number"
+              min={1}
+              max={999}
+              className={readOnly ? inputDisabledClass : inputClass}
+              value={maxScore}
+              onChange={e => setMaxScore(Math.max(1, parseInt(e.target.value) || 1))}
+              disabled={readOnly}
+            />
+            <p className="text-xs text-slate-600 mt-1">Used in match score validation. Default: 16</p>
+          </div>
+        </div>
       </div>
 
       {/* Participants & Groups */}

@@ -58,6 +58,7 @@ const tournamentWriteSchema = z.object({
   qualifiesByGroup: z.number().int().min(1),
   eliminationType: z.enum(["SINGLE_ELIMINATION", "ROUND_ROBIN_2"]),
   status: z.enum(["SETUP", "STARTED", "COMPLETED"]).default("SETUP"),
+  maxScore: z.number().int().min(1).default(16),
   createdAt: z.number().int().positive().optional(),
   startedAt: z.number().int().positive().nullable().optional(),
   completedAt: z.number().int().positive().nullable().optional(),
@@ -101,6 +102,7 @@ type TournamentWithRelations = {
   createdAt: Date;
   startedAt: Date | null;
   completedAt: Date | null;
+  maxScore: number;
   participants: DbParticipant[];
   matches: DbMatch[];
 };
@@ -137,6 +139,7 @@ const mapTournament = (tournament: TournamentWithRelations) => ({
   createdAt: tournament.createdAt.getTime(),
   startedAt: tournament.startedAt?.getTime(),
   completedAt: tournament.completedAt?.getTime(),
+  maxScore: tournament.maxScore,
   participants: tournament.participants.map((participant: DbParticipant) => ({
     id: participant.id,
     name: participant.name,
@@ -288,6 +291,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
             qualifiesByGroup: parsedBody.data.qualifiesByGroup,
             eliminationType: parsedBody.data.eliminationType,
             status: parsedBody.data.status,
+            maxScore: parsedBody.data.maxScore,
             createdAt: toOptionalDate(parsedBody.data.createdAt),
             startedAt: toNullableDate(parsedBody.data.startedAt),
             completedAt: toNullableDate(parsedBody.data.completedAt),
@@ -411,6 +415,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
             qualifiesByGroup: parsedBody.data.qualifiesByGroup,
             eliminationType: parsedBody.data.eliminationType,
             status: parsedBody.data.status,
+            maxScore: parsedBody.data.maxScore,
             createdAt: toOptionalDate(parsedBody.data.createdAt),
             startedAt: toNullableDate(parsedBody.data.startedAt),
             completedAt: toNullableDate(parsedBody.data.completedAt),
