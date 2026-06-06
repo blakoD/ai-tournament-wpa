@@ -15,10 +15,10 @@
 - [X] Tournament configuration page to edit title, description, rules, start and end date, logo, etc. Adding new Players and groups management should not be allowed to edit if the tournament has started.
 - [X] Autocomplete URL Slug automatically from tournament name.
 - [X] Added tournament COMPLETED status in the TournamentView Header when the completedAt field is set.
-- [ ] Tournament templates with custom settings configure max match score in settings. Update message "Rule: First to 16 points wins. No ties allowed."
-- [ ] pre-configured templates. Mode "Federacion".
-- [ ] Show update score in fullscreen view for mobile
+- [x] Show update score in fullscreen view for mobile
+- [ ] Configure tournament matches max score in settings. Update message "Rule: First to 16 points wins. No ties allowed." with the configured max score.
 - [ ] Configure global sorting (Wins > Point Diff > Points For > Points Against)
+- [ ] pre-configured templates. Mode "Federacion". 
 - [ ] Add url param for each stage and match to allow sharing direct links to them. E.g `/#/tournament/123/stage/1/match/2`
 - [ ] Remove storage from localStorage
 - [ ] Bulk import players from textarea input 
