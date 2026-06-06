@@ -446,13 +446,20 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                 </svg>
               </button>
               <div>
-                <h1
-                  onClick={handleTitleTap}
-                  className="text-2xl font-bold text-white cursor-pointer select-none"
-                  title="Tournament"
-                >
-                  {tournament.name}
-                </h1>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <h1
+                    onClick={handleTitleTap}
+                    className="text-2xl font-bold text-white cursor-pointer select-none"
+                    title="Tournament"
+                  >
+                    {tournament.name}
+                  </h1>
+                  {tournament.completedAt && (
+                    <span className="text-xs font-semibold text-emerald-400 bg-emerald-900/30 border border-emerald-700/50 px-2 py-0.5 rounded mb-[-3px]">
+                      Completed
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-slate-400">{tournament.title}</p>
                 <p className="text-xs text-slate-500 mt-1">{!tournamentReadOnly && 'Edit mode enabled (local)'}</p>
               </div>

@@ -14,7 +14,7 @@
 - [X] Fix Started/Ended tournament status. It should be based on the start and end date of the tournament, not on the matches. 
 - [X] Tournament configuration page to edit title, description, rules, start and end date, logo, etc. Adding new Players and groups management should not be allowed to edit if the tournament has started.
 - [X] Autocomplete URL Slug automatically from tournament name.
-- [ ] Added tournament COMPLETED status in the TournamentView Header when the completedAt field is set.
+- [X] Added tournament COMPLETED status in the TournamentView Header when the completedAt field is set.
 - [ ] Tournament templates with custom settings configure max match score in settings. Update message "Rule: First to 16 points wins. No ties allowed."
 - [ ] pre-configured templates. Mode "Federacion".
 - [ ] Show update score in fullscreen view for mobile
