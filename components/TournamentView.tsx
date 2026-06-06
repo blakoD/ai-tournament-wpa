@@ -8,6 +8,7 @@ import { BracketView } from './BracketView';
 import { MatchModal } from './MatchModal';
 import { ConfirmDialog } from './ConfirmDialog';
 import { NextStageModal } from './NextStageModal';
+import { TournamentConfig } from './TournamentConfig';
 
 interface Props {
   tournament: Tournament;
@@ -492,6 +493,12 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
           {/* Tabs */}
           <div className="flex gap-6 text-sm font-medium overflow-x-auto">
             <button
+              onClick={() => setActiveTab('config')}
+              className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'config' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+            >
+              Configuration
+            </button>
+            <button
               onClick={() => setActiveTab('global-standings')}
               className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'global-standings' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
             >
@@ -519,6 +526,14 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
       <div className="max-w-5xl mx-auto px-4 py-8">
         {saveError && (
           <div className="mb-4 rounded border border-red-700/60 bg-red-900/30 p-3 text-sm text-red-200">{saveError}</div>
+        )}
+
+        {activeTab === 'config' && (
+          <TournamentConfig
+            tournament={tournament}
+            readOnly={!canEdit}
+            onUpdate={updateWithHistory}
+          />
         )}
 
         {activeTab === 'global-standings' && (

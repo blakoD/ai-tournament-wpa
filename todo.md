@@ -11,9 +11,11 @@
       Round 1: Matches (A1vsA2, B1vsB2, C1vsC2, A3vsA4, B3vsB4, C3vsC4), 
       Round 2: Matches (A1vsA3, B1vsB3, C1vsC3, A2vsA4, B2vsB4, C2vsC4),
       Round 3: Matches (A1vsA4, B1vsB4, C1vsC4, A2vsA3, B2vsB3, C2vsC3)
-- [ ] Fix Started/Ended tournament status. It should be based on the start and end date of the tournament, not on the matches. 
-- [ ] Configure max match score in settings. Update message "Rule: First to 16 points wins. No ties allowed."
-- [ ] Tournament templates with custom settings pre-configured.
+- [X] Fix Started/Ended tournament status. It should be based on the start and end date of the tournament, not on the matches. 
+- [X] Tournament configuration page to edit title, description, rules, start and end date, logo, etc. Adding new Players and groups management should not be allowed to edit if the tournament has started.
+- [ ] Autocomplete URL Slug automatically from tournament name.
+- [ ] Tournament templates with custom settings configure max match score in settings. Update message "Rule: First to 16 points wins. No ties allowed."
+- [ ] pre-configured templates. Mode "Federacion".
 - [ ] Show update score in fullscreen view for mobile
 - [ ] Configure global sorting (Wins > Point Diff > Points For > Points Against)
 - [ ] Add url param for each stage and match to allow sharing direct links to them. E.g `/#/tournament/123/stage/1/match/2`
@@ -25,7 +27,11 @@
 - [ ] Add logo for tournaments
 - [ ] Add logo/photo for players
 
+## Improvements
+- [] Improve api endpoints to send only modified data to update the match score and tournament configuration instead of sending the whole tournament data.
+- [ ] Improve api endpoints to update the match score and tournament configuration in real time using websockets or server-sent events. This will allow users to see the updates without refreshing the page.
+
 Roles and permissions:
-1. Admin
-2. Tournament Owner
+1. Admin User
+2. Tournament Owner User
 3. Regular User

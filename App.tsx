@@ -319,7 +319,7 @@ const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProps) => {
               <div
                 key={t.id}
                 onClick={() => navigate(`/tournament/${t.urlSlug}`)}
-                className="bg-slate-800 border border-slate-700 p-6 rounded-xl hover:border-blue-500/50 hover:bg-slate-800/80 cursor-pointer transition-all group"
+                className="bg-slate-800 border border-slate-700 p-4 rounded-xl hover:border-blue-500/50 hover:bg-slate-800/80 cursor-pointer transition-all group"
               >
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">
@@ -346,9 +346,9 @@ const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProps) => {
                          </>
                      )}
                 </div>
-                <div className="mt-4 pt-3 border-t border-slate-700/50 flex justify-end">
-                  {/* TODO isTournamentEditable(t, session.user.id, role) */}
-                  {!readOnly && (
+                {/* TODO isTournamentEditable(t, session.user.id, role) */}
+                {!readOnly && (
+                  <div className="mt-4 pt-3 border-t border-slate-700/50 flex justify-end">
                     <button
                       type="button"
                       onClick={(event) => {
@@ -356,12 +356,12 @@ const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProps) => {
                         void handleDeleteTournament(t.id, t.name);
                       }}
                       disabled={deletingTournamentId === t.id}
-                      className="text-xs bg-slate-900 hover:bg-red-900/30 border border-slate-600 hover:border-red-500 text-slate-300 hover:text-red-300 px-3 py-1.5 rounded transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="text-xs bg-slate-900 hover:bg-red-900/30 border border-slate-600 hover:border-red-500 text-slate-300 hover:text-red-300 px-3 py-1 rounded transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {deletingTournamentId === t.id ? 'Deleting...' : 'Delete'}
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -86,9 +86,9 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
               <tr>
                 {canDrag && <th className="w-8"></th>}
                 <th className="px-3 py-2 w-10 text-center text-slate-600">#</th>
-                <th className="px-3 py-2 text-right">Home</th>
+                <th className="px-3 py-2 text-right"></th>
                 <th className="px-3 py-2 w-28 text-center">Score</th>
-                <th className="px-3 py-2 text-left">Away</th>
+                <th className="px-3 py-2 text-left"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700/50">
@@ -165,10 +165,12 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                     <td className="px-3 py-2.5 text-center w-28">
                       {m.isCompleted ? (
                         <span className="font-mono font-bold text-white text-base tabular-nums">
-                          {m.scoreA} – {m.scoreB}
+                          <span className={`${m.winnerId === m.participantAId ? 'text-green-400' : 'text-white'}`}>{m.scoreA}</span> 
+                          {` – `}
+                          <span className={`${m.winnerId === m.participantBId ? 'text-green-400' : 'text-white'}`}>{m.scoreB}</span>
                         </span>
                       ) : (
-                        <span className="text-slate-600 text-xs flex items-center justify-center gap-1.5">
+                          <span className="text-slate-600 text-xs flex items-center justify-center gap-1.5">
                           vs
                           <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse inline-block"></span>
                         </span>
