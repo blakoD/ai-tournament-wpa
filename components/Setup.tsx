@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { generateId, generateRoundRobinMatches, generateBracket } from '../services/tournamentLogic';
 import { Tournament, TournamentStatus, EliminationType, StageType, Participant } from '../types';
 import { createTournament, listTournaments, startTournament } from '../services/apiClient';
@@ -11,6 +12,7 @@ interface GroupDef {
 
 export const Setup: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
@@ -69,7 +71,7 @@ export const Setup: React.FC = () => {
   }, [elimType, pCount]);
 
   const initializeParticipants = (count: number) => {
-    const newNames = Array(count).fill(0).map((_, i) => `Player ${i + 1}`);
+    const newNames = Array(count).fill(0).map((_, i) => `${t('setup.player', { number: i + 1 })}`);
     setNames(newNames);
     
     // Reset to single default group
@@ -222,18 +224,18 @@ export const Setup: React.FC = () => {
     try {
 
     if (!name || !title || !slug) {
-      setError('Please fill in all required basic info.');
+      setError(t('setup.errorFillRequired'));
       return;
     }
 
     if (names.some(n => !n.trim())) {
-      setError('All participant names must be filled.');
+      setError(t('setup.errorAllNames'));
       return;
     }
 
       const existingTournaments = await listTournaments();
       if (existingTournaments.some((tournament) => tournament.urlSlug === slug)) {
-        setError('URL Slug is already taken. Please choose another.');
+        setError(t('setup.errorSlugTaken'));
         return;
       }
     
@@ -241,14 +243,14 @@ export const Setup: React.FC = () => {
     for (const g of groups) {
         const count = Object.values(assignments).filter(id => id === g.id).length;
         if (count < 2) {
-            setError(`Group "${g.name}" must have at least 2 participants.`);
+            setError(t('setup.errorGroupMinParticipants', { name: g.name }));
             return;
         }
     }
     
     // Validate Qualification Count vs Participants
     if (qCount > pCount) {
-        setError(`Cannot qualify ${qCount} players from only ${pCount} participants.`);
+        setError(t('setup.errorQualifyCount', { qualified: qCount, total: pCount }));
         return;
     }
 
@@ -314,7 +316,7 @@ export const Setup: React.FC = () => {
 
       navigate(`/tournament/${slug}`);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Failed to create tournament.');
+      setError(submitError instanceof Error ? submitError.message : t('setup.errorCreateFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -322,32 +324,32 @@ export const Setup: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl my-8">
-      <h2 className="text-2xl font-bold mb-6 text-white">Setup Tournament</h2>
+      <h2 className="text-2xl font-bold mb-6 text-white">{t('setup.title')}</h2>
 
       <div className="space-y-6">
         {/* Basic Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Tournament Name</label>
+            <label className="block text-sm font-medium text-slate-400 mb-1">{t('setup.tournamentName')}</label>
             <input
               type="text"
               className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none"
-              placeholder="e.g. Winter Cup"
+              placeholder={t('setup.namePlaceholder')}
               value={name}
               onChange={e => handleTournamentNameChange(e.target.value)}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-400 mb-1 flex items-center gap-2">
-              URL Slug
+              {t('setup.urlSlug')}
               {!slugManuallyEdited && slug && (
-                <span className="text-[10px] font-semibold text-blue-400 bg-blue-900/30 border border-blue-700/40 px-1.5 py-0.5 rounded">auto</span>
+                <span className="text-[10px] font-semibold text-blue-400 bg-blue-900/30 border border-blue-700/40 px-1.5 py-0.5 rounded">{t('setup.auto')}</span>
               )}
             </label>
             <input
               type="text"
               className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none"
-              placeholder="e.g. winter-cup-24"
+              placeholder={t('setup.slugPlaceholder')}
               value={slug}
               onChange={e => handleSlugChange(e.target.value)}
             />
@@ -355,18 +357,18 @@ export const Setup: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-400 mb-1">Official Title</label>
+          <label className="block text-sm font-medium text-slate-400 mb-1">{t('setup.officialTitle')}</label>
           <input
             type="text"
             className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none"
-            placeholder="e.g. The 2024 Grand Winter Championship"
+            placeholder={t('setup.titlePlaceholder')}
             value={title}
             onChange={e => setTitle(e.target.value)}
           />
         </div>
         
         <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Description (Optional)</label>
+            <label className="block text-sm font-medium text-slate-400 mb-1">{t('setup.description')}</label>
             <textarea
               className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none h-20"
               value={desc}
@@ -377,18 +379,18 @@ export const Setup: React.FC = () => {
         {/* Configuration */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
           <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Next Format</label>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('setup.nextFormat')}</label>
             <select 
               className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
               value={elimType}
               onChange={e => setElimType(e.target.value as EliminationType)}
             >
-              <option value={EliminationType.SINGLE_ELIMINATION}>Bracket</option>
-              <option value={EliminationType.ROUND_ROBIN_2}>Round-Robin</option>
+              <option value={EliminationType.SINGLE_ELIMINATION}>{t('setup.bracket')}</option>
+              <option value={EliminationType.ROUND_ROBIN_2}>{t('setup.roundRobin')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Participants</label>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('setup.participants')}</label>
             <select 
               className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
               value={pCount}
@@ -397,21 +399,21 @@ export const Setup: React.FC = () => {
               {Array.from({ length: 49 }, (_, i) => i + 2)
                 .filter(n => elimType !== EliminationType.SINGLE_ELIMINATION || n % 2 === 0)
                 .map(n => (
-                  <option key={n} value={n}>{n} Players</option>
+                  <option key={n} value={n}>{t('setup.players', { count: n })}</option>
                 ))
               }
             </select>
           </div>
           {elimType !== EliminationType.SINGLE_ELIMINATION && (
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Qualifies by Group</label>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('setup.qualifiesByGroup')}</label>
               <select 
                 className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
                 value={qCount}
                 onChange={e => setQCount(parseInt(e.target.value))}
               >
                 {[1, 2, 3, 4, 5, 6, 8].map(opt => (
-                    <option key={opt} value={opt}>Top {opt} per Group</option>
+                    <option key={opt} value={opt}>{t('setup.topPerGroup', { count: opt })}</option>
                 ))}
               </select>
             </div>
@@ -420,7 +422,7 @@ export const Setup: React.FC = () => {
 
         {/* Participants Input */}
         <div>
-           <h3 className="text-sm font-bold text-slate-400 mb-3">Enter Participants</h3>
+           <h3 className="text-sm font-bold text-slate-400 mb-3">{t('setup.enterParticipants')}</h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
              {names.map((pName, i) => {
                // Find assigned group for display
@@ -432,7 +434,7 @@ export const Setup: React.FC = () => {
                     <div className="flex-1 relative">
                         <input 
                             type="text"
-                            placeholder={`Player ${i + 1}`}
+                            placeholder={t('setup.player', { number: i + 1 })}
                             className="w-full bg-slate-900 border border-slate-700 rounded p-2 pr-16 text-white text-sm focus:border-blue-500 outline-none"
                             value={pName}
                             onChange={e => handleNameChange(i, e.target.value)}
@@ -453,12 +455,12 @@ export const Setup: React.FC = () => {
         {elimType !== EliminationType.SINGLE_ELIMINATION && (
           <div className="pt-4 border-t border-slate-700">
                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-bold text-slate-400">Group Configuration</h3>
+                  <h3 className="text-sm font-bold text-slate-400">{t('setup.groupConfiguration')}</h3>
                   <button 
                       onClick={addGroup}
                       className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded font-medium transition-colors"
                   >
-                      + Add Group
+                      {t('setup.addGroup')}
                   </button>
                </div>
 
@@ -473,22 +475,22 @@ export const Setup: React.FC = () => {
                                       className="bg-transparent text-white font-bold text-sm border-b border-transparent focus:border-blue-500 outline-none w-full"
                                       value={g.name}
                                       onChange={e => updateGroupName(g.id, e.target.value)}
-                                      placeholder="Group Name"
+                                      placeholder={t('setup.groupName')}
                                   />
                                   {groups.length > 1 && (
                                       <button 
                                           onClick={() => removeGroup(g.id)}
                                           className="text-slate-500 hover:text-red-400 text-xs"
-                                          title="Remove Group"
+                                          title={t('setup.removeGroup')}
                                       >
-                                          Delete
+                                          {t('setup.removeGroup')}
                                       </button>
                                   )}
                               </div>
                               
                               <div className="flex flex-wrap gap-2 mb-3">
                                   {memberOrder.length === 0 ? (
-                                      <span className="text-xs text-slate-600 italic">No players assigned</span>
+                                      <span className="text-xs text-slate-600 italic">{t('setup.noPlayersAssigned')}</span>
                                   ) : (
                                       memberOrder.map((pIdx) => (
                                           <span
@@ -512,7 +514,7 @@ export const Setup: React.FC = () => {
                                   onClick={() => openGroupModal(g.id)}
                                   className="w-full py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs text-blue-400 font-medium transition-colors"
                               >
-                                  Select Participants ({memberOrder.length})
+                                  {t('setup.selectParticipants', { count: memberOrder.length })}
                               </button>
                           </div>
                        );
@@ -532,14 +534,14 @@ export const Setup: React.FC = () => {
             onClick={() => navigate('/')}
             className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button 
             onClick={handleSubmit}
             disabled={isSubmitting}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded shadow-lg shadow-blue-900/20 transition-all"
           >
-            {isSubmitting ? 'Starting...' : 'Start Tournament'}
+            {isSubmitting ? t('setup.starting') : t('setup.startTournament')}
           </button>
         </div>
       </div>
@@ -550,7 +552,7 @@ export const Setup: React.FC = () => {
             <div className="bg-slate-800 border border-slate-600 w-full max-w-md rounded-xl shadow-2xl flex flex-col max-h-[80vh] animate-in fade-in zoom-in duration-200">
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center">
                         <h3 className="font-bold text-white">
-                            Manage <span className="text-blue-400">{groups.find(g => g.id === activeGroupModal)?.name}</span> Players
+                            {t('setup.manageGroup', { name: groups.find(g => g.id === activeGroupModal)?.name })}
                         </h3>
                         <button onClick={closeGroupModal} className="text-slate-400 hover:text-white">✕</button>
                 </div>
@@ -578,7 +580,7 @@ export const Setup: React.FC = () => {
                                 </div>
                                 {!isAssignedToThis && otherGroup && (
                                     <span className="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800">
-                                        in {otherGroup.name}
+                                        {t('setup.inGroup', { name: otherGroup.name })}
                                     </span>
                                 )}
                             </label>
@@ -587,10 +589,10 @@ export const Setup: React.FC = () => {
                 </div>
                 <div className="p-4 border-t border-slate-700 bg-slate-900/30 rounded-b-xl flex gap-3">
                     <button onClick={closeGroupModal} className="flex-1 py-2 rounded border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                     <button onClick={saveGroupModal} className="flex-1 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-colors">
-                        Done
+                        {t('setup.done')}
                     </button>
                 </div>
             </div>

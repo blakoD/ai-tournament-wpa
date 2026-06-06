@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Match, Participant } from '../types';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const BracketView: React.FC<Props> = ({ matches, participants, onMatchClick, onParticipantSwap, readOnly = false }) => {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState<{matchId: string, slot: 'A' | 'B'} | null>(null);
   // Group by Round
   const roundsMap: Record<number, Match[]> = {};
@@ -36,7 +38,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                 <div key={rIndex} className="flex flex-col justify-around relative">
                     {/* Round Label */}
                     <div className="absolute -top-8 left-0 w-full text-center font-bold text-slate-500 uppercase text-sm">
-                        {!isFinalRound && ((rIndex === rounds.length - 2 && roundMatches.length === 2) ? 'Semi-Finals' : `Round ${rIndex + 1}`)}
+                        {!isFinalRound && ((rIndex === rounds.length - 2 && roundMatches.length === 2) ? t('bracketView.semiFinals') : t('bracketView.round', { number: rIndex + 1 }))}
                     </div>
 
                     {roundMatches.map(m => {
@@ -63,7 +65,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                                             autoFocus
                                             onClick={(e) => e.stopPropagation()}
                                         >
-                                            <option value="">Select Player</option>
+                                            <option value="">{t('bracketView.selectPlayer')}</option>
                                             {participants.map(part => (
                                                 <option key={part.id} value={part.id}>
                                                     {part.globalRank ? `(#${part.globalRank})  ` : ''}{part.name}
@@ -78,7 +80,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                                 <div className={`px-3 py-2 flex justify-between items-center group/player ${slot === 'A' ? 'border-b border-slate-700/50' : ''} ${isWinner ? 'bg-emerald-900/20 text-emerald-400 font-bold' : 'text-slate-300 font-medium'}`}>
                                     {p?.globalRank ? (<span className="font-mono text-slate-600 leading-tight pr-2">#{p.globalRank}</span>) : ''}
                                     <span className="flex-1 pr-2 leading-tight flex items-center gap-1">
-                                        {p?.name || 'TBD'}
+                                        {p?.name || t('bracketView.tbd')}
                                         {onParticipantSwap && !readOnly && !m.isCompleted && (
                                             <button
                                                 className="opacity-0 group-hover/player:opacity-100 text-slate-500 hover:text-blue-400 transition-opacity px-1"
@@ -86,7 +88,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                                                     e.stopPropagation();
                                                     setEditing({ matchId: m.id, slot });
                                                 }}
-                                                title="Switch Player"
+                                                title={t('bracketView.switchPlayer')}
                                             >
                                                 ⇄
                                             </button>

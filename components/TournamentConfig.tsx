@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tournament, TournamentStatus } from '../types';
 
 interface Props {
@@ -22,6 +23,7 @@ const dateInputToTs = (val: string): number | null => {
 };
 
 export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpdate }) => {
+  const { t } = useTranslation();
   const hasStarted = tournament.status !== TournamentStatus.SETUP;
 
   const [name, setName] = useState(tournament.name);
@@ -63,7 +65,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to save configuration.');
+      setSaveError(err instanceof Error ? err.message : t('config.errorSave'));
     } finally {
       setIsSaving(false);
     }
@@ -100,18 +102,18 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
       {/* Basic Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className={labelClass}>Tournament Name</label>
+          <label className={labelClass}>{t('config.tournamentName')}</label>
           <input
             type="text"
             className={readOnly ? inputDisabledClass : inputClass}
-            placeholder="e.g. Winter Cup"
+            placeholder={t('config.namePlaceholder')}
             value={name}
             onChange={e => setName(e.target.value)}
             disabled={readOnly}
           />
         </div>
         <div>
-          <label className={labelClass}>URL Slug</label>
+          <label className={labelClass}>{t('config.urlSlug')}</label>
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -122,20 +124,20 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
             <button
               onClick={handleCopySlug}
               className="px-3 py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 hover:text-white rounded text-xs font-medium transition-colors whitespace-nowrap"
-              title="Copy slug to clipboard"
+              title={t('config.copy')}
             >
-              {copied ? '✓ Copied' : 'Copy'}
+              {copied ? t('config.copied') : t('config.copy')}
             </button>
           </div>
         </div>
       </div>
 
       <div>
-        <label className={labelClass}>Official Title</label>
+        <label className={labelClass}>{t('config.officialTitle')}</label>
         <input
           type="text"
           className={readOnly ? inputDisabledClass : inputClass}
-          placeholder="e.g. The 2024 Grand Winter Championship"
+          placeholder={t('config.titlePlaceholder')}
           value={title}
           onChange={e => setTitle(e.target.value)}
           disabled={readOnly}
@@ -143,7 +145,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
       </div>
 
       <div>
-        <label className={labelClass}>Description (Optional)</label>
+        <label className={labelClass}>{t('config.description')}</label>
         <textarea
           className={`${readOnly ? inputDisabledClass : inputClass} h-20`}
           value={description}
@@ -154,10 +156,10 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
 
       {/* Match Settings */}
       <div className="pt-4 border-t border-slate-700">
-        <h3 className="text-sm font-bold text-slate-400 mb-3">Match Settings</h3>
+        <h3 className="text-sm font-bold text-slate-400 mb-3">{t('config.matchSettings')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
           <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Max Score (points to win)</label>
+            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('config.maxScore')}</label>
             <input
               type="number"
               min={1}
@@ -167,7 +169,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
               onChange={e => setMaxScore(Math.max(1, parseInt(e.target.value) || 1))}
               disabled={readOnly}
             />
-            <p className="text-xs text-slate-600 mt-1">Used in match score validation. Default: 16</p>
+            <p className="text-xs text-slate-600 mt-1">{t('config.maxScoreNote')}</p>
           </div>
         </div>
       </div>
@@ -175,10 +177,10 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
       {/* Participants & Groups */}
       <div className="pt-4 border-t border-slate-700">
         <div className="flex items-center gap-3 mb-4">
-          <h3 className="text-sm font-bold text-slate-400">Participants</h3>
+          <h3 className="text-sm font-bold text-slate-400">{t('config.participants')}</h3>
           {hasStarted && (
             <span className="text-xs text-amber-400 bg-amber-900/30 border border-amber-700/40 px-2 py-0.5 rounded">
-              Locked — tournament has started
+              {t('config.locked')}
             </span>
           )}
         </div>
@@ -205,7 +207,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
           </div>
         ) : (
           <div className="rounded border border-slate-700 bg-slate-900/50 px-4 py-3 text-sm text-slate-400">
-            No participants yet.
+            {t('config.noParticipants')}
           </div>
         )}
       </div>
@@ -220,7 +222,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
       {/* Save */}
       {!readOnly && (
         <div className="pt-4 border-t border-slate-700 flex justify-end items-center gap-4">
-          {saveSuccess && <span className="text-sm text-emerald-400">✓ Saved successfully</span>}
+          {saveSuccess && <span className="text-sm text-emerald-400">{t('config.savedSuccess')}</span>}
           <button
             onClick={handleSave}
             disabled={isSaving || !isDirty}
@@ -230,7 +232,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
                 : 'bg-slate-700 text-slate-500 cursor-not-allowed'
             }`}
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? t('config.saving') : t('config.saveChanges')}
           </button>
         </div>
       )}

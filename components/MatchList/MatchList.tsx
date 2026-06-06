@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Match, Participant } from '../../types';
 import { useMatchList } from './useMatchList';
 
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick, onReorderMatches, readOnly = false }) => {
+  const { t } = useTranslation();
   const {
     sortMode,
     viewMode,
@@ -35,40 +37,40 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
       {/* Controls */}
       <div className="flex justify-end items-center gap-3 mb-3">
         <label className="text-xs text-slate-400 flex items-center gap-2">
-          Order by
+          {t('matchList.orderBy')}
           <select
             value={sortMode}
             onChange={(e) => handleSortModeChange(e.target.value as 'round' | 'group' | 'custom')}
             className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200"
           >
-            <option value="group">Group</option>
-            <option value="round">Round</option>
-            {viewMode === 'list' && <option value="custom">Custom</option>}
+            <option value="group">{t('matchList.group')}</option>
+            <option value="round">{t('matchList.round')}</option>
+            {viewMode === 'list' && <option value="custom">{t('matchList.custom')}</option>}
           </select>
         </label>
         {/* View toggle */}
         <div className="flex items-center bg-slate-900 border border-slate-700 rounded overflow-hidden text-xs">
           <button
             onClick={() => handleSetViewMode('cards')}
-            title="Cards view"
+            title={t('matchList.cards')}
             className={`px-2.5 py-1.5 flex items-center gap-1 transition-colors ${viewMode === 'cards' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'}`}
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
               <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
               <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
             </svg>
-            Cards
+            {t('matchList.cards')}
           </button>
           <button
             onClick={() => handleSetViewMode('list')}
-            title="List view"
+            title={t('matchList.list')}
             className={`px-2.5 py-1.5 flex items-center gap-1 border-l border-slate-700 transition-colors ${viewMode === 'list' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'}`}
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
               <rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="14" height="2" rx="1"/>
               <rect x="1" y="12" width="14" height="2" rx="1"/>
             </svg>
-            List
+            {t('matchList.list')}
           </button>
         </div>
       </div>
@@ -78,7 +80,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
         <div className="rounded-xl border border-slate-700 overflow-hidden">
           {canDrag && (
             <div className="px-3 py-1.5 bg-slate-900/70 border-b border-slate-700 text-xs text-slate-500 flex items-center gap-1.5 select-none">
-              <span className="text-slate-600 text-base leading-none">⠿</span> Drag rows to reorder — order is saved automatically
+              <span className="text-slate-600 text-base leading-none">⠷</span> {t('matchList.dragHint')}
             </div>
           )}
           <table className="w-full text-sm">
@@ -113,8 +115,8 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                 const prevKey = idx > 0 ? getSectionKey(sortedMatches[idx - 1]) : null;
                 const showSeparator = sortMode !== 'custom' && (idx === 0 || currentKey !== prevKey);
                 const separatorLabel = sortMode === 'round'
-                  ? `Round ${m.round || 1}`
-                  : currentKey === 'ZZZ' ? 'Without Group' : `Group ${currentKey}`;
+                  ? t('matchList.roundLabel', { number: m.round || 1 })
+                  : currentKey === 'ZZZ' ? t('matchList.withoutGroup') : t('matchList.groupLabel', { name: currentKey });
 
                 return (
                   <React.Fragment key={m.id}>
@@ -154,7 +156,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                     <td className="px-1 py-2.5">
                       <div className="flex items-center justify-end gap-2">
                         <span className={`font-medium max-w-[130px] ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-200'}`}>
-                          {pA?.name || 'TBD'}
+                          {pA?.name || t('matchList.tbd')}
                         </span>
                         <span className="text-[10px] font-bold text-slate-500 bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-700/50 shrink-0">
                           {posA.replace(/^group\s+/i, '').trim().toUpperCase()}
@@ -171,7 +173,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                         </span>
                       ) : (
                           <span className="text-slate-600 text-xs flex items-center justify-center gap-1.5">
-                          vs
+                          {t('matchList.vs')}
                           <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse inline-block"></span>
                         </span>
                       )}
@@ -183,7 +185,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                           {posB.replace(/^group\s+/i, '').trim().toUpperCase()}
                         </span>
                         <span className={`font-medium max-w-[130px] ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-200'}`}>
-                          {pB?.name || 'TBD'}
+                          {pB?.name || t('matchList.tbd')}
                         </span>
                       </div>
                     </td>
@@ -201,19 +203,19 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
         const sections = sortMode === 'round'
           ? Object.keys(groupedByRound).sort((a, b) => parseInt(a) - parseInt(b)).map(key => ({
               key: `round-${key}`,
-              header: `Round ${key}`,
+              header: t('matchList.roundLabel', { number: key }),
               sectionMatches: groupedByRound[parseInt(key)],
             }))
           : orderedGroupKeys.map(groupKey => ({
               key: `group-${groupKey}`,
-              header: groupKey === 'ZZZ' ? 'Without Group' : `Group ${groupKey}`,
+              header: groupKey === 'ZZZ' ? t('matchList.withoutGroup') : t('matchList.groupLabel', { name: groupKey }),
               sectionMatches: groupedByGroup[groupKey],
             }));
 
         const getBadge = (m: Match) =>
           sortMode === 'round'
-            ? (m.group ? (m.group.startsWith('Group') ? m.group : `Group ${m.group}`) : null)
-            : `Round ${m.round || 1}`;
+            ? (m.group ? (m.group.startsWith('Group') ? m.group : t('matchList.groupLabel', { name: m.group })) : null)
+            : t('matchList.roundLabel', { number: m.round || 1 });
 
         return sections.map(({ key, header, sectionMatches }) => (
           <div key={key}>
@@ -250,7 +252,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                     )}
                     <div className="flex justify-between items-center mb-2">
                       <span className={`font-medium ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-300'}`}>
-                        {pA?.name || 'TBD'}
+                        {pA?.name || t('matchList.tbd')}
                       </span>
                       <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantAId ? 'text-green-400' : 'text-white') : 'text-slate-600'}`}>
                         {m.scoreA ?? '-'}
@@ -258,7 +260,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                     </div>
                     <div className="flex justify-between items-center">
                       <span className={`font-medium ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-300'}`}>
-                        {pB?.name || 'TBD'}
+                        {pB?.name || t('matchList.tbd')}
                       </span>
                       <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantBId ? 'text-green-400' : 'text-white') : 'text-slate-600'}`}>
                         {m.scoreB ?? '-'}

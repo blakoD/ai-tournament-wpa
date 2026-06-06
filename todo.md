@@ -17,12 +17,13 @@
 - [X] Added tournament COMPLETED status in the TournamentView Header when the completedAt field is set.
 - [x] Show update score in fullscreen view for mobile
 - [X] Configure tournament matches max score in settings. Update message "Rule: First to 16 points wins. No ties allowed." with the configured max score.
-- [ ] Configure global sorting (Wins > Point Diff > Points For > Points Against)
-- [ ] pre-configured templates. Mode "Federacion". 
-- [ ] Remove storage from localStorage
-- [ ] Bulk import players from textarea input separated by new line. E.g 
-- [ ] Add support to change the language of the app to Spanish
+- [x] Configure global sorting (Wins > Point Diff > Points For > Points Against)
 - [ ] Switch dark/light mode based on user preference 
+- [ ] Fix Authentication. The user should be able to login and see only their tournaments. The user should be able to share the tournament with other users by adding their email in the tournament configuration. Only the tournament owner and the users with whom the tournament is shared can edit the tournament. All users with access to the tournament can view it.
+- [x] Add support to change the language of the app to Spanish
+- [ ] Remove storage from localStorage
+- [ ] pre-configured templates. Mode "Federacion". 
+- [ ] Bulk import players from textarea input separated by new line. E.g 
 - [ ] Improve dashboard UI and add pagination for tournaments list and filter by sport category
 - [ ] Add logo for tournaments
 - [ ] Add logo/photo for players

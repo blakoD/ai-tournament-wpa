@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { loadInitialData } from './services/initialData';
+import './i18n';
 
 // Initialize sample data if storage is empty
 loadInitialData();

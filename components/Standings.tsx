@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Participant } from '../types';
 
 interface Props {
@@ -16,10 +17,11 @@ export const Standings: React.FC<Props> = ({
   allowEdits,
   mode = 'grouped'
 }) => {
+  const { t } = useTranslation();
   if (!participants || participants.length === 0) {
     return (
       <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 text-center text-slate-500 italic">
-        No participants found in this tournament.
+        {t('standings.noParticipants')}
       </div>
     );
   }
@@ -30,7 +32,7 @@ export const Standings: React.FC<Props> = ({
   if (mode === 'global') {
       // Sort by global rank
       const sorted = [...participants].sort((a, b) => (a.globalRank || 999) - (b.globalRank || 999));
-      groups['Global Standings'] = sorted;
+      groups[t('standings.globalStandings')] = sorted;
   } else {
       participants.forEach(p => {
         const g = p.group || 'A';
@@ -65,22 +67,22 @@ export const Standings: React.FC<Props> = ({
           <div key={gKey} className="overflow-hidden rounded-xl border border-slate-700 bg-slate-800 shadow-sm">
              {(showGroups || mode === 'global') && (
                  <div className="bg-slate-900/50 px-4 py-2 border-b border-slate-700 font-bold text-blue-400">
-                     {mode === 'global' ? 'Global Standings' : (gKey.startsWith('Group') ? gKey : `Group ${gKey}`)}
+                     {mode === 'global' ? t('standings.globalStandings') : (gKey.startsWith('Group') ? gKey : t('standings.group', { name: gKey }))}
                  </div>
              )}
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
                 <thead className="bg-slate-900 text-slate-400 uppercase font-medium border-b border-slate-700">
                     <tr>
-                    <th className="px-4 py-3 w-12" title={mode === 'global' ? "Global Rank" : "Group Rank"}>#</th>
-                    {showGroups && <th className="px-4 py-3 w-16 text-center border-l border-slate-800 text-slate-500" title="Global Rank">Gp</th>}
-                    <th className="px-4 py-3">Player</th>
-                    {mode === 'global' && <th className="px-4 py-3 text-center w-16">Group</th>}
-                    <th className="px-4 py-3 text-center w-16">G</th>
-                    <th className="px-4 py-3 text-center w-16">PJ</th>
-                    <th className="px-4 py-3 text-center w-16">PF</th>
-                    <th className="px-4 py-3 text-center w-16">PC</th>
-                    <th className="px-4 py-3 text-center w-16">Diff</th>
+                    <th className="px-4 py-3 w-12" title={mode === 'global' ? t('standings.globalRank') : t('standings.groupRank')}>#</th>
+                    {showGroups && <th className="px-4 py-3 w-16 text-center border-l border-slate-800 text-slate-500" title={t('standings.globalRank')}>{t('standings.gp')}</th>}
+                    <th className="px-4 py-3">{t('standings.player')}</th>
+                    {mode === 'global' && <th className="px-4 py-3 text-center w-16">{t('standings.groupCol')}</th>}
+                    <th className="px-4 py-3 text-center w-16">{t('standings.wins')}</th>
+                    <th className="px-4 py-3 text-center w-16">{t('standings.matchesPlayed')}</th>
+                    <th className="px-4 py-3 text-center w-16">{t('standings.pointsFor')}</th>
+                    <th className="px-4 py-3 text-center w-16">{t('standings.pointsAgainst')}</th>
+                    <th className="px-4 py-3 text-center w-16">{t('standings.diff')}</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700">
@@ -103,7 +105,7 @@ export const Standings: React.FC<Props> = ({
                                 {replacingId === p.id ? null : (
                                   <div className="flex items-center gap-2">
                                       {p.name}
-                                      {p.isDropped && <span className="text-[10px] bg-red-900 text-red-200 px-1 rounded">DROPPED</span>}
+                                      {p.isDropped && <span className="text-[10px] bg-red-900 text-red-200 px-1 rounded">{t('standings.dropped')}</span>}
                                   </div>
                                 )}
                                 {allowEdits && (
@@ -128,7 +130,7 @@ export const Standings: React.FC<Props> = ({
                                             onClick={() => handleReplace(p.id)}
                                             className="text-[10px] text-blue-400 hover:text-blue-300 opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
-                                            Rename
+                                            {t('standings.rename')}
                                         </button>
                                     )
                                 )}
@@ -158,9 +160,9 @@ export const Standings: React.FC<Props> = ({
         );
       })}
       <div className="bg-slate-900 px-4 py-2 text-xs text-slate-500 flex justify-between">
-        <span>Sorting: Wins &gt; Points For &gt; Diff</span>
+        <span>{t('standings.sorting')}</span>
         { qualifiesByGroup &&
-            <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Qualified Zone (Top {qualifiesByGroup} per Group)</span>
+            <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> {t('standings.qualifiedZone', { count: qualifiesByGroup })}</span>
         }
       </div>
     </div>

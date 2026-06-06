@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ImPlus, ImMinus } from "react-icons/im";
+import { useTranslation } from 'react-i18next';
 import { Match, Participant } from '../types';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16, onSave, onReset, onClose }) => {
+  const { t } = useTranslation();
   const [sA, setSA] = useState<string>(match.scoreA?.toString() || '');
   const [sB, setSB] = useState<string>(match.scoreB?.toString() || '');
   const [fullscreen, setFullscreen] = useState(false);
@@ -53,12 +55,12 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
     const scoreB = parseInt(sB);
 
     if (isNaN(scoreA) || isNaN(scoreB)) {
-      setError('Please enter valid numbers for both scores.');
+      setError(t('matchModal.errorInvalidScores'));
       return;
     }
 
     if (scoreA === scoreB) {
-      setError('Draws are not allowed. One player must win.');
+      setError(t('matchModal.errorDraws'));
       return;
     }
 
@@ -134,13 +136,13 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
     <div className={overlayClass}>
       <div className={cardClass}>
         <div className="bg-slate-900 px-4 py-3 flex justify-between items-center border-b border-slate-700 shrink-0">
-          <h3 className={'font-bold text-white ' + (fullscreen ? 'text-xl' : 'text-lg')}>Update Score</h3>
+          <h3 className={'font-bold text-white ' + (fullscreen ? 'text-xl' : 'text-lg')}>{t('matchModal.title')}</h3>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setFullscreen(f => !f)}
               className="text-slate-400 hover:text-white p-1 rounded transition-colors"
-              title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+              title={fullscreen ? t('matchModal.exitFullscreen') : t('matchModal.fullscreen')}
             >
               {fullscreen ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,7 +167,7 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
                     <div className="flex-1 text-center">
                     <div className={'font-bold text-blue-400 ' + (fullscreen ? 'text-3xl' : 'text-xl')}>{pA.name}</div>
                     </div>
-                    <div className={'text-slate-500 font-bold ' + (fullscreen ? 'text-3xl' : 'text-xl')}>VS</div>
+                    <div className={'text-slate-500 font-bold ' + (fullscreen ? 'text-3xl' : 'text-xl')}>{t('matchModal.vs')}</div>
                     <div className="flex-1 text-center">
                     <div className={'font-bold text-red-400 ' + (fullscreen ? 'text-3xl' : 'text-xl')}>{pB.name}</div>
                     </div>
@@ -190,14 +192,14 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
 
                 {showLowScoreWarning && (
                     <div className="mb-4 p-3 bg-amber-900/50 border border-amber-700 text-amber-200 text-sm text-center rounded animate-pulse">
-                    <strong>Warning:</strong> Neither player reached {maxScore} points.<br />
-                    Click <strong>Save Result</strong> again to confirm this score.
+                    <strong>{t('matchModal.warningTitle')}</strong> {t('matchModal.warningBody', { max: maxScore })}<br />
+                    {t('matchModal.warningConfirm')}
                     </div>
                 )}
 
                 {!showLowScoreWarning && !error && (
                     <div className={'text-slate-500 text-center ' + (fullscreen ? 'text-base mb-4' : 'text-xs mb-6')}>
-                    Rule: First to {maxScore} points wins. No ties allowed.
+                    {t('matchModal.rule', { max: maxScore })}
                     </div>
                 )}
 
@@ -207,9 +209,9 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
                         type="button"
                         onClick={onReset}
                         className={'px-4 rounded-lg bg-red-900/20 text-red-400 font-bold hover:bg-red-900/40 border border-red-900/50 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
-                        title="Reset Match Result"
+                        title={t('matchModal.resetTitle')}
                     >
-                        Reset
+                        {t('matchModal.reset')}
                     </button>
                     )}
                     <button
@@ -217,13 +219,13 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
                     onClick={onClose}
                     className={'flex-1 rounded-lg bg-slate-700 text-slate-300 font-bold hover:bg-slate-600 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
                     >
-                    Cancel
+                    {t('matchModal.cancel')}
                     </button>
                     <button
                     type="submit"
                     className={'flex-1 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
                     >
-                    {showLowScoreWarning ? 'Confirm & Save' : 'Save Result'}
+                    {showLowScoreWarning ? t('matchModal.confirmSave') : t('matchModal.saveResult')}
                     </button>
                 </div>
             </div>

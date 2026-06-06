@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const ConfirmDialog: React.FC<Props> = ({ isOpen, title, message, onConfirm, onCancel }) => {
+  const { t } = useTranslation();
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
         if(e.key === 'Escape' && isOpen) onCancel();
@@ -31,13 +33,13 @@ export const ConfirmDialog: React.FC<Props> = ({ isOpen, title, message, onConfi
                 onClick={onCancel}
                 className="px-4 py-2 rounded text-slate-400 hover:text-white font-medium transition-colors"
             >
-                Cancel
+                {t('confirmDialog.cancel')}
             </button>
             <button 
                 onClick={onConfirm}
                 className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-900/20 transition-colors"
             >
-                Confirm
+                {t('confirmDialog.confirm')}
             </button>
         </div>
       </div>

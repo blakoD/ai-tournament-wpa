@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Tournament, Match, StageType, TournamentStatus, Participant, EliminationType } from '../types';
 import { calculateStandings, startNextStage, generateId } from '../services/tournamentLogic';
 import { Standings } from './Standings';
@@ -20,6 +21,7 @@ interface Props {
 
 export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate, onMatchResult, onSwapParticipant }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string>('global-standings');
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
@@ -186,8 +188,8 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
     if (!selectedMatch) return;
 
     openConfirm(
-      "Reset Match Result?",
-      "Are you sure? This will clear the scores and winner. If this is a bracket match, it will clear the participant slot in the next match.",
+      t('tournamentView.confirmResetMatchTitle'),
+      t('tournamentView.confirmResetMatchMsg'),
       () => {
         const matchId = selectedMatch.id;
         const newMatches = tournament.matches.map(m => {
@@ -263,8 +265,8 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
     }
 
     openConfirm(
-      'Finalize Tournament?',
-      'This will mark the tournament as completed.',
+      t('tournamentView.confirmFinalizeTitle'),
+      t('tournamentView.confirmFinalizeMsg'),
       () => {
         void updateWithHistory({
           ...tournament,
@@ -309,8 +311,8 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
     const stageType = stageMatches[0]?.stage || StageType.RR;
 
     openConfirm(
-      "Simulate Results ?",
-      `This will simulate random scores for all remaining ${stageType === StageType.RR ? 'Round Robin' : 'Bracket'} matches in this stage. Existing results will not be changed.`,
+      t('tournamentView.confirmSimulateTitle'),
+      t('tournamentView.confirmSimulateMsg', { type: stageType === StageType.RR ? t('tournamentView.roundRobin') : t('tournamentView.bracket') }),
       () => {
         let newMatches = tournament.matches.map(m => {
           if (m.stageNumber === currentTabStageNumber && !m.isCompleted && m.participantAId && m.participantBId) {
@@ -380,11 +382,11 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
     if (!canEdit) return;
     const stageMatches = tournament.matches.filter(m => m.stageNumber === stageNum);
     const stageType = stageMatches[0]?.stage;
-    const label = stageType === StageType.SE ? 'Bracket' : `Stage ${stageNum}`;
+    const label = stageType === StageType.SE ? t('tournamentView.bracket') : t('tournamentView.stage', { number: stageNum });
 
     openConfirm(
-      `Remove ${label} ?`,
-      `This will permanently delete all matches in ${label}. The previous stage will become active again.`,
+      t('tournamentView.confirmRemoveTitle', { label }),
+      t('tournamentView.confirmRemoveMsg', { label }),
       () => {
         const newMatches = tournament.matches.filter(m => m.stageNumber !== stageNum);
         let newStatus = tournament.status;
@@ -403,8 +405,8 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
   const handleClearStage = (stageNum: number) => {
     if (!canEdit) return;
     openConfirm(
-      `Reset Stage ${stageNum} Results ?`,
-      `This will reset all scores in Stage ${stageNum} to unplayed. All current progress in this stage will be lost.`,
+      t('tournamentView.confirmResetStageTitle', { number: stageNum }),
+      t('tournamentView.confirmResetStageMsg', { number: stageNum }),
       () => {
         const stageMatches = tournament.matches.filter(m => m.stageNumber === stageNum);
         const minRound = stageMatches.length > 0 ? Math.min(...stageMatches.map(m => m.round)) : 1;
@@ -440,7 +442,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
               <button
                 onClick={() => navigate('/')}
                 className="text-slate-400 hover:text-white hover:bg-slate-700 p-2 rounded-full transition-colors"
-                title="Back to Dashboard"
+                title={t('tournamentView.backToDashboard')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -457,16 +459,16 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                   </h1>
                   {tournament.completedAt && (
                     <span className="text-xs font-semibold text-emerald-400 bg-emerald-900/30 border border-emerald-700/50 px-2 py-0.5 rounded mb-[-3px]">
-                      Completed
+                      {t('tournamentView.completed')}
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-slate-400">{tournament.title}</p>
-                <p className="text-xs text-slate-500 mt-1">{!tournamentReadOnly && 'Edit mode enabled (local)'}</p>
+                <p className="text-xs text-slate-500 mt-1">{!tournamentReadOnly && t('tournamentView.editModeEnabled')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {isSaving && <span className="text-xs text-blue-400">Saving...</span>}
+              {isSaving && <span className="text-xs text-blue-400">{t('tournamentView.saving')}</span>}
               {canEdit && history.length > 0 && (
                 <button
                   onClick={handleUndo}
@@ -483,7 +485,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                   disabled={isSaving}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded font-bold shadow-lg shadow-emerald-900/20 animate-pulse"
                 >
-                  Next Stage
+                  {t('tournamentView.nextStage')}
                 </button>
               )}
               {canEdit && isCurrentStageComplete && tournament.status !== TournamentStatus.COMPLETED && (
@@ -492,7 +494,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                   disabled={isSaving}
                   className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold shadow-lg shadow-blue-900/20"
                 >
-                  Finalize Tournament
+                  {t('tournamentView.finalizeTournament')}
                 </button>
               )}
             </div>
@@ -504,18 +506,18 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
               onClick={() => setActiveTab('config')}
               className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'config' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
             >
-              Configuration
+              {t('tournamentView.configTab')}
             </button>
             <button
               onClick={() => setActiveTab('global-standings')}
               className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'global-standings' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
             >
-              Global Standings
+              {t('tournamentView.globalStandingsTab')}
             </button>
             {Array.from(new Set(tournament.matches.map(m => m.stageNumber))).sort((a, b) => a - b).map(stageNum => {
               const stageMatches = tournament.matches.filter(m => m.stageNumber === stageNum);
               const stageType = stageMatches[0]?.stage;
-              const label = stageType === StageType.SE ? 'Bracket' : `Stage ${stageNum}`;
+              const label = stageType === StageType.SE ? t('tournamentView.bracket') : t('tournamentView.stage', { number: stageNum });
               return (
                 <button
                   key={stageNum}
@@ -564,7 +566,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-bold text-slate-400">
-                  {stageType === StageType.SE ? 'Bracket' : `Stage ${stageNum} Matches`}
+                  {stageType === StageType.SE ? t('tournamentView.bracket') : t('tournamentView.stageMatches', { number: stageNum })}
                 </h2>
                 <div className="flex gap-2">
                   {canEdit && isLastStage && !isCurrentStageComplete && (
@@ -620,8 +622,8 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
               {stageType === StageType.RR && (
                 <div className="mt-12 border-t border-slate-800 pt-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-white">Stage Standings</h3>
-                    <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Stage {stageNum}</span>
+                    <h3 className="text-xl font-bold text-white">{t('tournamentView.stageStandings')}</h3>
+                    <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">{t('tournamentView.stage', { number: stageNum })}</span>
                   </div>
                   <Standings
                     participants={calculateStandings(

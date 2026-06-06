@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { HashRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
+import i18n from './i18n';
 
 import { ProfilePage } from "./components/ProfilePage";
 import { Setup } from "./components/Setup";
@@ -48,16 +50,26 @@ interface ToolbarProps {
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
+  const { t } = useTranslation();
+  const [lang, setLang] = useState(i18n.language);
+
+  const toggleLanguage = () => {
+    const next = lang === 'en' ? 'es' : 'en';
+    void i18n.changeLanguage(next);
+    localStorage.setItem('app_language', next);
+    setLang(next);
+  };
+
   return (
     <header className="border-b border-slate-800 bg-slate-900/95 backdrop-blur sticky top-0 z-10">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="text-white font-bold tracking-wide">
-          Tournament Builder
+          {t('app.name')}
         </Link>
 
         <nav className="flex items-center gap-2 text-sm">
           <Link to="/" className="text-slate-300 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors">
-            Inicio
+            {t('app.home')}
           </Link>
           {session && (
             <>
@@ -65,13 +77,13 @@ const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
                 to="/dashboard"
                 className="text-slate-300 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors"
               >
-                Dashboard
+                {t('app.dashboard')}
               </Link>
               <Link
                 to="/profile"
                 className="text-slate-300 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors"
               >
-                Perfil
+                {t('app.profile')}
               </Link>
               <button
                 type="button"
@@ -80,7 +92,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
                 }}
                 className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 px-3 py-1.5 rounded-md transition-colors"
               >
-                Logout
+                {t('app.logout')}
               </button>
             </>
           )}
@@ -90,16 +102,24 @@ const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
                 to="/signin"
                 className="text-slate-300 hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors"
               >
-                Login
+                {t('app.login')}
               </Link>
               <Link
                 to="/signup"
                 className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md transition-colors"
               >
-                Sign up
+                {t('app.signup')}
               </Link>
             </>
           )}
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            className="ml-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-md transition-colors text-xs font-semibold tracking-wide"
+            title={lang === 'en' ? 'Cambiar a Español' : 'Switch to English'}
+          >
+            {lang === 'en' ? 'ES' : 'EN'}
+          </button>
         </nav>
       </div>
     </header>
@@ -112,6 +132,7 @@ interface HomePageProps {
 }
 
 const HomePage: React.FC<HomePageProps> = ({ session, onSignOut }) => {
+  const { t } = useTranslation();
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -139,11 +160,11 @@ const HomePage: React.FC<HomePageProps> = ({ session, onSignOut }) => {
       <Toolbar session={session} onSignOut={onSignOut} />
       <main className="max-w-6xl mx-auto px-4 py-8">
         <section className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Ultimos torneos</h1>
-          <p className="text-slate-400">Se muestran en modo lectura. Solo puedes editarlos desde Dashboard si tienes permiso.</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{t('home.title')}</h1>
+          <p className="text-slate-400">{t('home.subtitle')}</p>
         </section>
 
-        {isLoading && <p className="text-slate-300">Loading tournaments...</p>}
+        {isLoading && <p className="text-slate-300">{t('home.loading')}</p>}
         {error && <p className="text-red-300">{error}</p>}
 
         {!isLoading && !error && (
@@ -153,7 +174,7 @@ const HomePage: React.FC<HomePageProps> = ({ session, onSignOut }) => {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-semibold text-white">{tournament.name}</h3>
                   <span className="text-[11px] uppercase tracking-wide bg-slate-800 border border-slate-700 text-slate-300 px-2 py-1 rounded">
-                    Read only
+                    {t('home.readOnly')}
                   </span>
                 </div>
                 <p className="text-slate-400 text-sm mb-4">{tournament.title}</p>
@@ -162,7 +183,7 @@ const HomePage: React.FC<HomePageProps> = ({ session, onSignOut }) => {
                   onClick={() => navigate(`/tournament/${tournament.urlSlug}?readonly=1`)}
                   className="text-sm text-blue-400 hover:text-blue-300"
                 >
-                  Ver torneo
+                  {t('home.viewTournament')}
                 </button>
               </div>
             ))}
@@ -181,6 +202,7 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProps) => {
+  const { t } = useTranslation();
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -218,7 +240,7 @@ const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProps) => {
   };
 
   const handleDeleteTournament = async (tournamentId: string, tournamentName: string) => {
-    const shouldDelete = window.confirm(`Delete tournament \"${tournamentName}\"? This action cannot be undone.`);
+    const shouldDelete = window.confirm(t('dashboard.deleteConfirm', { name: tournamentName }));
     if (!shouldDelete) {
       return;
     }
@@ -277,27 +299,26 @@ const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProps) => {
                 void handleToggleActionsFromTitle();
               }}
               className={`text-3xl font-bold text-white mb-2 select-none ${isAdmin ? 'cursor-pointer' : ''}`}
-              title="Tournaments"
             >
-              My Tournaments
+              {t('dashboard.title')}
             </h1>
-            <p className="text-slate-400">Manage your competitions efficiently.</p>
-            {userEmail && <p className="text-slate-500 text-sm mt-1">Signed in as {userEmail}</p>}
-            <p className="text-slate-500 text-xs mt-1">Role: {isAdmin ? 'admin' : 'user'}</p>
+            <p className="text-slate-400">{t('dashboard.subtitle')}</p>
+            {userEmail && <p className="text-slate-500 text-sm mt-1">{t('dashboard.signedInAs', { email: userEmail })}</p>}
+            <p className="text-slate-500 text-xs mt-1">{t('dashboard.role', { role: isAdmin ? 'admin' : 'user' })}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/create')}
               className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-blue-900/20"
             >
-              + New Tournament
+              {t('dashboard.newTournament')}
             </button>
           </div>
         </header>
 
         {isLoading ? (
           <div className="text-center py-20 bg-slate-800/50 rounded-xl border border-slate-700">
-            <p className="text-slate-300">Loading tournaments...</p>
+            <p className="text-slate-300">{t('dashboard.loading')}</p>
           </div>
         ) : error ? (
           <div className="text-center py-20 bg-red-900/20 rounded-xl border border-red-700/60 px-6">
@@ -305,60 +326,59 @@ const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProps) => {
           </div>
         ) : tournaments.length === 0 ? (
           <div className="text-center py-20 bg-slate-800/50 rounded-xl border border-slate-700">
-            <p className="text-slate-400 mb-4">No active tournaments found.</p>
+            <p className="text-slate-400 mb-4">{t('dashboard.noTournaments')}</p>
             <button
               onClick={() => navigate('/create')}
               className="text-blue-400 hover:text-blue-300 font-semibold"
             >
-              Create your first one
+              {t('dashboard.createFirst')}
             </button>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {tournaments.map((t) => (
+            {tournaments.map((ts) => (
               <div
-                key={t.id}
-                onClick={() => navigate(`/tournament/${t.urlSlug}`)}
+                key={ts.id}
+                onClick={() => navigate(`/tournament/${ts.urlSlug}`)}
                 className="bg-slate-800 border border-slate-700 p-4 rounded-xl hover:border-blue-500/50 hover:bg-slate-800/80 cursor-pointer transition-all group"
               >
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">
-                    {t.name}
+                    {ts.name}
                   </h3>
                   <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${
-                    t.status === 'COMPLETED' ? 'bg-green-900 text-green-300' : 'bg-amber-900 text-amber-300'
+                    ts.status === 'COMPLETED' ? 'bg-green-900 text-green-300' : 'bg-amber-900 text-amber-300'
                   }`}>
-                    {t.status}
+                    {ts.status}
                   </span>
                 </div>
-                <p className="text-slate-400 text-sm mb-4">{t.title}</p>
+                <p className="text-slate-400 text-sm mb-4">{ts.title}</p>
                 <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">
-                  <span>{t.participantCount} Players</span>
+                  <span>{t('dashboard.players', { count: ts.participantCount })}</span>
                   <span>•</span>
-                  <span>{t.eliminationType === 'SINGLE_ELIMINATION' ? 'Bracket' : '2nd Round Robin'}</span>
+                  <span>{ts.eliminationType === 'SINGLE_ELIMINATION' ? t('dashboard.bracketType') : t('dashboard.roundRobinType')}</span>
                 </div>
                 <div className="text-xs text-slate-500 border-t border-slate-700/50 pt-2 flex gap-2">
-                     <span>Started: {formatDate(t.startedAt)}</span>
-                     {t.completedAt && (
+                     <span>{t('dashboard.started', { date: formatDate(ts.startedAt) })}</span>
+                     {ts.completedAt && (
                          <>
                             <span>•</span>
-                            <span className="text-emerald-500/80">Finished: {formatDate(t.completedAt)}</span>
+                            <span className="text-emerald-500/80">{t('dashboard.finished', { date: formatDate(ts.completedAt) })}</span>
                          </>
                      )}
                 </div>
-                {/* TODO isTournamentEditable(t, session.user.id, role) */}
                 {!readOnly && (
                   <div className="mt-4 pt-3 border-t border-slate-700/50 flex justify-end">
                     <button
                       type="button"
                       onClick={(event) => {
                         event.stopPropagation();
-                        void handleDeleteTournament(t.id, t.name);
+                        void handleDeleteTournament(ts.id, ts.name);
                       }}
-                      disabled={deletingTournamentId === t.id}
+                      disabled={deletingTournamentId === ts.id}
                       className="text-xs bg-slate-900 hover:bg-red-900/30 border border-slate-600 hover:border-red-500 text-slate-300 hover:text-red-300 px-3 py-1 rounded transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      {deletingTournamentId === t.id ? 'Deleting...' : 'Delete'}
+                      {deletingTournamentId === ts.id ? t('dashboard.deleting') : t('dashboard.delete')}
                     </button>
                   </div>
                 )}
@@ -370,6 +390,21 @@ const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProps) => {
       </div>
     </div>
   );
+};
+
+const LoadingView: React.FC = () => {
+  const { t } = useTranslation();
+  return <div className="p-8 text-center text-slate-400">{t('common.loading')}</div>;
+};
+
+const NotFoundView: React.FC = () => {
+  const { t } = useTranslation();
+  return <div className="p-8 text-center text-slate-400">{t('common.tournamentNotFound')}</div>;
+};
+
+const CheckingSessionView: React.FC = () => {
+  const { t } = useTranslation();
+  return <div className="min-h-screen bg-slate-900 text-slate-300 flex items-center justify-center">{t('common.checkingSession')}</div>;
 };
 
 interface TournamentRouteProps {
@@ -441,9 +476,9 @@ const TournamentRoute = ({ session, role }: TournamentRouteProps) => {
     return persisted;
   };
 
-  if (isLoading) return <div className="p-8 text-center text-slate-400">Loading...</div>;
+  if (isLoading) return <LoadingView />;
   if (error) return <div className="p-8 text-center text-red-300">{error}</div>;
-  if (!tournament) return <div className="p-8 text-center text-slate-400">Tournament not found.</div>;
+  if (!tournament) return <NotFoundView />;
 
   return (
     <TournamentView
@@ -500,7 +535,7 @@ const App: React.FC = () => {
 
   const guard = (element: React.ReactElement, requiredRole?: 'admin') => {
     if (isAuthLoading) {
-      return <div className="min-h-screen bg-slate-900 text-slate-300 flex items-center justify-center">Checking session...</div>;
+      return <CheckingSessionView />;
     }
     if (!session) {
       return <Navigate to="/signin" replace />;

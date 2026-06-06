@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "../services/supabaseClient.js";
 
 export const SignUpPage: React.FC = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -30,19 +32,19 @@ export const SignUpPage: React.FC = () => {
       return;
     }
 
-    setSuccess("Account created. Check your email to confirm your account.");
+    setSuccess(t('signUp.successMsg'));
   };
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
       <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl">
-        <h1 className="text-2xl font-bold text-white mb-2">Create account</h1>
-        <p className="text-slate-400 mb-6">Sign up to manage tournaments with Supabase auth.</p>
+        <h1 className="text-2xl font-bold text-white mb-2">{t('signUp.title')}</h1>
+        <p className="text-slate-400 mb-6">{t('signUp.subtitle')}</p>
 
         <form onSubmit={handleSignUp} className="space-y-4">
           <div>
             <label htmlFor="signup-email" className="block text-sm text-slate-300 mb-1">
-              Email
+              {t('signUp.email')}
             </label>
             <input
               id="signup-email"
@@ -56,7 +58,7 @@ export const SignUpPage: React.FC = () => {
 
           <div>
             <label htmlFor="signup-password" className="block text-sm text-slate-300 mb-1">
-              Password
+              {t('signUp.password')}
             </label>
             <input
               id="signup-password"
@@ -77,12 +79,12 @@ export const SignUpPage: React.FC = () => {
             disabled={isSubmitting}
             className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold rounded-lg py-2.5 transition-colors"
           >
-            {isSubmitting ? "Creating account..." : "Create account"}
+            {isSubmitting ? t('signUp.submitting') : t('signUp.submit')}
           </button>
         </form>
 
         <p className="text-sm text-slate-400 mt-5 text-center">
-          Already have an account? <Link to="/signin" className="text-blue-400 hover:text-blue-300">Sign in</Link>
+          {t('signUp.hasAccount')} <Link to="/signin" className="text-blue-400 hover:text-blue-300">{t('signUp.signIn')}</Link>
         </p>
       </div>
     </div>
