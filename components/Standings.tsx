@@ -158,7 +158,7 @@ export const Standings: React.FC<Props> = ({
         );
       })}
       <div className="bg-slate-900 px-4 py-2 text-xs text-slate-500 flex justify-between">
-        <span>Sorting: Wins &gt; Diff &gt; Points For &gt; Manual</span>
+        <span>Sorting: Wins &gt; Points For &gt; Diff</span>
         { qualifiesByGroup &&
             <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Qualified Zone (Top {qualifiesByGroup} per Group)</span>
         }

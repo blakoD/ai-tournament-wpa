@@ -144,13 +144,13 @@ export const calculateStandings = (participants: Participant[], matches: Match[]
 
   const updatedParticipants = Array.from(statsMap.values());
 
-  // Sort function: Wins > Diff > Points > Manual
+  // Sort function: Wins > Points For > Diff > Manual
   const sortFn = (a: Participant, b: Participant) => {
     if (b.wins !== a.wins) return b.wins - a.wins;
+    if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
     const diffA = a.pointsFor - a.pointsAgainst;
     const diffB = b.pointsFor - b.pointsAgainst;
     if (diffB !== diffA) return diffB - diffA;
-    if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
     return (b.manualRankAdjustment || 0) - (a.manualRankAdjustment || 0);
   };
 

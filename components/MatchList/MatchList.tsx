@@ -151,20 +151,20 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                     )}
                     <td className="px-3 py-2.5 text-center font-mono text-xs text-slate-500">{idx + 1}</td>
                     {/* Team A */}
-                    <td className="px-3 py-2.5">
+                    <td className="px-1 py-2.5">
                       <div className="flex items-center justify-end gap-2">
-                        <span className={`font-medium truncate max-w-[130px] ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-200'}`}>
+                        <span className={`font-medium max-w-[130px] ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-200'}`}>
                           {pA?.name || 'TBD'}
                         </span>
                         <span className="text-[10px] font-bold text-slate-500 bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-700/50 shrink-0">
-                          {posA}
+                          {posA.replace(/^group\s+/i, '').trim().toUpperCase()}
                         </span>
                       </div>
                     </td>
                     {/* Score */}
-                    <td className="px-3 py-2.5 text-center w-28">
+                    <td className="py-2.5 text-center w-[15%]">
                       {m.isCompleted ? (
-                        <span className="font-mono font-bold text-white text-base tabular-nums">
+                        <span className="font-mono font-bold text-white text-sm tabular-nums">
                           <span className={`${m.winnerId === m.participantAId ? 'text-green-400' : 'text-white'}`}>{m.scoreA}</span> 
                           {` – `}
                           <span className={`${m.winnerId === m.participantBId ? 'text-green-400' : 'text-white'}`}>{m.scoreB}</span>
@@ -177,12 +177,12 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                       )}
                     </td>
                     {/* Team B */}
-                    <td className="px-3 py-2.5">
+                    <td className="px-1 py-2.5">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold text-slate-500 bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-700/50 shrink-0">
-                          {posB}
+                          {posB.replace(/^group\s+/i, '').trim().toUpperCase()}
                         </span>
-                        <span className={`font-medium truncate max-w-[130px] ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-200'}`}>
+                        <span className={`font-medium max-w-[130px] ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-200'}`}>
                           {pB?.name || 'TBD'}
                         </span>
                       </div>
@@ -219,7 +219,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
           <div key={key}>
             <h3 className="text-sm font-bold text-slate-500 uppercase my-3 ml-1">{header}</h3>
             <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {sectionMatches.map(m => {
+              {sectionMatches.map((m, idx) => {
                 const pA = participants.find(p => p.id === m.participantAId);
                 const pB = participants.find(p => p.id === m.participantBId);
                 const badge = getBadge(m);
@@ -234,19 +234,22 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                     }`}
                   >
                     {(badge || !m.isCompleted) && (
-                      <div className="flex justify-center items-center mb-2 h-4">
-                        {badge && (
-                          <span className="text-[10px] font-bold text-slate-500 uppercase bg-slate-900/50 px-1.5 py-0.5 mr-2 rounded border border-slate-700/50">
-                            {badge}
-                          </span>
-                        )}
-                        {!m.isCompleted && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                        )}
+                      <div className="flex">
+                        <div className="font-mono text-xs text-slate-500">#{idx + 1}</div>
+                        <div className="flex flex-1 justify-center items-center mb-2 h-4">
+                          {badge && (
+                            <span className="text-[10px] font-bold text-slate-500 uppercase bg-slate-900/50 px-1.5 py-0.5 mr-2 rounded border border-slate-700/50">
+                              {badge}
+                            </span>
+                          )}
+                          {!m.isCompleted && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          )}
+                        </div>
                       </div>
                     )}
                     <div className="flex justify-between items-center mb-2">
-                      <span className={`font-medium truncate ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-300'}`}>
+                      <span className={`font-medium ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-300'}`}>
                         {pA?.name || 'TBD'}
                       </span>
                       <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantAId ? 'text-green-400' : 'text-white') : 'text-slate-600'}`}>
@@ -254,7 +257,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className={`font-medium truncate ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-300'}`}>
+                      <span className={`font-medium ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-300'}`}>
                         {pB?.name || 'TBD'}
                       </span>
                       <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantBId ? 'text-green-400' : 'text-white') : 'text-slate-600'}`}>
