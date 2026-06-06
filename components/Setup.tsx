@@ -323,24 +323,24 @@ export const Setup: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl my-8">
-      <h2 className="text-2xl font-bold mb-6 text-white">{t('setup.title')}</h2>
+    <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl my-8">
+      <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">{t('setup.title')}</h2>
 
       <div className="space-y-6">
         {/* Basic Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">{t('setup.tournamentName')}</label>
+            <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('setup.tournamentName')}</label>
             <input
               type="text"
-              className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none"
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
               placeholder={t('setup.namePlaceholder')}
               value={name}
               onChange={e => handleTournamentNameChange(e.target.value)}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1 flex items-center gap-2">
+            <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-2">
               {t('setup.urlSlug')}
               {!slugManuallyEdited && slug && (
                 <span className="text-[10px] font-semibold text-blue-400 bg-blue-900/30 border border-blue-700/40 px-1.5 py-0.5 rounded">{t('setup.auto')}</span>
@@ -348,7 +348,7 @@ export const Setup: React.FC = () => {
             </label>
             <input
               type="text"
-              className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none"
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
               placeholder={t('setup.slugPlaceholder')}
               value={slug}
               onChange={e => handleSlugChange(e.target.value)}
@@ -357,10 +357,10 @@ export const Setup: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-400 mb-1">{t('setup.officialTitle')}</label>
+          <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('setup.officialTitle')}</label>
           <input
             type="text"
-            className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none"
+            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
             placeholder={t('setup.titlePlaceholder')}
             value={title}
             onChange={e => setTitle(e.target.value)}
@@ -368,20 +368,20 @@ export const Setup: React.FC = () => {
         </div>
         
         <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">{t('setup.description')}</label>
+            <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('setup.description')}</label>
             <textarea
-              className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none h-20"
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-900 dark:text-white focus:border-blue-500 outline-none h-20"
               value={desc}
               onChange={e => setDesc(e.target.value)}
             />
         </div>
 
         {/* Configuration */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
           <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('setup.nextFormat')}</label>
+            <label className="block text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-1">{t('setup.nextFormat')}</label>
             <select 
-              className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-900 dark:text-white"
               value={elimType}
               onChange={e => setElimType(e.target.value as EliminationType)}
             >
@@ -390,9 +390,9 @@ export const Setup: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('setup.participants')}</label>
+            <label className="block text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-1">{t('setup.participants')}</label>
             <select 
-              className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-900 dark:text-white"
               value={pCount}
               onChange={e => handlePCountChange(parseInt(e.target.value))}
             >
@@ -406,9 +406,9 @@ export const Setup: React.FC = () => {
           </div>
           {elimType !== EliminationType.SINGLE_ELIMINATION && (
             <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('setup.qualifiesByGroup')}</label>
+            <label className="block text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-1">{t('setup.qualifiesByGroup')}</label>
               <select 
-                className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white"
+                className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-900 dark:text-white"
                 value={qCount}
                 onChange={e => setQCount(parseInt(e.target.value))}
               >
@@ -422,7 +422,7 @@ export const Setup: React.FC = () => {
 
         {/* Participants Input */}
         <div>
-           <h3 className="text-sm font-bold text-slate-400 mb-3">{t('setup.enterParticipants')}</h3>
+           <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-3">{t('setup.enterParticipants')}</h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
              {names.map((pName, i) => {
                // Find assigned group for display
@@ -430,17 +430,17 @@ export const Setup: React.FC = () => {
                const gName = groups.find(g => g.id === gId)?.name;
                return (
                 <div key={i} className="flex items-center gap-2">
-                    <span className="w-6 text-slate-500 text-sm font-mono text-right">#{i + 1}</span>
+                    <span className="w-6 text-slate-400 dark:text-slate-500 text-sm font-mono text-right">#{i + 1}</span>
                     <div className="flex-1 relative">
                         <input 
                             type="text"
                             placeholder={t('setup.player', { number: i + 1 })}
-                            className="w-full bg-slate-900 border border-slate-700 rounded p-2 pr-16 text-white text-sm focus:border-blue-500 outline-none"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 pr-16 text-slate-900 dark:text-white text-sm focus:border-blue-500 outline-none"
                             value={pName}
                             onChange={e => handleNameChange(i, e.target.value)}
                         />
                         {gName && (
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                                 {gName}
                             </span>
                         )}
@@ -453,9 +453,9 @@ export const Setup: React.FC = () => {
 
         {/* Groups Section */}
         {elimType !== EliminationType.SINGLE_ELIMINATION && (
-          <div className="pt-4 border-t border-slate-700">
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-bold text-slate-400">{t('setup.groupConfiguration')}</h3>
+                  <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400">{t('setup.groupConfiguration')}</h3>
                   <button 
                       onClick={addGroup}
                       className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded font-medium transition-colors"
@@ -469,10 +469,10 @@ export const Setup: React.FC = () => {
                        const memberOrder = groupMemberOrder[g.id] || [];
                        
                        return (
-                          <div key={g.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
+                          <div key={g.id} className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
                               <div className="flex items-center gap-3 mb-2">
                                   <input 
-                                      className="bg-transparent text-white font-bold text-sm border-b border-transparent focus:border-blue-500 outline-none w-full"
+                                      className="bg-transparent text-slate-900 dark:text-white font-bold text-sm border-b border-transparent focus:border-blue-500 outline-none w-full"
                                       value={g.name}
                                       onChange={e => updateGroupName(g.id, e.target.value)}
                                       placeholder={t('setup.groupName')}
@@ -490,7 +490,7 @@ export const Setup: React.FC = () => {
                               
                               <div className="flex flex-wrap gap-2 mb-3">
                                   {memberOrder.length === 0 ? (
-                                      <span className="text-xs text-slate-600 italic">{t('setup.noPlayersAssigned')}</span>
+                                      <span className="text-xs text-slate-300 italic">{t('setup.noPlayersAssigned')}</span>
                                   ) : (
                                       memberOrder.map((pIdx) => (
                                           <span
@@ -500,9 +500,9 @@ export const Setup: React.FC = () => {
                                               onDragOver={(e) => { e.preventDefault(); setDragOverInfo({ pIdx, groupId: g.id }); }}
                                               onDrop={(e) => { e.preventDefault(); handleMemberDrop(g.id); }}
                                               onDragEnd={() => { setDragInfo(null); setDragOverInfo(null); }}
-                                              className={`text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700 cursor-grab select-none transition-all
+                                              className={`text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 cursor-grab select-none transition-all
                                                   ${dragInfo?.pIdx === pIdx ? 'opacity-30' : ''}
-                                                  ${dragOverInfo?.pIdx === pIdx && dragInfo?.groupId === g.id && dragInfo?.pIdx !== pIdx ? 'ring-1 ring-blue-500 bg-slate-700' : ''}`}
+                                                  ${dragOverInfo?.pIdx === pIdx && dragInfo?.groupId === g.id && dragInfo?.pIdx !== pIdx ? 'ring-1 ring-blue-500 bg-slate-200 dark:bg-slate-700' : ''}`}
                                           >
                                             <span className="text-slate-600">⠿</span> {names[pIdx]}
                                           </span>
@@ -512,7 +512,7 @@ export const Setup: React.FC = () => {
 
                               <button 
                                   onClick={() => openGroupModal(g.id)}
-                                  className="w-full py-1.5 rounded border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs text-blue-400 font-medium transition-colors"
+                                  className="w-full py-1.5 rounded border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs text-blue-600 dark:text-blue-400 font-medium transition-colors"
                               >
                                   {t('setup.selectParticipants', { count: memberOrder.length })}
                               </button>
@@ -529,10 +529,10 @@ export const Setup: React.FC = () => {
           </div>
         )}
 
-        <div className="pt-4 border-t border-slate-700 flex justify-end gap-4">
+        <div className="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-4">
           <button 
             onClick={() => navigate('/')}
-            className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+            className="px-4 py-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
             {t('common.cancel')}
           </button>
@@ -549,12 +549,12 @@ export const Setup: React.FC = () => {
       {/* Modal for Group Selection */}
       {activeGroupModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-slate-800 border border-slate-600 w-full max-w-md rounded-xl shadow-2xl flex flex-col max-h-[80vh] animate-in fade-in zoom-in duration-200">
-                <div className="p-4 border-b border-slate-700 flex justify-between items-center">
-                        <h3 className="font-bold text-white">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 w-full max-w-md rounded-xl shadow-2xl flex flex-col max-h-[80vh] animate-in fade-in zoom-in duration-200">
+                <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                        <h3 className="font-bold text-slate-900 dark:text-white">
                             {t('setup.manageGroup', { name: groups.find(g => g.id === activeGroupModal)?.name })}
                         </h3>
-                        <button onClick={closeGroupModal} className="text-slate-400 hover:text-white">✕</button>
+                        <button onClick={closeGroupModal} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">✕</button>
                 </div>
                 <div className="p-2 overflow-y-auto flex-1 space-y-1">
                     {names.map((pName, i) => {
@@ -564,9 +564,9 @@ export const Setup: React.FC = () => {
                         const otherGroup = groups.find(g => g.id === assignedGid);
                         
                         return (
-                            <label key={i} className={`flex items-center justify-between p-3 rounded cursor-pointer transition-colors ${isAssignedToThis ? 'bg-blue-900/30 border border-blue-500/50' : 'border border-transparent hover:bg-slate-700/50'}`}>
+                            <label key={i} className={`flex items-center justify-between p-3 rounded cursor-pointer transition-colors ${isAssignedToThis ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-400 dark:border-blue-500/50' : 'border border-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isAssignedToThis ? 'bg-blue-600 border-blue-600' : 'bg-slate-900 border-slate-600'}`}>
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isAssignedToThis ? 'bg-blue-600 border-blue-600' : 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600'}`}>
                                         {isAssignedToThis && <span className="text-white text-xs">✓</span>}
                                     </div>
                                     {/* Hidden Checkbox for logic */}
@@ -576,10 +576,10 @@ export const Setup: React.FC = () => {
                                         checked={isAssignedToThis}
                                         onChange={() => toggleAssignment(i, activeGroupModal)}
                                     />
-                                    <span className={isAssignedToThis ? 'text-white font-medium' : 'text-slate-400'}>{pName}</span>
+                                    <span className={isAssignedToThis ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-500 dark:text-slate-400'}>{pName}</span>
                                 </div>
                                 {!isAssignedToThis && otherGroup && (
-                                    <span className="text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded border border-slate-200 dark:border-slate-800">
                                         {t('setup.inGroup', { name: otherGroup.name })}
                                     </span>
                                 )}
@@ -587,8 +587,8 @@ export const Setup: React.FC = () => {
                         )
                     })}
                 </div>
-                <div className="p-4 border-t border-slate-700 bg-slate-900/30 rounded-b-xl flex gap-3">
-                    <button onClick={closeGroupModal} className="flex-1 py-2 rounded border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">
+                <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 rounded-b-xl flex gap-3">
+                    <button onClick={closeGroupModal} className="flex-1 py-2 rounded border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                         {t('common.cancel')}
                     </button>
                     <button onClick={saveGroupModal} className="flex-1 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-colors">

@@ -18,7 +18,7 @@
 - [x] Show update score in fullscreen view for mobile
 - [X] Configure tournament matches max score in settings. Update message "Rule: First to 16 points wins. No ties allowed." with the configured max score.
 - [x] Configure global sorting (Wins > Point Diff > Points For > Points Against)
-- [ ] Switch dark/light mode based on user preference 
+- [x] Switch dark/light mode based on user preference 
 - [ ] Fix Authentication. The user should be able to login and see only their tournaments. The user should be able to share the tournament with other users by adding their email in the tournament configuration. Only the tournament owner and the users with whom the tournament is shared can edit the tournament. All users with access to the tournament can view it.
 - [x] Add support to change the language of the app to Spanish
 - [ ] Remove storage from localStorage

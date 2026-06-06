@@ -23,15 +23,15 @@ export const ConfirmDialog: React.FC<Props> = ({ isOpen, title, message, onConfi
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-slate-800 border border-slate-600 w-full max-w-sm rounded-xl shadow-2xl overflow-hidden scale-100">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 w-full max-w-sm rounded-xl shadow-2xl overflow-hidden scale-100">
         <div className="p-6">
-            <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-            <p className="text-slate-300 text-sm">{message}</p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{title}</h3>
+            <p className="text-slate-600 dark:text-slate-300 text-sm">{message}</p>
         </div>
-        <div className="bg-slate-900/50 p-4 flex justify-end gap-3 border-t border-slate-700">
+        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-700">
             <button 
                 onClick={onCancel}
-                className="px-4 py-2 rounded text-slate-400 hover:text-white font-medium transition-colors"
+                className="px-4 py-2 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium transition-colors"
             >
                 {t('confirmDialog.cancel')}
             </button>

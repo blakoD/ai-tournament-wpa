@@ -79,8 +79,8 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
     : 'fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200';
 
   const cardClass = fullscreen
-    ? 'bg-slate-800 w-full h-full flex flex-col overflow-hidden'
-    : 'bg-slate-800 border border-slate-600 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden';
+    ? 'bg-white dark:bg-slate-800 w-full h-full flex flex-col overflow-hidden'
+    : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden';
 
   const btnSize = fullscreen ? 'w-16 h-16 text-3xl' : 'w-10 h-10 text-md';
   const inputSize = fullscreen ? 'w-36 h-32 text-7xl' : 'w-20 h-16 text-3xl';
@@ -101,7 +101,7 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
             type="number"
             autoFocus={autoFocus}
             min="0"
-            className={inputSize + ' text-center font-bold bg-slate-900 border border-slate-600 rounded-lg focus:border-blue-500 outline-none text-white'}
+            className={inputSize + ' text-center font-bold bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:border-blue-500 outline-none text-slate-900 dark:text-white'}
             value={value}
             onChange={e => {
             onChange(e.target.value);
@@ -135,13 +135,13 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
   return (
     <div className={overlayClass}>
       <div className={cardClass}>
-        <div className="bg-slate-900 px-4 py-3 flex justify-between items-center border-b border-slate-700 shrink-0">
-          <h3 className={'font-bold text-white ' + (fullscreen ? 'text-xl' : 'text-lg')}>{t('matchModal.title')}</h3>
+        <div className="bg-slate-50 dark:bg-slate-900 px-4 py-3 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
+          <h3 className={'font-bold text-slate-900 dark:text-white ' + (fullscreen ? 'text-xl' : 'text-lg')}>{t('matchModal.title')}</h3>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setFullscreen(f => !f)}
-              className="text-slate-400 hover:text-white p-1 rounded transition-colors"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 rounded transition-colors"
               title={fullscreen ? t('matchModal.exitFullscreen') : t('matchModal.fullscreen')}
             >
               {fullscreen ? (
@@ -154,7 +154,7 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
                 </svg>
               )}
             </button>
-            <button onClick={onClose} className="text-slate-400 hover:text-white">✕</button>
+            <button onClick={onClose} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">✕</button>
           </div>
         </div>
 

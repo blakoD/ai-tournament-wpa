@@ -36,12 +36,12 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
     <div className="">
       {/* Controls */}
       <div className="flex justify-end items-center gap-3 mb-3">
-        <label className="text-xs text-slate-400 flex items-center gap-2">
+        <label className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
           {t('matchList.orderBy')}
           <select
             value={sortMode}
             onChange={(e) => handleSortModeChange(e.target.value as 'round' | 'group' | 'custom')}
-            className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200"
+            className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-2 py-1 text-slate-700 dark:text-slate-200"
           >
             <option value="group">{t('matchList.group')}</option>
             <option value="round">{t('matchList.round')}</option>
@@ -49,11 +49,11 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
           </select>
         </label>
         {/* View toggle */}
-        <div className="flex items-center bg-slate-900 border border-slate-700 rounded overflow-hidden text-xs">
+        <div className="flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded overflow-hidden text-xs">
           <button
             onClick={() => handleSetViewMode('cards')}
             title={t('matchList.cards')}
-            className={`px-2.5 py-1.5 flex items-center gap-1 transition-colors ${viewMode === 'cards' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`px-2.5 py-1.5 flex items-center gap-1 transition-colors ${viewMode === 'cards' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
               <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
@@ -64,7 +64,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
           <button
             onClick={() => handleSetViewMode('list')}
             title={t('matchList.list')}
-            className={`px-2.5 py-1.5 flex items-center gap-1 border-l border-slate-700 transition-colors ${viewMode === 'list' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`px-2.5 py-1.5 flex items-center gap-1 border-l border-slate-300 dark:border-slate-700 transition-colors ${viewMode === 'list' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
               <rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="14" height="2" rx="1"/>
@@ -77,17 +77,17 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
 
       {/* ── List view ── */}
       {viewMode === 'list' && (
-        <div className="rounded-xl border border-slate-700 overflow-hidden">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           {canDrag && (
-            <div className="px-3 py-1.5 bg-slate-900/70 border-b border-slate-700 text-xs text-slate-500 flex items-center gap-1.5 select-none">
-              <span className="text-slate-600 text-base leading-none">⠷</span> {t('matchList.dragHint')}
+            <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900/70 border-b border-slate-200 dark:border-slate-700 text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5 select-none">
+              <span className="text-slate-400 dark:text-slate-600 text-base leading-none">⢷</span> {t('matchList.dragHint')}
             </div>
           )}
           <table className="w-full text-sm">
-            <thead className="bg-slate-900 text-slate-500 text-xs uppercase border-b border-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-xs uppercase border-b border-slate-200 dark:border-slate-700">
               <tr>
                 {canDrag && <th className="w-8"></th>}
-                <th className="px-3 py-2 w-10 text-center text-slate-600">#</th>
+                <th className="px-3 py-2 w-10 text-center text-slate-400 dark:text-slate-600">#</th>
                 <th className="px-3 py-2 text-right"></th>
                 <th className="px-3 py-2 w-28 text-center">Score</th>
                 <th className="px-3 py-2 text-left"></th>
@@ -151,11 +151,11 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                         ⠿
                       </td>
                     )}
-                    <td className="px-3 py-2.5 text-center font-mono text-xs text-slate-500">{idx + 1}</td>
+                    <td className="px-2 py-2.5 text-center font-mono text-xs text-slate-500">{idx + 1}</td>
                     {/* Team A */}
                     <td className="px-1 py-2.5">
                       <div className="flex items-center justify-end gap-2">
-                        <span className={`font-medium max-w-[130px] ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-200'}`}>
+                        <span className={`font-medium max-w-[130px] text-right ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-200'}`}>
                           {pA?.name || t('matchList.tbd')}
                         </span>
                         <span className="text-[10px] font-bold text-slate-500 bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-700/50 shrink-0">
@@ -184,7 +184,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                         <span className="text-[10px] font-bold text-slate-500 bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-700/50 shrink-0">
                           {posB.replace(/^group\s+/i, '').trim().toUpperCase()}
                         </span>
-                        <span className={`font-medium max-w-[130px] ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-200'}`}>
+                        <span className={`font-medium max-w-[130px] text-left ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-200'}`}>
                           {pB?.name || t('matchList.tbd')}
                         </span>
                       </div>
@@ -219,7 +219,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
 
         return sections.map(({ key, header, sectionMatches }) => (
           <div key={key}>
-            <h3 className="text-sm font-bold text-slate-500 uppercase my-3 ml-1">{header}</h3>
+            <h3 className="text-sm font-bold text-slate-500 dark:text-slate-500 uppercase my-3 ml-1">{header}</h3>
             <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               {sectionMatches.map((m, idx) => {
                 const pA = participants.find(p => p.id === m.participantAId);
@@ -231,16 +231,16 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                     onClick={() => { if (!readOnly) onMatchClick(m); }}
                     className={`relative rounded-lg border p-3 transition-all ${readOnly ? 'cursor-default' : 'cursor-pointer'} ${
                       m.isCompleted
-                        ? 'bg-slate-800 border-slate-600 opacity-80 hover:opacity-100'
-                        : 'bg-slate-800/50 border-blue-900/30 hover:border-blue-500 shadow-sm hover:shadow-md hover:shadow-blue-900/20'
+                        ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 opacity-80 hover:opacity-100'
+                        : 'bg-slate-50 dark:bg-slate-800/50 border-blue-200 dark:border-blue-900/30 hover:border-blue-500 shadow-sm hover:shadow-md hover:shadow-blue-900/20'
                     }`}
                   >
                     {(badge || !m.isCompleted) && (
                       <div className="flex">
-                        <div className="font-mono text-xs text-slate-500">#{idx + 1}</div>
+                          <div className="font-mono text-xs text-slate-400 dark:text-slate-500">#{idx + 1}</div>
                         <div className="flex flex-1 justify-center items-center mb-2 h-4">
                           {badge && (
-                            <span className="text-[10px] font-bold text-slate-500 uppercase bg-slate-900/50 px-1.5 py-0.5 mr-2 rounded border border-slate-700/50">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase bg-slate-100 dark:bg-slate-900/50 px-1.5 py-0.5 mr-2 rounded border border-slate-200 dark:border-slate-700/50">
                               {badge}
                             </span>
                           )}
@@ -251,18 +251,18 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                       </div>
                     )}
                     <div className="flex justify-between items-center mb-2">
-                      <span className={`font-medium ${m.winnerId === m.participantAId ? 'text-green-400' : 'text-slate-300'}`}>
+                      <span className={`font-medium ${m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-300'}`}>
                         {pA?.name || t('matchList.tbd')}
                       </span>
-                      <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantAId ? 'text-green-400' : 'text-white') : 'text-slate-600'}`}>
+                      <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white') : 'text-slate-300 dark:text-slate-600'}`}>
                         {m.scoreA ?? '-'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className={`font-medium ${m.winnerId === m.participantBId ? 'text-green-400' : 'text-slate-300'}`}>
+                      <span className={`font-medium ${m.winnerId === m.participantBId ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-300'}`}>
                         {pB?.name || t('matchList.tbd')}
                       </span>
-                      <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantBId ? 'text-green-400' : 'text-white') : 'text-slate-600'}`}>
+                      <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantBId ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white') : 'text-slate-300 dark:text-slate-600'}`}>
                         {m.scoreB ?? '-'}
                       </span>
                     </div>

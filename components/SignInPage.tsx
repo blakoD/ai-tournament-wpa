@@ -44,29 +44,29 @@ export const SignInPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl">
-        <h1 className="text-2xl font-bold text-white mb-2">{t('signIn.title')}</h1>
-        <p className="text-slate-400 mb-6">{t('signIn.subtitle')}</p>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
+      <div className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-xl">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('signIn.title')}</h1>
+        <p className="text-slate-500 dark:text-slate-400 mb-6">{t('signIn.subtitle')}</p>
 
         <button
           type="button"
           onClick={() => {
             void handleGoogleSignIn();
           }}
-          className="w-full mb-4 bg-white hover:bg-slate-100 text-slate-900 font-semibold rounded-lg py-2.5 transition-colors"
+          className="w-full mb-4 bg-white hover:bg-slate-50 dark:hover:bg-slate-100 text-slate-900 font-semibold rounded-lg py-2.5 transition-colors border border-slate-300"
         >
           {t('signIn.continueWithGoogle')}
         </button>
 
         <div className="relative mb-4">
-          <div className="h-px bg-slate-700" />
-          <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-slate-800 px-2 text-xs text-slate-500">{t('signIn.or')}</span>
+          <div className="h-px bg-slate-200 dark:bg-slate-700" />
+          <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 px-2 text-xs text-slate-400 dark:text-slate-500">{t('signIn.or')}</span>
         </div>
 
         <form onSubmit={handleEmailSignIn} className="space-y-4">
           <div>
-            <label htmlFor="signin-email" className="block text-sm text-slate-300 mb-1">
+            <label htmlFor="signin-email" className="block text-sm text-slate-600 dark:text-slate-300 mb-1">
               {t('signIn.email')}
             </label>
             <input
@@ -75,12 +75,12 @@ export const SignInPage: React.FC = () => {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
-              className="w-full rounded-lg bg-slate-900 border border-slate-700 text-slate-100 px-3 py-2"
+              className="w-full rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2"
             />
           </div>
 
           <div>
-            <label htmlFor="signin-password" className="block text-sm text-slate-300 mb-1">
+            <label htmlFor="signin-password" className="block text-sm text-slate-600 dark:text-slate-300 mb-1">
               {t('signIn.password')}
             </label>
             <input
@@ -89,7 +89,7 @@ export const SignInPage: React.FC = () => {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
-              className="w-full rounded-lg bg-slate-900 border border-slate-700 text-slate-100 px-3 py-2"
+              className="w-full rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2"
             />
           </div>
 
@@ -104,8 +104,8 @@ export const SignInPage: React.FC = () => {
           </button>
         </form>
 
-        <p className="text-sm text-slate-400 mt-5 text-center">
-          {t('signIn.noAccount')} <Link to="/signup" className="text-blue-400 hover:text-blue-300">{t('signIn.createOne')}</Link>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-5 text-center">
+          {t('signIn.noAccount')} <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">{t('signIn.createOne')}</Link>
         </p>
       </div>
     </div>

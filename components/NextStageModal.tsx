@@ -135,17 +135,17 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-slate-800 border border-slate-700 w-full max-w-2xl rounded-xl shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
-        <div className="p-6 border-b border-slate-700">
-          <h2 className="text-2xl font-bold text-white">{t('nextStageModal.title')}</h2>
-          <p className="text-slate-400 text-sm">{t('nextStageModal.subtitle')}</p>
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 w-full max-w-2xl rounded-xl shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('nextStageModal.title')}</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">{t('nextStageModal.subtitle')}</p>
         </div>
 
         <div className="p-6 overflow-y-auto flex-1 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-2">{t('nextStageModal.nextFormat')}</label>
+            <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">{t('nextStageModal.nextFormat')}</label>
             <select 
-              className="w-full bg-slate-900 border border-slate-700 rounded p-3 text-white focus:border-blue-500 outline-none"
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-3 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
               value={nextFormat}
               onChange={e => setNextFormat(e.target.value as EliminationType)}
             >
@@ -156,9 +156,9 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
 
           {nextFormat === EliminationType.ROUND_ROBIN_2 && selectedIds.length >= 2 && (
             <div className="animate-in slide-in-from-top-2 duration-200">
-              <label className="block text-sm font-medium text-slate-400 mb-2">{t('nextStageModal.numberOfGroups')}</label>
+              <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">{t('nextStageModal.numberOfGroups')}</label>
               <select 
-                className="w-full bg-slate-900 border border-slate-700 rounded p-3 text-white focus:border-blue-500 outline-none"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-3 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
                 value={groupCount}
                 onChange={e => setGroupCount(parseInt(e.target.value))}
               >
@@ -171,7 +171,7 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
 
           <div>
             <div className="flex justify-between items-center mb-3">
-              <label className="block text-sm font-medium text-slate-400">{t('nextStageModal.selectQualified')}</label>
+              <label className="block text-sm font-medium text-slate-500 dark:text-slate-400">{t('nextStageModal.selectQualified')}</label>
               <div className="flex items-center gap-4">
                 {canShowManualFinals && (
                     <div className="flex items-center gap-2">
@@ -180,9 +180,9 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
                         id="manualFinals" 
                         checked={isManualFinals} 
                         onChange={(e) => setIsManualFinals(e.target.checked)}
-                        className="rounded border-slate-600 bg-slate-900 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-slate-400 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-blue-600 focus:ring-blue-500"
                         />
-                        <label htmlFor="manualFinals" className="text-xs text-slate-400 cursor-pointer select-none">
+                        <label htmlFor="manualFinals" className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
                           {t('nextStageModal.finals')}
                         </label>
                     </div>
@@ -193,17 +193,17 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
                     id="showAll" 
                     checked={showAllParticipants} 
                     onChange={(e) => setShowAllParticipants(e.target.checked)}
-                    className="rounded border-slate-600 bg-slate-900 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-slate-400 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-blue-600 focus:ring-blue-500"
                   />
-                  <label htmlFor="showAll" className="text-xs text-slate-400 cursor-pointer select-none">
+                  <label htmlFor="showAll" className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
                     {t('nextStageModal.showAll')}
                   </label>
                 </div>
               </div>
             </div>
-            <div className="border border-slate-700 rounded-lg overflow-hidden">
+            <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
               <table className="w-full text-sm text-left">
-                <thead className="bg-slate-900 text-slate-500 uppercase text-xs font-bold">
+                <thead className="bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 uppercase text-xs font-bold">
                   <tr>
                     <th className="px-4 py-2 w-10"></th>
                     <th className="px-4 py-2 w-12 text-center">{t('nextStageModal.rank')}</th>
@@ -220,29 +220,29 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                   {sortedStandings.map((p) => {
                     const isSelected = selectedIds.includes(p.id);
                     return (
                       <tr 
                         key={p.id} 
-                        className={`hover:bg-slate-700/30 cursor-pointer transition-colors ${isSelected ? 'bg-blue-900/20' : ''}`}
+                        className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                         onClick={() => toggleParticipant(p.id)}
                       >
                         <td className="px-4 py-3">
-                          <div className={`w-5 h-5 rounded border flex items-center justify-center ${isSelected ? 'bg-blue-600 border-blue-600' : 'bg-slate-900 border-slate-600'}`}>
+                          <div className={`w-5 h-5 rounded border flex items-center justify-center ${isSelected ? 'bg-blue-600 border-blue-600' : 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600'}`}>
                             {isSelected && <span className="text-white text-xs">✓</span>}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center font-mono text-slate-400">
+                        <td className="px-4 py-3 text-center font-mono text-slate-400 dark:text-slate-400">
                             #{p.globalRank}
                         </td>
-                        <td className="px-4 py-3 font-medium text-white">{p.name}</td>
+                        <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{p.name}</td>
                         <td className="px-4 py-3 text-center text-emerald-400 font-bold">{p.wins}</td>
                         <td className="px-4 py-3 text-center text-slate-400">{p.pointsFor - p.pointsAgainst}</td>
                         {isRR && (
                           <td className="px-4 py-3 text-center">
-                            <span className="text-[10px] font-bold bg-slate-900 text-slate-500 px-1.5 py-0.5 rounded border border-slate-700">
+                            <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-900 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                               {p.group}
                             </span>
                           </td>
@@ -256,7 +256,7 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
                           <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                             {isSelected ? (
                               <select 
-                                className="bg-slate-900 border border-slate-700 rounded text-xs text-white p-1 outline-none focus:border-blue-500"
+                                className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded text-xs text-slate-900 dark:text-white p-1 outline-none focus:border-blue-500"
                                 value={groupAssignments[p.id] || 'A'}
                                 onChange={(e) => setGroupAssignments(prev => ({ ...prev, [p.id]: e.target.value }))}
                               >
@@ -292,7 +292,7 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
                 </tbody>
               </table>
             </div>
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
               {t('nextStageModal.selected', { count: selectedIds.length })} 
               {nextFormat === EliminationType.SINGLE_ELIMINATION && !isManualFinals && selectedIds.length % 2 !== 0 && (
                 <span className="text-amber-500 ml-2">{t('nextStageModal.bracketEven')}</span>
@@ -308,10 +308,10 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
         </div>
 
 
-        <div className="p-6 border-t border-slate-700 flex gap-4">
+        <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex gap-4">
           <button 
             onClick={onClose}
-            className="flex-1 py-3 rounded border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+            className="flex-1 py-3 rounded border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
           >
             {t('nextStageModal.cancel')}
           </button>
@@ -321,7 +321,7 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
             className={`flex-1 py-3 font-bold rounded shadow-lg transition-colors ${
               canConfirm 
                 ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-blue-900/20' 
-                : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
             }`}
           >
             {t('nextStageModal.confirmNextStage')}

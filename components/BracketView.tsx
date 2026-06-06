@@ -37,7 +37,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
               return (
                 <div key={rIndex} className="flex flex-col justify-around relative">
                     {/* Round Label */}
-                    <div className="absolute -top-8 left-0 w-full text-center font-bold text-slate-500 uppercase text-sm">
+                    <div className="absolute -top-8 left-0 w-full text-center font-bold text-slate-400 dark:text-slate-500 uppercase text-sm">
                         {!isFinalRound && ((rIndex === rounds.length - 2 && roundMatches.length === 2) ? t('bracketView.semiFinals') : t('bracketView.round', { number: rIndex + 1 }))}
                     </div>
 
@@ -51,9 +51,9 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                             
                             if (isEditing) {
                                 return (
-                                    <div className={`px-3 py-2 flex items-center ${slot === 'A' ? 'border-b border-slate-700/50' : ''}`}>
+                                    <div className={`px-3 py-2 flex items-center ${slot === 'A' ? 'border-b border-slate-200 dark:border-slate-700/50' : ''}`}>
                                         <select
-                                            className="w-full bg-slate-800 text-white text-xs p-1 rounded border border-slate-600 outline-none focus:border-blue-500"
+                                            className="w-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-xs p-1 rounded border border-slate-300 dark:border-slate-600 outline-none focus:border-blue-500"
                                             value={p?.id || ''}
                                             onChange={(e) => {
                                                 if (onParticipantSwap && e.target.value) {
@@ -77,8 +77,8 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                             }
 
                             return (
-                                <div className={`px-3 py-2 flex justify-between items-center group/player ${slot === 'A' ? 'border-b border-slate-700/50' : ''} ${isWinner ? 'bg-emerald-900/20 text-emerald-400 font-bold' : 'text-slate-300 font-medium'}`}>
-                                    {p?.globalRank ? (<span className="font-mono text-slate-600 leading-tight pr-2">#{p.globalRank}</span>) : ''}
+                                <div className={`px-3 py-2 flex justify-between items-center group/player ${slot === 'A' ? 'border-b border-slate-200 dark:border-slate-700/50' : ''} ${isWinner ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 font-medium'}`}>
+                                    {p?.globalRank ? (<span className="font-mono text-slate-400 dark:text-slate-600 leading-tight pr-2">#{p.globalRank}</span>) : ''}
                                     <span className="flex-1 pr-2 leading-tight flex items-center gap-1">
                                         {p?.name || t('bracketView.tbd')}
                                         {onParticipantSwap && !readOnly && !m.isCompleted && (
@@ -132,8 +132,8 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                                         rounded-lg border shadow-sm transition-all z-10 relative ${readOnly ? 'cursor-default' : 'cursor-pointer'}
                                         ${m.isFinal ? 'w-[280px] text-base border-yellow-500' : 'w-[280px] text-sm'}
                                         ${m.isCompleted 
-                                            ? 'bg-slate-800 border-slate-600 hover:border-slate-500' 
-                                            : 'bg-slate-900 border-blue-900/50 hover:border-blue-500 hover:shadow-blue-900/20'}
+                                            ? 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500' 
+                                            : 'bg-slate-50 dark:bg-slate-900 border-blue-200 dark:border-blue-900/50 hover:border-blue-500 hover:shadow-blue-900/20'}
                                     `}
                                 >
                                     {renderParticipant('A', pA, m.scoreA)}
@@ -141,7 +141,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
 
                                     {/* Connector Lines */}
                                     {rIndex < rounds.length - 1 && (
-                                        <div className="absolute -right-6 w-6 h-px bg-slate-600 top-1/2" />
+                                        <div className="absolute -right-6 w-6 h-px bg-slate-300 dark:bg-slate-600 top-1/2" />
                                     )}
                                 </div>
                             </div>

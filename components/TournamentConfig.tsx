@@ -93,12 +93,12 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
 
   const sortedGroupNames = Object.keys(groupedParticipants).sort();
 
-  const inputClass = 'w-full bg-slate-900 border border-slate-700 rounded p-2 text-white focus:border-blue-500 outline-none';
-  const inputDisabledClass = 'w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-400 outline-none opacity-60 cursor-not-allowed';
-  const labelClass = 'block text-sm font-medium text-slate-400 mb-1';
+  const inputClass = 'w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-900 dark:text-white focus:border-blue-500 outline-none';
+  const inputDisabledClass = 'w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-400 outline-none opacity-60 cursor-not-allowed';
+  const labelClass = 'block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1';
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
+    <div className="max-w-4xl mx-auto space-y-4 bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl">
       {/* Basic Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -123,7 +123,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
             />
             <button
               onClick={handleCopySlug}
-              className="px-3 py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 hover:text-white rounded text-xs font-medium transition-colors whitespace-nowrap"
+              className="px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded text-xs font-medium transition-colors whitespace-nowrap"
               title={t('config.copy')}
             >
               {copied ? t('config.copied') : t('config.copy')}
@@ -155,11 +155,11 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
       </div>
 
       {/* Match Settings */}
-      <div className="pt-4 border-t border-slate-700">
-        <h3 className="text-sm font-bold text-slate-400 mb-3">{t('config.matchSettings')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
+      <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+        <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-3">{t('config.matchSettings')}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
           <div>
-            <label className="block text-xs font-bold uppercase text-slate-500 mb-1">{t('config.maxScore')}</label>
+            <label className="block text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-1">{t('config.maxScore')}</label>
             <input
               type="number"
               min={1}
@@ -169,15 +169,15 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
               onChange={e => setMaxScore(Math.max(1, parseInt(e.target.value) || 1))}
               disabled={readOnly}
             />
-            <p className="text-xs text-slate-600 mt-1">{t('config.maxScoreNote')}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-600 mt-1">{t('config.maxScoreNote')}</p>
           </div>
         </div>
       </div>
 
       {/* Participants & Groups */}
-      <div className="pt-4 border-t border-slate-700">
+      <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-3 mb-4">
-          <h3 className="text-sm font-bold text-slate-400">{t('config.participants')}</h3>
+          <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400">{t('config.participants')}</h3>
           {hasStarted && (
             <span className="text-xs text-amber-400 bg-amber-900/30 border border-amber-700/40 px-2 py-0.5 rounded">
               {t('config.locked')}
@@ -188,15 +188,15 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
         {sortedGroupNames.length > 0 ? (
           <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
             {sortedGroupNames.map(groupName => (
-              <div key={groupName} className="bg-slate-900/50 border border-slate-700 rounded-lg pt-3 pr-5 pb-5 pl-2">
-                <h4 className="text-xs font-bold uppercase text-slate-500 mb-2 text-center">{groupName}</h4>
+              <div key={groupName} className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg pt-3 pr-5 pb-5 pl-2">
+                <h4 className="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-2 text-center">{groupName}</h4>
                 <div className="grid grid-cols-1 gap-2">
                   {groupedParticipants[groupName].map((p, i) => (
                     <div key={p.id} className="flex items-center gap-2">
-                      <span className="w-5 text-slate-600 text-xs font-mono text-right shrink-0">
+                      <span className="w-5 text-slate-400 dark:text-slate-600 text-xs font-mono text-right shrink-0">
                         #{p.groupSort ?? i + 1}
                       </span>
-                      <span className="flex-1 border border-slate-700 rounded p-1.5 text-sm text-slate-300 truncate">
+                      <span className="flex-1 border border-slate-200 dark:border-slate-700 rounded p-1.5 text-sm text-slate-600 dark:text-slate-300 truncate">
                         {p.name}
                       </span>
                     </div>
@@ -206,7 +206,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
             ))}
           </div>
         ) : (
-          <div className="rounded border border-slate-700 bg-slate-900/50 px-4 py-3 text-sm text-slate-400">
+          <div className="rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
             {t('config.noParticipants')}
           </div>
         )}
@@ -221,7 +221,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
 
       {/* Save */}
       {!readOnly && (
-        <div className="pt-4 border-t border-slate-700 flex justify-end items-center gap-4">
+        <div className="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end items-center gap-4">
           {saveSuccess && <span className="text-sm text-emerald-400">{t('config.savedSuccess')}</span>}
           <button
             onClick={handleSave}
@@ -229,7 +229,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
             className={`px-6 py-2 font-bold rounded shadow-lg shadow-blue-900/20 transition-all ${
               isDirty && !isSaving
                 ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
             }`}
           >
             {isSaving ? t('config.saving') : t('config.saveChanges')}
