@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { RiDeleteBinFill } from 'react-icons/ri';
+import { GrClearOption } from 'react-icons/gr';
 import { Tournament, Match, StageType, TournamentStatus, Participant, EliminationType } from '../types';
 import { calculateStandings, startNextStage, generateId } from '../services/tournamentLogic';
 import { Standings } from './Standings';
@@ -458,7 +460,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                     {tournament.name}
                   </h1>
                   {tournament.completedAt && (
-                    <span className="text-xs font-semibold text-emerald-400 bg-emerald-900/30 border border-emerald-700/50 px-2 py-0.5 rounded mb-[-3px]">
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100/20 dark:bg-emerald-900/30 border border-emerald-700/50 px-2 py-0.5 rounded mb-[-3px]">
                       {t('tournamentView.completed')}
                     </span>
                   )}
@@ -584,7 +586,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                       title="Reset all match results in this stage"
                       className="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/30 border border-slate-300 dark:border-slate-600 hover:border-red-400 dark:hover:border-red-500 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 px-3 py-1.5 rounded transition-colors"
                     >
-                      🧹 
+                      <GrClearOption />
                     </button>
                   )}
                   {canEdit && isLastStage && stageNum > 1 && (
@@ -593,7 +595,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                       title="Remove this stage and all its matches"
                       className="text-xs bg-red-900/20 hover:bg-red-900/50 border border-red-700/50 hover:border-red-500 text-red-400 hover:text-red-300 px-3 py-1.5 rounded transition-colors"
                     >
-                      🗑️
+                      <RiDeleteBinFill />
                     </button>
                   )}
                 </div>
@@ -620,9 +622,9 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
               )}
 
               {stageType === StageType.RR && (
-                <div className="mt-12 border-t border-slate-800 pt-8">
+                <div className="mt-12 border-t dark:border-slate-800 pt-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-white">{t('tournamentView.stageStandings')}</h3>
+                    <h3 className="text-xl font-bold text-slate-500 dark:text-white">{t('tournamentView.stageStandings')}</h3>
                     <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">{t('tournamentView.stage', { number: stageNum })}</span>
                   </div>
                   <Standings

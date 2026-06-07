@@ -77,7 +77,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                             }
 
                             return (
-                                <div className={`px-3 py-2 flex justify-between items-center group/player ${slot === 'A' ? 'border-b border-slate-200 dark:border-slate-700/50' : ''} ${isWinner ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 font-medium'}`}>
+                                <div className={`px-3 py-2 flex justify-between items-center group/player ${slot === 'A' ? 'border-b border-slate-200 dark:border-slate-700/50' : ''} ${isWinner ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-400 dark:text-emerald-400 font-bold' : 'text-slate-700 dark:text-slate-300 font-medium'}`}>
                                     {p?.globalRank ? (<span className="font-mono text-slate-400 dark:text-slate-600 leading-tight pr-2">#{p.globalRank}</span>) : ''}
                                     <span className="flex-1 pr-2 leading-tight flex items-center gap-1">
                                         {p?.name || t('bracketView.tbd')}

@@ -179,7 +179,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
         <div className="flex items-center gap-3 mb-4">
           <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400">{t('config.participants')}</h3>
           {hasStarted && (
-            <span className="text-xs text-amber-400 bg-amber-900/30 border border-amber-700/40 px-2 py-0.5 rounded">
+            <span className="text-xs text-amber-600 bg-amber-100/10 dark:bg-amber-900/30 border border-amber-700/40 px-2 py-0.5 rounded">
               {t('config.locked')}
             </span>
           )}
