@@ -503,10 +503,10 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-6 text-sm font-medium overflow-x-auto">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
             <button
               onClick={() => setActiveTab('config')}
-              className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'config' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+              className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'config' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
             >
               {t('tournamentView.configTab')}
             </button>
@@ -537,7 +537,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
       {/* Content */}
       <div className="max-w-5xl mx-auto px-4 py-8">
         {saveError && (
-          <div className="mb-4 rounded border border-red-700/60 bg-red-900/30 p-3 text-sm text-red-200">{saveError}</div>
+          <div className="mb-4 rounded border border-red-700/60 bg-red-700/20 dark:bg-red-900/30 p-3 text-sm text-red-700 dark:text-red-200">{saveError}</div>
         )}
 
         {activeTab === 'config' && (

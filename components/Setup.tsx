@@ -32,7 +32,11 @@ export const Setup: React.FC = () => {
   // Drag state for group member reordering
   const [dragInfo, setDragInfo] = useState<{ pIdx: number; groupId: string } | null>(null);
   const [dragOverInfo, setDragOverInfo] = useState<{ pIdx: number; groupId: string } | null>(null);
-  
+
+  // Bulk import state
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkText, setBulkText] = useState('');
+
   // UI State
   const [activeGroupModal, setActiveGroupModal] = useState<string | null>(null);
   const [tempAssignments, setTempAssignments] = useState<Record<number, string>>({});
@@ -97,6 +101,52 @@ export const Setup: React.FC = () => {
     const newNames = [...names];
     newNames[idx] = val;
     setNames(newNames);
+  };
+
+  const switchToBulkMode = () => {
+    setBulkText(names.join('\n'));
+    setBulkMode(true);
+  };
+
+  const handleBulkApply = () => {
+    const parsed = bulkText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    if (parsed.length < 2) {
+      setError(t('setup.bulkImportMinError'));
+      return;
+    }
+
+    let count = Math.min(parsed.length, 50);
+    // Single elimination requires even number
+    if (elimType === EliminationType.SINGLE_ELIMINATION && count % 2 !== 0) {
+      count -= 1;
+    }
+    if (count < 2) {
+      setError(t('setup.bulkImportMinError'));
+      return;
+    }
+
+    const finalNames = parsed.slice(0, count);
+    setPCount(count);
+    setNames(finalNames);
+
+    // Reset all to first group
+    const defId = groups[0]?.id || 'g1';
+    const newAssignments: Record<number, string> = {};
+    for (let i = 0; i < count; i++) {
+      newAssignments[i] = defId;
+    }
+    setAssignments(newAssignments);
+    setGroupMemberOrder(prev => ({
+      ...Object.fromEntries(Object.keys(prev).map(gid => [gid, [] as number[]])),
+      [defId]: Array.from({ length: count }, (_, i) => i),
+    }));
+
+    setError('');
+    setBulkMode(false);
   };
 
   // Group Management Functions
@@ -379,7 +429,7 @@ export const Setup: React.FC = () => {
         {/* Configuration */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
           <div>
-            <label className="block text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-1">{t('setup.nextFormat')}</label>
+            <label className="block text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-1">{t('setup.startFormat')}</label>
             <select 
               className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-900 dark:text-white"
               value={elimType}
@@ -422,33 +472,81 @@ export const Setup: React.FC = () => {
 
         {/* Participants Input */}
         <div>
-           <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-3">{t('setup.enterParticipants')}</h3>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-             {names.map((pName, i) => {
-               // Find assigned group for display
-               const gId = assignments[i];
-               const gName = groups.find(g => g.id === gId)?.name;
-               return (
-                <div key={i} className="flex items-center gap-2">
-                    <span className="w-6 text-slate-400 dark:text-slate-500 text-sm font-mono text-right">#{i + 1}</span>
-                    <div className="flex-1 relative">
-                        <input 
-                            type="text"
-                            placeholder={t('setup.player', { number: i + 1 })}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 pr-16 text-slate-900 dark:text-white text-sm focus:border-blue-500 outline-none"
-                            value={pName}
-                            onChange={e => handleNameChange(i, e.target.value)}
-                        />
-                        {gName && (
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                                {gName}
-                            </span>
-                        )}
-                    </div>
-                </div>
-               );
-             })}
+           <div className="flex items-center justify-between mb-3">
+             <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400">{t('setup.enterParticipants')}</h3>
+             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
+               <button
+                 type="button"
+                 onClick={() => setBulkMode(false)}
+                 className={`px-3 py-1 rounded text-xs font-medium transition-all ${!bulkMode ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+               >
+                 {t('setup.bulkImportIndividual')}
+               </button>
+               <button
+                 type="button"
+                 onClick={switchToBulkMode}
+                 className={`px-3 py-1 rounded text-xs font-medium transition-all ${bulkMode ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+               >
+                 {t('setup.bulkImport')}
+               </button>
+             </div>
            </div>
+
+           {bulkMode ? (
+             <div className="space-y-2">
+               <textarea
+                 className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 text-slate-900 dark:text-white text-sm focus:border-blue-500 outline-none resize-none font-mono"
+                 rows={Math.max(6, Math.min(names.length + 2, 16))}
+                 placeholder={t('setup.bulkImportPlaceholder')}
+                 value={bulkText}
+                 onChange={e => setBulkText(e.target.value)}
+                 autoFocus
+               />
+               <div className="flex items-center justify-between gap-3">
+                 <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                   </svg>
+                   {t('setup.bulkImportHint')}
+                 </p>
+                 <div className="flex gap-2 shrink-0">
+                   <button
+                     type="button"
+                     onClick={() => setBulkMode(false)}
+                     className="px-3 py-1.5 rounded border border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs transition-colors"
+                   >
+                     {t('common.cancel')}
+                   </button>
+                   <button
+                     type="button"
+                     onClick={handleBulkApply}
+                     className="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow transition-colors"
+                   >
+                     {t('setup.bulkImportApply')}
+                   </button>
+                 </div>
+               </div>
+             </div>
+           ) : (
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+               {names.map((pName, i) => {
+                 return (
+                  <div key={i} className="flex items-center gap-2">
+                      <span className="w-6 text-slate-400 dark:text-slate-500 text-sm font-mono text-right">#{i + 1}</span>
+                      <div className="flex-1 relative">
+                          <input 
+                              type="text"
+                              placeholder={t('setup.player', { number: i + 1 })}
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 pr-16 text-slate-900 dark:text-white text-sm focus:border-blue-500 outline-none"
+                              value={pName}
+                              onChange={e => handleNameChange(i, e.target.value)}
+                          />
+                      </div>
+                  </div>
+                 );
+               })}
+             </div>
+           )}
         </div>
 
         {/* Groups Section */}

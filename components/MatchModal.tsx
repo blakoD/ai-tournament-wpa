@@ -113,7 +113,7 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
             <button
                 type="button"
                 onClick={() => adjustScore(side, 1)}
-                className={btnSize + ' rounded-md bg-slate-700 bg-[#296421] hover:bg-[#3a7a2a] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
+                className={btnSize + ' rounded-md bg-[#296421] hover:bg-[#3a7a2a] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
             >
                 <div className="flex items-center justify-center">
                     <ImPlus />
@@ -122,7 +122,7 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
             <button
                 type="button"
                 onClick={() => adjustScore(side, -1)}
-                className={btnSize + ' rounded-md bg-slate-700 bg-[#642929] hover:bg-[#7a2a2a] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
+                className={btnSize + ' rounded-md bg-[#d52525] hover:bg-[#ff4c4c] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
             >
                 <div className="flex items-center justify-center">
                     <ImMinus />
@@ -163,21 +163,24 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
           className={'flex flex-col flex-1 ' + (fullscreen ? 'p-8 gap-6' : 'p-6')}
         >
             <div className={'flex flex-col ' + (fullscreen ? 'flex-1 justify-center' : '')}>
-                <div className="flex justify-between items-center gap-4 mb-2">
+                <div className={'flex justify-between items-center gap-4 ' + (fullscreen ? 'mb-12' : 'mb-2')}>
                     <div className="flex-1 text-center">
-                    <div className={'font-bold text-blue-400 ' + (fullscreen ? 'text-3xl' : 'text-xl')}>{pA.name}</div>
+                        <div className={'font-bold text-blue-400 ' + (fullscreen ? 'text-3xl' : 'text-xl')}>{pA.name}</div>
                     </div>
-                    <div className={'text-slate-500 font-bold ' + (fullscreen ? 'text-3xl' : 'text-xl')}>{t('matchModal.vs')}</div>
+                    <div className={'text-slate-500 font-bold ' + (fullscreen ? 'text-md' : 'text-xs')}>{t('matchModal.vs')}</div>
                     <div className="flex-1 text-center">
-                    <div className={'font-bold text-red-400 ' + (fullscreen ? 'text-3xl' : 'text-xl')}>{pB.name}</div>
+                        <div className={'font-bold text-red-400 ' + (fullscreen ? 'text-3xl' : 'text-xl')}>{pB.name}</div>
                     </div>
                 </div>
-
                 <div className={'flex justify-between items-center gap-4 ' + (fullscreen ? 'mb-4' : 'mb-8 mt-4')}>
                     <div className="flex-1 flex justify-center">
                         <ScoreControl side="A" value={sA} onChange={setSA} autoFocus />
                     </div>
-                    <div className={'text-slate-700 font-bold ' + (fullscreen ? 'text-5xl' : 'text-2xl')}>-</div>
+                    <div 
+                        className={'text-slate-700 font-bold ' + (fullscreen ? 'text-5xl mt-8' : 'text-2xl mt-3')} 
+                        style={{ alignSelf: 'baseline' }}>
+                            -
+                    </div>
                     <div className="flex-1 flex justify-center">
                         <ScoreControl side="B" value={sB} onChange={setSB} />
                     </div>

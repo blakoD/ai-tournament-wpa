@@ -53,7 +53,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
           <button
             onClick={() => handleSetViewMode('cards')}
             title={t('matchList.cards')}
-            className={`px-2.5 py-1.5 flex items-center gap-1 transition-colors ${viewMode === 'cards' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+            className={`px-2.5 py-1.5 flex items-center gap-1 transition-colors ${viewMode === 'cards' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
               <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
@@ -64,7 +64,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
           <button
             onClick={() => handleSetViewMode('list')}
             title={t('matchList.list')}
-            className={`px-2.5 py-1.5 flex items-center gap-1 border-l border-slate-300 dark:border-slate-700 transition-colors ${viewMode === 'list' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+            className={`px-2.5 py-1.5 flex items-center gap-1 border-l border-slate-300 dark:border-slate-700 transition-colors ${viewMode === 'list' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
               <rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="14" height="2" rx="1"/>
@@ -89,7 +89,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                 {canDrag && <th className="w-8"></th>}
                 <th className="px-3 py-2 w-10 text-center text-slate-400 dark:text-slate-600">#</th>
                 <th className="px-3 py-2 text-right"></th>
-                <th className="px-3 py-2 w-28 text-center">Score</th>
+                <th className="px-3 py-2 w-28 text-center">{t('matchList.score')}</th>
                 <th className="px-3 py-2 text-left"></th>
               </tr>
             </thead>
