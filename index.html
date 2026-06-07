@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Tournament Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @keyframes match-progress {
+        0%, 100% { 
+          border-color: rgba(59, 130, 246, 0.35); 
+          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); 
+        }
+        50% { 
+          border-color: rgba(90, 27, 214, 0.85); 
+          box-shadow: 0 0 12px 3px rgba(90, 27, 214, 0.22); 
+        }
+        /* 50%, 80% { 
+          border-color: rgba(156, 59, 246, 0.35); 
+          box-shadow: 0 0 0 0 rgba(156, 59, 246, 0); 
+        } */
+
+      }
+      .card-in-progress {
+        animation: match-progress 2.5s ease-in-out infinite;
+      }
+      @keyframes row-progress {
+        0%, 100% { box-shadow: inset 3px 0 0 rgba(59, 130, 246, 0.3); }
+        50%       { box-shadow: inset 3px 0 0 rgb(129 36 226 / 85%); }
+      }
+      .row-in-progress {
+        animation: row-progress 2.5s ease-in-out infinite;
+      }
+    </style>
     <script>
       tailwind.config = {
         darkMode: 'class',

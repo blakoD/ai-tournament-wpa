@@ -9,9 +9,10 @@ interface Props {
   onMatchClick: (match: Match) => void;
   onReorderMatches?: (reorderedMatches: Match[]) => void;
   readOnly?: boolean;
+  maxScore?: number;
 }
 
-export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick, onReorderMatches, readOnly = false }) => {
+export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick, onReorderMatches, readOnly = false, maxScore = 16 }) => {
   const { t } = useTranslation();
   const {
     sortMode,
@@ -101,6 +102,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                 const posB = m.participantBId ? (groupPositionMap[m.participantBId] || '?') : '?';
                 const isDragging = dragIndex === idx;
                 const isDragOver = dragOverIndex === idx && dragIndex !== idx;
+                const isInProgress = ((m.scoreA ?? 0) > 0 || (m.scoreB ?? 0) > 0) && (m.scoreA ?? 0) < maxScore && (m.scoreB ?? 0) < maxScore;
 
                 // Section separator logic
                 const getSectionKey = (match: Match) => {
@@ -144,6 +146,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                       isDragging ? 'opacity-30 bg-slate-200 dark:bg-slate-700' : '',
                       isDragOver ? 'bg-blue-50 dark:bg-blue-900/20 border-t-2 border-t-blue-500' : '',
                       !isDragging && !isDragOver ? (m.isCompleted ? 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50' : 'bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-700/30') : '',
+                    isInProgress && !isDragging && !isDragOver ? 'row-in-progress' : '',
                     ].join(' ')}
                   >
                     {canDrag && (
@@ -225,14 +228,17 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                 const pA = participants.find(p => p.id === m.participantAId);
                 const pB = participants.find(p => p.id === m.participantBId);
                 const badge = getBadge(m);
+                const isInProgress = ((m.scoreA ?? 0) > 0 || (m.scoreB ?? 0) > 0) && (m.scoreA ?? 0) < maxScore && (m.scoreB ?? 0) < maxScore;
                 return (
                   <div
                     key={m.id}
                     onClick={() => { if (!readOnly) onMatchClick(m); }}
                     className={`relative rounded-lg border p-3 transition-all ${readOnly ? 'cursor-default' : 'cursor-pointer'} ${
-                      m.isCompleted
-                        ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 opacity-80 hover:opacity-100'
-                        : 'bg-white/95 dark:bg-slate-800/50 border-blue-200 dark:border-blue-900/30 hover:border-blue-500 shadow-sm hover:shadow-md hover:shadow-blue-900/20'
+                      isInProgress
+                        ? 'bg-white/95 dark:bg-slate-800/50 shadow-sm card-in-progress'
+                        : m.isCompleted
+                          ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 opacity-80 hover:opacity-100'
+                          : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30'
                     }`}
                   >
                     {(badge || !m.isCompleted) && (

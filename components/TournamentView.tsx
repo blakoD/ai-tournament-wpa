@@ -618,6 +618,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                   onMatchClick={setSelectedMatch}
                   onReorderMatches={canEdit ? handleReorderMatches : undefined}
                   readOnly={!canEdit}
+                  maxScore={tournament.maxScore ?? 16}
                 />
               )}
 

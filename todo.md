@@ -21,15 +21,15 @@
 - [x] Switch dark/light mode based on user preference 
 - [ ] Fix Authentication. The user should be able to login and see only their tournaments. The user should be able to share the tournament with other users by adding their email in the tournament configuration. Only the tournament owner and the users with whom the tournament is shared can edit the tournament. All users with access to the tournament can view it.
 - [x] Add support to change the language of the app to Spanish
+- [x] Bulk import players from textarea input separated by new line. E.g 
 - [ ] Remove storage from localStorage
 - [ ] pre-configured templates. Mode "Federacion". 
-- [ ] Bulk import players from textarea input separated by new line. E.g 
 - [ ] Improve dashboard UI and add pagination for tournaments list and filter by sport category
 - [ ] Add logo for tournaments
 - [ ] Add logo/photo for players
 
 ## Improvements
-- [] Improve api endpoints to send only modified data to update the match score and tournament configuration instead of sending the whole tournament data.
+- [ ] Improve api endpoints to send only modified data to update the match score and tournament configuration instead of sending the whole tournament data.
 - [ ] Improve api endpoints to update the match score and tournament configuration in real time using websockets or server-sent events. This will allow users to see the updates without refreshing the page.
 - [ ] Add url param for each stage and match to allow sharing direct links to them. E.g `/#/tournament/123/stage/1/match/2`
 
