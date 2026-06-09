@@ -53,19 +53,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onClose, onSwitchMode })
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('signIn.title')}</h1>
         <p className="text-slate-500 dark:text-slate-400 mb-6">{t('signIn.subtitle')}</p>
 
-        <button
-          type="button"
-          onClick={() => {
-            void handleGoogleSignIn();
-          }}
-          className="w-full mb-4 bg-white hover:bg-slate-50 dark:hover:bg-slate-100 text-slate-900 font-semibold rounded-lg py-2.5 transition-colors border border-slate-300"
-        >
-          {t('signIn.continueWithGoogle')}
-        </button>
-
         <div className="relative mb-4">
           <div className="h-px bg-slate-200 dark:bg-slate-700" />
-          <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 px-2 text-xs text-slate-400 dark:text-slate-500">{t('signIn.or')}</span>
+          <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 px-2 text-xs text-slate-400 dark:text-slate-500"></span>
         </div>
 
         <form onSubmit={handleEmailSignIn} className="space-y-4">

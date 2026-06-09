@@ -193,7 +193,6 @@ const en = {
   // TournamentView
   tournamentView: {
     backToDashboard: 'Back to Dashboard',
-    editModeEnabled: 'Edit mode enabled (local)',
     saving: 'Saving...',
     nextStage: 'Next Stage',
     finalizeTournament: 'Finalize Tournament',
@@ -247,8 +246,6 @@ const en = {
   signIn: {
     title: 'Sign in',
     subtitle: 'Access your tournaments dashboard.',
-    continueWithGoogle: 'Continue with Google',
-    or: 'or',
     email: 'Email',
     password: 'Password',
     submit: 'Sign in',
@@ -274,6 +271,41 @@ const en = {
   confirmDialog: {
     cancel: 'Cancel',
     confirm: 'Confirm',
+  },
+
+  // OAuth Consent
+  oauth: {
+    title: 'Authorize Application',
+    subtitle: 'An application is requesting access to your account.',
+    requestingApp: 'Application requesting access',
+    redirectsTo: 'Redirects to:',
+    signingInAs: 'Signing in as',
+    willBeAbleTo: 'This application will be able to:',
+    allow: 'Allow',
+    allowing: 'Allowing…',
+    deny: 'Deny',
+    denying: 'Denying…',
+    revokeHint: 'You can revoke access at any time from your account settings.',
+    invalidRequest: 'Invalid Authorization Request',
+    missingParams: 'The authorization request is missing required parameters (client_id or redirect_uri).',
+    untrustedRedirect: 'Untrusted Redirect URI',
+    untrustedRedirectDesc: 'The redirect URI provided is not registered for this application and cannot be trusted:',
+    goHome: 'Go to Home',
+    // Scopes
+    scope: {
+      tournamentRead: 'View tournaments',
+      tournamentReadDesc: 'Read tournament data, brackets, and match results.',
+      tournamentWrite: 'Manage tournaments',
+      tournamentWriteDesc: 'Create, update, and delete your tournaments.',
+      profileRead: 'View your profile',
+      profileReadDesc: 'Access your display name and account details.',
+      openid: 'Confirm your identity',
+      openidDesc: 'Verify who you are using OpenID Connect.',
+      email: 'View your email address',
+      emailDesc: 'Access the email associated with your account.',
+      unknown: 'Unknown permission',
+      unknownDesc: 'An unrecognized scope has been requested.',
+    },
   },
 } as const;
 

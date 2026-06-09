@@ -466,7 +466,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                   )}
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{tournament.title}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{!tournamentReadOnly && t('tournamentView.editModeEnabled')}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{!tournamentReadOnly && "Edit Mode"}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

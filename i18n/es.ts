@@ -193,7 +193,6 @@ const es = {
   // TournamentView
   tournamentView: {
     backToDashboard: 'Volver al Panel',
-    editModeEnabled: 'Modo edición habilitado (local)',
     saving: 'Guardando...',
     nextStage: 'Próxima Fase',
     finalizeTournament: 'Finalizar Torneo',
@@ -247,8 +246,6 @@ const es = {
   signIn: {
     title: 'Iniciar sesión',
     subtitle: 'Accede al panel de tus torneos.',
-    continueWithGoogle: 'Continuar con Google',
-    or: 'o',
     email: 'Correo electrónico',
     password: 'Contraseña',
     submit: 'Iniciar sesión',
@@ -268,6 +265,40 @@ const es = {
     hasAccount: '¿Ya tienes una cuenta?',
     signIn: 'Iniciar sesión',
     successMsg: 'Cuenta creada. Revisa tu correo para confirmar tu cuenta.',
+  },
+
+  // OAuth Consent
+  oauth: {
+    title: 'Autorizar Aplicación',
+    subtitle: 'Una aplicación está solicitando acceso a tu cuenta.',
+    requestingApp: 'Aplicación que solicita acceso',
+    redirectsTo: 'Redirige a:',
+    signingInAs: 'Iniciando sesión como',
+    willBeAbleTo: 'Esta aplicación podrá:',
+    allow: 'Permitir',
+    allowing: 'Permitiendo…',
+    deny: 'Denegar',
+    denying: 'Denegando…',
+    revokeHint: 'Puedes revocar el acceso en cualquier momento desde la configuración de tu cuenta.',
+    invalidRequest: 'Solicitud de Autorización Inválida',
+    missingParams: 'A la solicitud de autorización le faltan parámetros requeridos (client_id o redirect_uri).',
+    untrustedRedirect: 'URI de Redirección No Confiable',
+    untrustedRedirectDesc: 'La URI de redirección proporcionada no está registrada para esta aplicación y no puede ser confiable:',
+    goHome: 'Ir al Inicio',
+    scope: {
+      tournamentRead: 'Ver torneos',
+      tournamentReadDesc: 'Leer datos de torneos, llaves y resultados de partidos.',
+      tournamentWrite: 'Administrar torneos',
+      tournamentWriteDesc: 'Crear, actualizar y eliminar tus torneos.',
+      profileRead: 'Ver tu perfil',
+      profileReadDesc: 'Acceder a tu nombre de usuario y detalles de cuenta.',
+      openid: 'Confirmar tu identidad',
+      openidDesc: 'Verificar quién eres usando OpenID Connect.',
+      email: 'Ver tu dirección de correo',
+      emailDesc: 'Acceder al correo asociado a tu cuenta.',
+      unknown: 'Permiso desconocido',
+      unknownDesc: 'Se solicitó un alcance no reconocido.',
+    },
   },
 
   // ConfirmDialog

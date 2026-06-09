@@ -11,6 +11,7 @@ import { AuthModal } from "./components/AuthModal";
 import { SignInPage } from "./components/SignInPage";
 import { SignUpPage } from "./components/SignUpPage";
 import { TournamentView } from "./components/TournamentView";
+import { OAuthConsent } from "./components/OAuthConsent";
 import { Tournament } from "./types";
 import { getUserRole } from "./services/auth";
 import {
@@ -67,14 +68,12 @@ const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
   return (
     <header className="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-10">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="text-slate-900 dark:text-white font-bold tracking-wide">
+        <Link to="/" className="flex items-center gap-2 text-slate-900 dark:text-white font-bold tracking-wide">
+          <img src="/trophy.svg" alt="Trophy" className="w-7 h-7" />
           {t('app.name')}
         </Link>
 
-        <nav className="flex items-center gap-2 text-sm">
-          <Link to="/" className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-            {t('app.home')}
-          </Link>
+        <nav className="flex flex-wrap text-center justify-end gap-2 text-sm">
           {session && (
             <>
               <Link
@@ -577,6 +576,10 @@ const AppContent: React.FC = () => {
         />
         <Route path="/create" element={guard(<Setup />)} />
         <Route path="/tournament/:slug" element={<TournamentRoute session={session} role={role} />} />
+        <Route
+          path="/oauth/consent"
+          element={<OAuthConsent session={session} isAuthLoading={isAuthLoading} />}
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
