@@ -23,7 +23,6 @@ Authentication routes:
 - `/#/signin`
 - `/#/signup`
 - `/#/dashboard` (protected)
-- `/#/profile` (protected)
 - `/#/` (home with toolbar + latest 6 readonly tournaments)
 
 Role-based access:

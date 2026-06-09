@@ -130,7 +130,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                                     }}
                                     className={`
                                         rounded-lg border shadow-sm transition-all z-10 relative ${readOnly ? 'cursor-default' : 'cursor-pointer'}
-                                        ${m.isFinal ? 'w-[280px] text-base border-yellow-500' : 'w-[280px] text-sm'}
+                                        ${m.isFinal ? 'w-[280px] text-base border-2 border-yellow-500' : 'w-[280px] text-sm'}
                                         ${m.isCompleted 
                                             ? 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500' 
                                             : 'bg-slate-50 dark:bg-slate-900 border-blue-200 dark:border-blue-900/50 hover:border-blue-500 hover:shadow-blue-900/20'}

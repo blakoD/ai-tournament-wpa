@@ -3,8 +3,7 @@ const es = {
   app: {
     name: 'Tournament Builder',
     home: 'Inicio',
-    dashboard: 'Panel',
-    profile: 'Perfil',
+    dashboard: 'Mis torneos',
     logout: 'Cerrar sesión',
     login: 'Iniciar sesión',
     signup: 'Registrarse',
@@ -13,7 +12,7 @@ const es = {
   // Home Page
   home: {
     title: 'Últimos torneos',
-    subtitle: 'Se muestran en modo lectura. Solo puedes editarlos desde el Panel si tienes permiso.',
+    subtitle: 'Se muestran en modo lectura. Solo puedes editarlos desde Mis torneos si tienes permiso.',
     loading: 'Cargando torneos...',
     readOnly: 'Solo lectura',
     viewTournament: 'Ver torneo',
@@ -102,6 +101,7 @@ const es = {
     title: 'Actualizar Marcador',
     vs: 'VS',
     saveResult: 'Guardar',
+    saving: 'Guardando...',
     confirmSave: 'Confirmar y Guardar',
     reset: 'Reiniciar',
     cancel: 'Cancelar',
@@ -268,17 +268,6 @@ const es = {
     hasAccount: '¿Ya tienes una cuenta?',
     signIn: 'Iniciar sesión',
     successMsg: 'Cuenta creada. Revisa tu correo para confirmar tu cuenta.',
-  },
-
-  // Profile
-  profile: {
-    title: 'Perfil',
-    subtitle: 'Detalles de tu cuenta de Supabase.',
-    backToDashboard: 'Volver al panel',
-    email: 'Correo electrónico',
-    role: 'Rol',
-    userId: 'ID de Usuario',
-    provider: 'Proveedor',
   },
 
   // ConfirmDialog

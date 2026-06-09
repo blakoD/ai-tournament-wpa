@@ -10,9 +10,10 @@ interface Props {
   onSave: (matchId: string, scoreA: number, scoreB: number) => void;
   onReset?: () => void;
   onClose: () => void;
+  isSaving?: boolean;
 }
 
-export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16, onSave, onReset, onClose }) => {
+export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16, onSave, onReset, onClose, isSaving }) => {
   const { t } = useTranslation();
   const [sA, setSA] = useState<string>(match.scoreA?.toString() || '');
   const [sB, setSB] = useState<string>(match.scoreB?.toString() || '');
@@ -188,21 +189,21 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
             </div>
             <div className="mt-auto">
                 {error && (
-                    <div className="mb-4 p-3 bg-red-900/50 border border-red-700 text-red-200 text-sm text-center rounded">
-                    {error}
+                    <div className="mb-4 p-3 bg-red-200/50 dark:bg-red-900/50 border border-red-700 text-red-600 dark:text-red-200 text-sm text-center rounded">
+                      {error}
                     </div>
                 )}
 
                 {showLowScoreWarning && (
                     <div className="mb-4 p-3 bg-amber-900/50 border border-amber-700 text-amber-200 text-sm text-center rounded animate-pulse">
                     <strong>{t('matchModal.warningTitle')}</strong> {t('matchModal.warningBody', { max: maxScore })}<br />
-                    {t('matchModal.warningConfirm')}
+                      {t('matchModal.warningConfirm')}
                     </div>
                 )}
 
                 {!showLowScoreWarning && !error && (
                     <div className={'text-slate-500 text-center ' + (fullscreen ? 'text-base mb-4' : 'text-xs mb-6')}>
-                    {t('matchModal.rule', { max: maxScore })}
+                      {t('matchModal.rule', { max: maxScore })}
                     </div>
                 )}
 
@@ -211,24 +212,28 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
                     <button
                         type="button"
                         onClick={onReset}
-                        className={'px-4 rounded-lg bg-red-900/20 text-red-400 font-bold hover:bg-red-900/40 border border-red-900/50 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
+                        className={'px-4 rounded-lg bg-red-200/50 dark:bg-red-900/20 text-red-400 font-bold hover:bg-red-900/40 border border-red-900/50 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
                         title={t('matchModal.resetTitle')}
                     >
                         {t('matchModal.reset')}
                     </button>
                     )}
                     <button
-                    type="button"
-                    onClick={onClose}
-                    className={'flex-1 rounded-lg bg-slate-700 text-slate-300 font-bold hover:bg-slate-600 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
+                      type="button"
+                      onClick={onClose}
+                      className={'flex-1 rounded-lg bg-slate-700 text-slate-300 font-bold hover:bg-slate-600 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
                     >
-                    {t('matchModal.cancel')}
+                      {t('matchModal.cancel')}
                     </button>
                     <button
-                    type="submit"
-                    className={'flex-1 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
+                      type="submit"
+                      disabled={isSaving}
+                      className={'flex-1 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
                     >
-                    {showLowScoreWarning ? t('matchModal.confirmSave') : t('matchModal.saveResult')}
+                      {isSaving 
+                        ? t('matchModal.saving') 
+                        : showLowScoreWarning ? t('matchModal.confirmSave') : t('matchModal.saveResult')
+                      }
                     </button>
                 </div>
             </div>

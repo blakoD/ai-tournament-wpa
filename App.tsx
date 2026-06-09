@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { HashRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
@@ -6,7 +6,6 @@ import { FiSun, FiMoon } from 'react-icons/fi';
 import i18n from './i18n';
 import { ThemeProvider, useTheme } from './services/themeContext';
 
-import { ProfilePage } from "./components/ProfilePage";
 import { Setup } from "./components/Setup";
 import { SignInPage } from "./components/SignInPage";
 import { SignUpPage } from "./components/SignUpPage";
@@ -81,12 +80,6 @@ const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
                 className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 {t('app.dashboard')}
-              </Link>
-              <Link
-                to="/profile"
-                className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                {t('app.profile')}
               </Link>
               <button
                 type="button"
@@ -184,9 +177,6 @@ const HomePage: React.FC<HomePageProps> = ({ session, onSignOut }) => {
               <div key={tournament.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{tournament.name}</h3>
-                  <span className="text-[11px] uppercase tracking-wide bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded">
-                    {t('home.readOnly')}
-                  </span>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">{tournament.title}</p>
                 <button
@@ -432,6 +422,14 @@ const TournamentRoute = ({ session, role }: TournamentRouteProps) => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Capture search string at the time of each slug change only, so that
+  // ?sort / ?view param updates from MatchList don't retrigger the data fetch.
+  const searchAtSlugLoad = useRef(location.search);
+  useEffect(() => {
+    searchAtSlugLoad.current = location.search;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
+
   useEffect(() => {
     const loadTournament = async () => {
       if (!slug) {
@@ -449,7 +447,7 @@ const TournamentRoute = ({ session, role }: TournamentRouteProps) => {
           return;
         }
 
-        const query = new URLSearchParams(location.search);
+        const query = new URLSearchParams(searchAtSlugLoad.current);
         const forceReadOnly = query.get("readonly") === "1";
         const canEditTournament = isTournamentEditable(summary, session?.user.id, role);
 
@@ -467,7 +465,7 @@ const TournamentRoute = ({ session, role }: TournamentRouteProps) => {
     };
 
     void loadTournament();
-  }, [slug, navigate, location.search, role, session?.user.id]);
+  }, [slug, navigate, role, session?.user.id]);
 
   const handleUpdate = async (updated: Tournament): Promise<Tournament> => {
     const persisted = await updateTournament(updated.id, updated);
@@ -572,7 +570,6 @@ const App: React.FC = () => {
             )
           }
         />
-        <Route path="/profile" element={guard(session ? <ProfilePage session={session} role={role} /> : <div />)} />
         <Route path="/create" element={guard(<Setup />)} />
         <Route path="/tournament/:slug" element={<TournamentRoute session={session} role={role} />} />
         <Route path="*" element={<Navigate to="/" replace />} />

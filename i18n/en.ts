@@ -4,7 +4,6 @@ const en = {
     name: 'Tournament Builder',
     home: 'Home',
     dashboard: 'Dashboard',
-    profile: 'Profile',
     logout: 'Logout',
     login: 'Login',
     signup: 'Sign up',
@@ -102,6 +101,7 @@ const en = {
     title: 'Update Score',
     vs: 'VS',
     saveResult: 'Save',
+    saving: 'Saving...',
     confirmSave: 'Confirm & Save',
     reset: 'Reset',
     cancel: 'Cancel',
@@ -268,17 +268,6 @@ const en = {
     hasAccount: 'Already have an account?',
     signIn: 'Sign in',
     successMsg: 'Account created. Check your email to confirm your account.',
-  },
-
-  // Profile
-  profile: {
-    title: 'Profile',
-    subtitle: 'Your Supabase account details.',
-    backToDashboard: 'Back to dashboard',
-    email: 'Email',
-    role: 'Role',
-    userId: 'User ID',
-    provider: 'Provider',
   },
 
   // ConfirmDialog

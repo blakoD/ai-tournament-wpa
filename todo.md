@@ -25,11 +25,16 @@
 - [ ] Remove storage from localStorage
 - [ ] pre-configured templates. Mode "Federacion". 
 - [ ] Improve dashboard UI and add pagination for tournaments list and filter by sport category
+- [ ] Configure matches number of rounds in tournament settings. E.g. Best of 3, Best of 5, etc. 
 - [ ] Add logo for tournaments
 - [ ] Add logo/photo for players
 
 ## Improvements
 - [ ] Improve api endpoints to send only modified data to update the match score and tournament configuration instead of sending the whole tournament data.
+- [ ] Add 2 players per team. Update the tournament configuration to allow configuring if the tournament is individual or by teams. Update the UI to show the players in the match and tournament standings. Update the database schema to support teams and players.
+- [ ] Modal score save the value each time the user clicks on the score buttons. When the user clicks outside the modal or on the close button, the score is saved in the database. 
+Remove the save and cancel button in the modal. Show a check icon and a text "Score saved" at the bottom when the score is saved successfully. Show an error message if the score could not be saved. 
+Move the reset score to the top right corner of the modal and change the icon to a refresh icon. Show a confirmation dialog when the user clicks on the reset score button to confirm if they want to reset the score to 0.
 - [ ] Improve api endpoints to update the match score and tournament configuration in real time using websockets or server-sent events. This will allow users to see the updates without refreshing the page.
 - [ ] Add url param for each stage and match to allow sharing direct links to them. E.g `/#/tournament/123/stage/1/match/2`
 

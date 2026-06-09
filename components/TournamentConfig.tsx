@@ -215,7 +215,7 @@ export const TournamentConfig: React.FC<Props> = ({ tournament, readOnly, onUpda
 
       {/* Error */}
       {saveError && (
-        <div className="p-3 bg-red-900/50 border border-red-700 text-red-200 rounded text-sm">
+        <div className="p-3 bg-red-200/50 dark:bg-red-900/50 border border-red-600 text-red-600 dark:text-red-200 rounded text-sm">
           {saveError}
         </div>
       )}

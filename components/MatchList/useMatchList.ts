@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Match, Participant } from '../../types';
 
 interface UseMatchListOptions {
@@ -9,8 +10,14 @@ interface UseMatchListOptions {
 }
 
 export function useMatchList({ matches, participants, onReorderMatches, readOnly = false }: UseMatchListOptions) {
-  const [sortMode, setSortMode] = useState<'round' | 'group' | 'custom'>('group');
-  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const rawSort = searchParams.get('sort');
+  const sortMode: 'round' | 'group' | 'custom' =
+    rawSort === 'round' || rawSort === 'group' || rawSort === 'custom' ? rawSort : 'group';
+
+  const rawView = searchParams.get('view');
+  const viewMode: 'cards' | 'list' = rawView === 'list' ? 'list' : 'cards';
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -120,12 +127,15 @@ export function useMatchList({ matches, participants, onReorderMatches, readOnly
 
   const handleSortModeChange = (mode: 'round' | 'group' | 'custom') => {
     if (mode !== 'custom') prevSortModeRef.current = mode;
-    setSortMode(mode);
+    setSearchParams(prev => { prev.set('sort', mode); return prev; }, { replace: true });
   };
 
   const handleSetViewMode = (mode: 'cards' | 'list') => {
-    if (mode === 'cards' && sortMode === 'custom') handleSortModeChange('round');
-    setViewMode(mode);
+    if (mode === 'cards' && sortMode === 'custom') {
+      setSearchParams(prev => { prev.set('sort', prevSortModeRef.current); prev.set('view', mode); return prev; }, { replace: true });
+    } else {
+      setSearchParams(prev => { prev.set('view', mode); return prev; }, { replace: true });
+    }
   };
 
   const handleDrop = () => {

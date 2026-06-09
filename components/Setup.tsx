@@ -393,7 +393,7 @@ export const Setup: React.FC = () => {
             <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-2">
               {t('setup.urlSlug')}
               {!slugManuallyEdited && slug && (
-                <span className="text-[10px] font-semibold text-blue-400 bg-blue-900/30 border border-blue-700/40 px-1.5 py-0.5 rounded">{t('setup.auto')}</span>
+                <span className="text-[10px] font-semibold text-blue-400 bg-blue-200/20 dark:bg-blue-900/30 border border-blue-700/40 px-1.5 py-0.5 rounded">{t('setup.auto')}</span>
               )}
             </label>
             <input
@@ -622,7 +622,7 @@ export const Setup: React.FC = () => {
         )}
 
         {error && (
-          <div className="p-3 bg-red-900/50 border border-red-700 text-red-200 rounded text-sm">
+          <div className="p-3 bg-red-200/50 dark:bg-red-900/50 border border-red-600 text-red-600 dark:text-red-200 rounded text-sm">
             {error}
           </div>
         )}
