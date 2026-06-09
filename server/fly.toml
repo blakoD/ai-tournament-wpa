@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for fronton-torneos-api on 2026-03-07T11:33:10Z
+# fly.toml app configuration file generated for fronton-torneos-api on 2026-06-09T08:15:29Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -9,9 +9,9 @@ primary_region = 'gru'
 [build]
 
 [env]
-  HOST = "0.0.0.0"
-  PORT = "3001"
-  CORS_ORIGIN = "https://fronton-torneos-web.fly.dev"
+  CORS_ORIGIN = 'https://fronton-torneos-web.fly.dev'
+  HOST = '0.0.0.0'
+  PORT = '3001'
 
 [http_service]
   internal_port = 3001
