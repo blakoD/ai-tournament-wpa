@@ -214,6 +214,8 @@ const es = {
     confirmRemoveMsg: 'Esto eliminará permanentemente todos los partidos de {{label}}. La fase anterior volverá a estar activa.',
     roundRobin: 'Grupos',
     stageStandings: 'Clasificación de la Fase',
+    owner: 'Organizador',
+    started: 'En curso',
   },
 
   // MatchList

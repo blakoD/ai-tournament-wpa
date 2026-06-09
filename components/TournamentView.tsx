@@ -29,8 +29,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
   const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [unlockTapTimestamps, setUnlockTapTimestamps] = useState<number[]>([]);
-  const [tournamentReadOnly, setTournamentReadOnly] = useState<boolean>(readOnly);
+  const tournamentReadOnly = readOnly;
 
   // History for Undo functionality
   const [history, setHistory] = useState<Tournament[]>([]);
@@ -57,38 +56,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
     return lastMatch?.stage || StageType.RR;
   }, [tournament.matches]);
 
-  useEffect(() => {
-    const storageKey = `tournament_read_only_${tournament.id}`;
-    const stored = window.localStorage.getItem(storageKey);
-
-    if (stored === null) {
-      setTournamentReadOnly(readOnly);
-      return;
-    }
-
-    setTournamentReadOnly(stored === 'true');
-  }, [tournament.id, readOnly]);
-
   const canEdit = !tournamentReadOnly;
-
-  const handleTitleTap = () => {
-    if (isSaving) {
-      return;
-    }
-
-    const now = Date.now();
-    const recentTaps = [...unlockTapTimestamps, now].filter((timestamp) => now - timestamp <= 5000);
-
-    if (recentTaps.length < 10) {
-      setUnlockTapTimestamps(recentTaps);
-      return;
-    }
-
-    setUnlockTapTimestamps([]);
-    const nextReadOnly = !tournamentReadOnly;
-    setTournamentReadOnly(nextReadOnly);
-    window.localStorage.setItem(`tournament_read_only_${tournament.id}`, String(nextReadOnly));
-  };
 
   const currentStageNumber = useMemo(() => {
     const lastMatch = tournament.matches[tournament.matches.length - 1];
@@ -453,20 +421,30 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
               <div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <h1
-                    onClick={handleTitleTap}
-                    className="text-2xl font-bold text-slate-900 dark:text-white cursor-pointer select-none"
+                    className="text-2xl font-bold text-slate-900 dark:text-white"
                     title="Tournament"
                   >
                     {tournament.name}
                   </h1>
-                  {tournament.completedAt && (
-                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100/20 dark:bg-emerald-900/30 border border-emerald-700/50 px-2 py-0.5 rounded mb-[-3px]">
+                </div>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{tournament.title}</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  {canEdit && (
+                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-900/30 border border-blue-400/50 dark:border-blue-600/50 px-1.5 py-0.5 rounded-xl">
+                      {t('tournamentView.owner')}
+                    </span>
+                  )}
+                  {tournament.status === TournamentStatus.STARTED && (
+                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-900/30 border border-blue-400/50 dark:border-blue-600/50 px-1.5 py-0.5 rounded-xl">
+                      {t('tournamentView.started')}
+                    </span>
+                  )}
+                  {tournament.status === TournamentStatus.COMPLETED && (
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100/40 dark:bg-emerald-900/30 border border-emerald-500/50 dark:border-emerald-700/50 px-1.5 py-0.5 rounded-xl">
                       {t('tournamentView.completed')}
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{tournament.title}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{!tournamentReadOnly && "Edit Mode"}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

@@ -350,10 +350,10 @@ const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProps) => {
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {ts.name}
                   </h3>
-                  <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${
+                  <span className={`px-2 py-1 rounded-xl text-xs font-bold uppercase ${
                     ts.status === 'COMPLETED' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' : 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300'
                   }`}>
-                    {ts.status}
+                    {ts.status === 'COMPLETED' ? t('tournamentView.completed') : t('tournamentView.started')}
                   </span>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">{ts.title}</p>

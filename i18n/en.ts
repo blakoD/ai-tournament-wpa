@@ -214,6 +214,8 @@ const en = {
     confirmRemoveMsg: 'This will permanently delete all matches in {{label}}. The previous stage will become active again.',
     roundRobin: 'Round Robin',
     stageStandings: 'Stage Standings',
+    owner: 'Owner',
+    started: 'Started',
   },
 
   // MatchList
