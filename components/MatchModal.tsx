@@ -175,7 +175,7 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
                 </div>
                 <div className={'flex justify-between items-center gap-4 ' + (fullscreen ? 'mb-4' : 'mb-8 mt-4')}>
                     <div className="flex-1 flex justify-center">
-                        <ScoreControl side="A" value={sA} onChange={setSA} autoFocus />
+                        <ScoreControl side="A" value={sA} onChange={setSA} />
                     </div>
                     <div 
                         className={'text-slate-700 font-bold ' + (fullscreen ? 'text-5xl mt-8' : 'text-2xl mt-3')} 

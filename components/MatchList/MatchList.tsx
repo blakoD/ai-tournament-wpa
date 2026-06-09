@@ -88,10 +88,10 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
             <thead className="bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-xs uppercase border-b border-slate-200 dark:border-slate-700">
               <tr>
                 {canDrag && <th className="w-8"></th>}
-                <th className="px-3 py-2 w-10 text-center text-slate-400 dark:text-slate-600">#</th>
-                <th className="px-3 py-2 text-right"></th>
-                <th className="px-3 py-2 w-28 text-center">{t('matchList.score')}</th>
-                <th className="px-3 py-2 text-left"></th>
+                <th className="px-1 md:px-3 py-2 w-10 text-center text-slate-400 dark:text-slate-600">#</th>
+                <th className="px-1 md:px-3 py-2 text-right"></th>
+                <th className="px-0 md:px-3 py-2 w-28 text-center">{t('matchList.score')}</th>
+                <th className="px-1 md:px-3 py-2 text-left"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50">
@@ -154,9 +154,9 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                         ⠿
                       </td>
                     )}
-                    <td className="px-2 py-2.5 text-center font-mono text-xs text-slate-400 dark:text-slate-500">{idx + 1}</td>
+                    <td className="px-0 md:px-2 py-2.5 text-center font-mono text-xs text-slate-400 dark:text-slate-500">{idx + 1}</td>
                     {/* Team A */}
-                    <td className="px-1 py-2.5">
+                    <td className="px-1 md:px-2 py-2.5">
                       <div className="flex items-center justify-end gap-2">
                         <span className={`font-medium max-w-[130px] text-right ${m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-200'}`}>
                           {pA?.name || t('matchList.tbd')}
@@ -167,7 +167,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                       </div>
                     </td>
                     {/* Score */}
-                    <td className="py-2.5 text-center w-[15%]">
+                    <td className="px-0 md:px-2 py-2.5 text-center w-[15%]">
                       {m.isCompleted ? (
                         <span className="font-mono font-bold text-slate-900 dark:text-white text-sm tabular-nums">
                           <span className={`${m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white'}`}>{m.scoreA}</span> 
@@ -182,7 +182,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                       )}
                     </td>
                     {/* Team B */}
-                    <td className="px-1 py-2.5">
+                    <td className="px-1 md:px-2 py-2.5">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700/50 shrink-0">
                           {posB.replace(/^group\s+/i, '').trim().toUpperCase()}

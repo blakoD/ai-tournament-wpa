@@ -28,6 +28,7 @@
 - [ ] Configure matches number of rounds in tournament settings. E.g. Best of 3, Best of 5, etc. 
 - [ ] Add logo for tournaments
 - [ ] Add logo/photo for players
+- [ ] Admin can see inactive tournaments and delete them.
 
 ## Improvements
 - [ ] Improve api endpoints to send only modified data to update the match score and tournament configuration instead of sending the whole tournament data.
