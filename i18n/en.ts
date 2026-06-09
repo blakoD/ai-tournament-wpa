@@ -1,7 +1,7 @@
 const en = {
   // App / Toolbar
   app: {
-    name: 'Tournament Builder',
+    name: 'Sport Tournaments',
     home: 'Home',
     dashboard: 'Dashboard',
     logout: 'Logout',

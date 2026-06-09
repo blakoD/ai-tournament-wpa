@@ -3,7 +3,12 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "../services/supabaseClient.js";
 
-export const SignUpPage: React.FC = () => {
+interface SignUpPageProps {
+  onClose?: () => void;
+  onSwitchMode?: () => void;
+}
+
+export const SignUpPage: React.FC<SignUpPageProps> = ({ onClose, onSwitchMode }) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,9 +40,8 @@ export const SignUpPage: React.FC = () => {
     setSuccess(t('signUp.successMsg'));
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-xl">
+  const card = (
+    <div className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-xl">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('signUp.title')}</h1>
         <p className="text-slate-500 dark:text-slate-400 mb-6">{t('signUp.subtitle')}</p>
 
@@ -84,9 +88,21 @@ export const SignUpPage: React.FC = () => {
         </form>
 
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-5 text-center">
-          {t('signUp.hasAccount')} <Link to="/signin" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">{t('signUp.signIn')}</Link>
+          {t('signUp.hasAccount')}{' '}
+          {onSwitchMode ? (
+            <button type="button" onClick={onSwitchMode} className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">{t('signUp.signIn')}</button>
+          ) : (
+            <Link to="/signin" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">{t('signUp.signIn')}</Link>
+          )}
         </p>
-      </div>
+    </div>
+  );
+
+  if (onClose) return card;
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
+      {card}
     </div>
   );
 };

@@ -9,8 +9,12 @@ import { registerTournamentRoutes } from "./routes/tournaments.js";
 
 const app = Fastify({ logger: true });
 
+const corsOrigins = env.CORS_ORIGIN === "*"
+  ? true
+  : env.CORS_ORIGIN.split(",").map((o) => o.trim());
+
 await app.register(cors, {
-  origin: env.CORS_ORIGIN === "*" ? true : env.CORS_ORIGIN
+  origin: corsOrigins
 });
 
 await registerHealthRoute(app);

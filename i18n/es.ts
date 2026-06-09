@@ -1,7 +1,7 @@
 const es = {
   // App / Toolbar
   app: {
-    name: 'Tournament Builder',
+    name: 'Torneos Deportivos',
     home: 'Inicio',
     dashboard: 'Mis torneos',
     logout: 'Cerrar sesión',

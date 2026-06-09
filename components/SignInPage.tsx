@@ -3,7 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "../services/supabaseClient.js";
 
-export const SignInPage: React.FC = () => {
+interface SignInPageProps {
+  onClose?: () => void;
+  onSwitchMode?: () => void;
+}
+
+export const SignInPage: React.FC<SignInPageProps> = ({ onClose, onSwitchMode }) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,9 +48,8 @@ export const SignInPage: React.FC = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-xl">
+  const card = (
+    <div className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-xl">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('signIn.title')}</h1>
         <p className="text-slate-500 dark:text-slate-400 mb-6">{t('signIn.subtitle')}</p>
 
@@ -105,9 +109,21 @@ export const SignInPage: React.FC = () => {
         </form>
 
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-5 text-center">
-          {t('signIn.noAccount')} <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">{t('signIn.createOne')}</Link>
+          {t('signIn.noAccount')}{' '}
+          {onSwitchMode ? (
+            <button type="button" onClick={onSwitchMode} className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">{t('signIn.createOne')}</button>
+          ) : (
+            <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">{t('signIn.createOne')}</Link>
+          )}
         </p>
-      </div>
+    </div>
+  );
+
+  if (onClose) return card;
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
+      {card}
     </div>
   );
 };

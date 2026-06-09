@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Session } from "@supabase/supabase-js";
-import { HashRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
+import { HashRouter, Link, Location, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { FiSun, FiMoon } from 'react-icons/fi';
 import i18n from './i18n';
 import { ThemeProvider, useTheme } from './services/themeContext';
 
 import { Setup } from "./components/Setup";
+import { AuthModal } from "./components/AuthModal";
 import { SignInPage } from "./components/SignInPage";
 import { SignUpPage } from "./components/SignUpPage";
 import { TournamentView } from "./components/TournamentView";
@@ -54,6 +55,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
   const { t } = useTranslation();
   const [lang, setLang] = useState(i18n.language);
   const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
 
   const toggleLanguage = () => {
     const next = lang === 'en' ? 'es' : 'en';
@@ -96,12 +98,14 @@ const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
             <>
               <Link
                 to="/signin"
+                state={{ background: location }}
                 className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 {t('app.login')}
               </Link>
               <Link
                 to="/signup"
+                state={{ background: location }}
                 className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md transition-colors"
               >
                 {t('app.signup')}
@@ -500,9 +504,11 @@ const TournamentRoute = ({ session, role }: TournamentRouteProps) => {
   );
 };
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const location = useLocation();
+  const background = (location.state as { background?: Location } | null)?.background;
 
   useEffect(() => {
     let isMounted = true;
@@ -556,9 +562,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <ThemeProvider>
-    <HashRouter>
-      <Routes>
+    <>
+      <Routes location={background ?? location}>
         <Route path="/" element={<HomePage session={session} onSignOut={handleSignOut} />} />
         <Route path="/signin" element={session ? <Navigate to="/dashboard" replace /> : <SignInPage />} />
         <Route path="/signup" element={session ? <Navigate to="/dashboard" replace /> : <SignUpPage />} />
@@ -574,9 +579,23 @@ const App: React.FC = () => {
         <Route path="/tournament/:slug" element={<TournamentRoute session={session} role={role} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </HashRouter>
-    </ThemeProvider>
+
+      {background && (
+        <Routes>
+          <Route path="/signin" element={session ? <Navigate to="/dashboard" replace /> : <AuthModal mode="signin" />} />
+          <Route path="/signup" element={session ? <Navigate to="/dashboard" replace /> : <AuthModal mode="signup" />} />
+        </Routes>
+      )}
+    </>
   );
 };
+
+const App: React.FC = () => (
+  <ThemeProvider>
+    <HashRouter>
+      <AppContent />
+    </HashRouter>
+  </ThemeProvider>
+);
 
 export default App;
