@@ -29,6 +29,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
   const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isKebabOpen, setIsKebabOpen] = useState(false);
   const tournamentReadOnly = readOnly;
 
   // History for Undo functionality
@@ -62,6 +63,9 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
     const lastMatch = tournament.matches[tournament.matches.length - 1];
     return lastMatch?.stageNumber || 1;
   }, [tournament.matches]);
+
+  const activeStageNum = activeTab.startsWith('stage-') ? parseInt(activeTab.split('-')[1]) : null;
+  const isActiveStageLastStage = activeStageNum !== null && activeStageNum === currentStageNumber;
 
   const isCurrentStageComplete = useMemo(() => {
     return tournament.matches.filter(m => m.stageNumber === currentStageNumber).every(m => m.isCompleted);
@@ -449,16 +453,6 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
             </div>
             <div className="flex items-center gap-2">
               {isSaving && <span className="text-xs text-blue-400">{t('tournamentView.saving')}</span>}
-              {canEdit && history.length > 0 && (
-                <button
-                  onClick={handleUndo}
-                  disabled={isSaving}
-                  className="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-3 py-2 rounded text-sm flex items-center gap-2 border border-slate-300 dark:border-slate-600"
-                  title="Undo last action"
-                >
-                  <span className="">↺</span>
-                </button>
-              )}
               {canEdit && isCurrentStageComplete && !isFinalStage && tournament.status !== TournamentStatus.COMPLETED && (
                 <button
                   onClick={() => setIsNextStageModalOpen(true)}
@@ -480,34 +474,86 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
-            <button
-              onClick={() => setActiveTab('config')}
-              className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'config' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-            >
-              {t('tournamentView.configTab')}
-            </button>
-            <button
-              onClick={() => setActiveTab('global-standings')}
-              className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'global-standings' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-            >
-              {t('tournamentView.globalStandingsTab')}
-            </button>
-            {Array.from(new Set(tournament.matches.map(m => m.stageNumber))).sort((a, b) => a - b).map(stageNum => {
-              const stageMatches = tournament.matches.filter(m => m.stageNumber === stageNum);
-              const stageType = stageMatches[0]?.stage;
-              const label = stageType === StageType.SE ? t('tournamentView.bracket') : t('tournamentView.stage', { number: stageNum });
-              return (
+          {/* Tabs row: Undo | scrollable tabs | kebab */}
+          <div className="flex items-center gap-x-2 text-sm font-medium">
+            {canEdit && history.length > 0 && (
+              <button
+                onClick={handleUndo}
+                disabled={isSaving}
+                className="shrink-0 w-8 h-8 flex items-center justify-center rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 mb-1"
+                title="Undo last action"
+              >
+                ↺
+              </button>
+            )}
+            {/* Scrollable tabs */}
+            <div className="flex flex-wrap items-center gap-x-4 overflow-x-auto flex-1 min-w-0">
+              <button
+                onClick={() => setActiveTab('config')}
+                className={`shrink-0 pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'config' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+              >
+                {t('tournamentView.configTab')}
+              </button>
+              <button
+                onClick={() => setActiveTab('global-standings')}
+                className={`shrink-0 pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'global-standings' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+              >
+                {t('tournamentView.globalStandingsTab')}
+              </button>
+              {Array.from(new Set(tournament.matches.map(m => m.stageNumber))).sort((a, b) => a - b).map(stageNum => {
+                const stageMatches = tournament.matches.filter(m => m.stageNumber === stageNum);
+                const stageType = stageMatches[0]?.stage;
+                const label = stageType === StageType.SE ? t('tournamentView.bracket') : t('tournamentView.stage', { number: stageNum });
+                return (
+                  <button
+                    key={stageNum}
+                    onClick={() => setActiveTab(`stage-${stageNum}`)}
+                    className={`shrink-0 pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === `stage-${stageNum}` ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            {activeStageNum !== null && canEdit && isActiveStageLastStage && (
+              <div className="relative shrink-0">
                 <button
-                  key={stageNum}
-                  onClick={() => setActiveTab(`stage-${stageNum}`)}
-                  className={`pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === `stage-${stageNum}` ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                  onClick={() => setIsKebabOpen(prev => !prev)}
+                  className="w-8 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400"
+                  title="Stage actions"
                 >
-                  {label}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
                 </button>
-              );
-            })}
+                {isKebabOpen && (
+                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-lg z-50 min-w-[180px] py-1">
+                    {!isCurrentStageComplete && (
+                      <button
+                        onClick={() => { handleSimulateResults(); setIsKebabOpen(false); }}
+                        className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+                      >
+                        ⚡ {t('tournamentView.simulate')}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { handleClearStage(activeStageNum); setIsKebabOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+                    >
+                      <VscClearAll className="shrink-0" /> {t('tournamentView.clearStage')}
+                    </button>
+                    {activeStageNum > 1 && (
+                      <button
+                        onClick={() => { handleRemoveStage(activeStageNum); setIsKebabOpen(false); }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                      >
+                        <RiDeleteBinFill className="shrink-0" /> {t('tournamentView.removeStage')}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -544,40 +590,11 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
 
           return (
             <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-slate-500 dark:text-slate-400">
-                  {stageType === StageType.SE ? "" : t('tournamentView.stageMatches', { number: stageNum })}
+              {stageType !== StageType.SE && (
+                <h2 className="text-lg font-bold text-slate-500 dark:text-slate-400 mb-4">
+                  {t('tournamentView.stageMatches', { number: stageNum })}
                 </h2>
-                <div className="flex gap-2">
-                  {canEdit && isLastStage && !isCurrentStageComplete && (
-                    <button
-                      onClick={handleSimulateResults}
-                      title="Simulate random results"
-                      className="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
-                    >
-                      ⚡ 
-                    </button>
-                  )}
-                  {canEdit && isLastStage && (
-                    <button
-                      onClick={() => handleClearStage(stageNum)}
-                      title="Reset all match results in this stage"
-                      className="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/30 border border-slate-300 dark:border-slate-600 hover:border-red-400 dark:hover:border-red-500 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 px-3 py-1.5 rounded transition-colors"
-                    >
-                      <VscClearAll />
-                    </button>
-                  )}
-                  {canEdit && isLastStage && stageNum > 1 && (
-                    <button
-                      onClick={() => handleRemoveStage(stageNum)}
-                      title="Remove this stage and all its matches"
-                      className="text-xs dark:bg-red-900/20 hover:bg-red-50 border border-red-700/50 hover:border-red-500 text-red-400 hover:text-red-300 px-3 py-1.5 rounded transition-colors"
-                    >
-                      <RiDeleteBinFill />
-                    </button>
-                  )}
-                </div>
-              </div>
+              )}
               {stageType === StageType.SE ? (
                 <BracketView
                   matches={stageMatches}

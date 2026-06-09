@@ -98,7 +98,7 @@ const en = {
 
   // MatchModal
   matchModal: {
-    title: 'Update Score',
+    title: 'Score',
     vs: 'VS',
     saveResult: 'Save',
     saving: 'Saving...',
@@ -216,6 +216,9 @@ const en = {
     stageStandings: 'Stage Standings',
     owner: 'Owner',
     started: 'Started',
+    simulate: 'Simulate results',
+    clearStage: 'Clear results',
+    removeStage: 'Remove stage',
   },
 
   // MatchList

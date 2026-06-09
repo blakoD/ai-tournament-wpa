@@ -98,7 +98,7 @@ const es = {
 
   // MatchModal
   matchModal: {
-    title: 'Actualizar Marcador',
+    title: 'Marcador',
     vs: 'VS',
     saveResult: 'Guardar',
     saving: 'Guardando...',
@@ -216,6 +216,9 @@ const es = {
     stageStandings: 'Clasificación de la Fase',
     owner: 'Organizador',
     started: 'En curso',
+    simulate: 'Simular resultados',
+    clearStage: 'Limpiar resultados',
+    removeStage: 'Eliminar fase',
   },
 
   // MatchList
