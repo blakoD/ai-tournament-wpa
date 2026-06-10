@@ -62,6 +62,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
         </Link>
 
         <nav className="flex items-center gap-2 text-sm">
+          {/* Dashboard links for authenticated users */}
           {session && (
             <Link
               to="/dashboard"
@@ -70,7 +71,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
               {t("app.dashboard")}
             </Link>
           )}
-
           {!session ? (
             <Link
               to="/signin"
@@ -81,10 +81,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
             </Link>
           ) : (
             <div className="relative" ref={userMenuRef}>
+              {/* Login / User menu */}
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((open) => !open)}
-                className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center justify-center transition-colors select-none"
+                className="border border-slate-300 dark:border-slate-500 dark:hover:bg-slate-600 dark:text-white flex font-bold h-8 hover:bg-slate-100 items-center justify-center rounded-full select-none text-slate-600 text-xs transition-colors w-8"
                 title={email}
               >
                 {initials}
@@ -105,7 +106,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
               )}
             </div>
           )}
-
+          {/* Kebab menu */}
           <div className="relative" ref={kebabRef}>
             <button
               type="button"
