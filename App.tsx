@@ -181,11 +181,14 @@ const AppContent: React.FC = () => {
     };
   }, []);
 
+  const navigate = useNavigate();
+
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Failed to sign out user', error);
     }
+    navigate('/');
   };
 
   const role = getUserRole(session);

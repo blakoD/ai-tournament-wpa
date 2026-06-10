@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { RiDeleteBinFill } from 'react-icons/ri';
@@ -29,6 +29,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
   const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const kebabRef = useRef<HTMLDivElement>(null);
   const [isKebabOpen, setIsKebabOpen] = useState(false);
   const tournamentReadOnly = readOnly;
 
@@ -406,6 +407,16 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
     );
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (kebabRef.current && !kebabRef.current.contains(event.target as Node)) {
+        setIsKebabOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div className="bg-slate-50 dark:bg-slate-900 min-h-screen">
       {/* Header */}
@@ -474,18 +485,8 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
             </div>
           </div>
 
-          {/* Tabs row: Undo | scrollable tabs | kebab */}
+          {/* Tabs scrollable tabs | row: Undo | kebab */}
           <div className="flex items-center gap-x-2 text-sm font-medium">
-            {canEdit && history.length > 0 && (
-              <button
-                onClick={handleUndo}
-                disabled={isSaving}
-                className="shrink-0 w-8 h-8 flex items-center justify-center rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 mb-1"
-                title="Undo last action"
-              >
-                ↺
-              </button>
-            )}
             {/* Scrollable tabs */}
             <div className="flex flex-wrap items-center gap-x-4 overflow-x-auto flex-1 min-w-0">
               <button
@@ -515,8 +516,19 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                 );
               })}
             </div>
+            {canEdit && history.length > 0 && (
+              <button
+                onClick={handleUndo}
+                disabled={isSaving}
+                className="shrink-0 w-8 h-8 flex items-center justify-center rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 mb-1"
+                title="Undo last action"
+              >
+                ↺
+              </button>
+            )}
+            {/* Kebab menu for stage actions */}
             {activeStageNum !== null && canEdit && isActiveStageLastStage && (
-              <div className="relative shrink-0">
+              <div className="relative shrink-0" ref={kebabRef}>
                 <button
                   onClick={() => setIsKebabOpen(prev => !prev)}
                   className="w-8 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400"

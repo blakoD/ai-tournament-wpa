@@ -7,6 +7,8 @@ const en = {
     logout: 'Logout',
     login: 'Login',
     signup: 'Sign up',
+    lightMode: 'Light mode',
+    darkMode: 'Dark mode',
   },
 
   // Home Page

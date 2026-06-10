@@ -122,7 +122,6 @@ export const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProp
                 {t("dashboard.title")}
               </h1>
               <p className="text-slate-500 dark:text-slate-400">{t("dashboard.subtitle")}</p>
-              {userEmail && <p className="text-slate-500 text-sm mt-1">{t("dashboard.signedInAs", { email: userEmail })}</p>}
               { isAdmin && 
                 <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-900/30 border border-blue-400/50 dark:border-blue-600/50 px-1.5 py-0.5 rounded-xl">
                   Admin
