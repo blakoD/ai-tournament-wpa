@@ -1,16 +1,12 @@
-# fly.toml app configuration file generated for fronton-torneos-web on 2026-05-20T19:11:07Z
+# fly.toml app configuration file generated for ai-tournament-wpa on 2026-06-09T08:04:29Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'fronton-torneos-web'
+app = 'ai-tournament-wpa'
 primary_region = 'gru'
 
 [build]
-  [build.args]
-    VITE_API_BASE_URL = "https://fronton-torneos-api.fly.dev"
-    VITE_SUPABASE_URL = "https://rmssrsitwmgxyqizvkjz.supabase.co"
-    VITE_SUPABASE_ANON_KEY = "sb_publishable_HPqSIGaqGsLmX1dclfA6rg_dATwv6SH"
 
 [http_service]
   internal_port = 8080
