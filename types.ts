@@ -1,3 +1,5 @@
+export type UserRole = "admin" | "user";
+
 export enum TournamentStatus {
   SETUP = 'SETUP',
   STARTED = 'STARTED',

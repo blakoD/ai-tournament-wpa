@@ -22,13 +22,14 @@
 - [ ] Fix Authentication. The user should be able to login and see only their tournaments. The user should be able to share the tournament with other users by adding their email in the tournament configuration. Only the tournament owner and the users with whom the tournament is shared can edit the tournament. All users with access to the tournament can view it.
 - [x] Add support to change the language of the app to Spanish
 - [x] Bulk import players from textarea input separated by new line. E.g 
-- [ ] Remove storage from localStorage
-- [ ] pre-configured templates. Mode "Federacion". 
+- [X] Remove storage from localStorage
+- [ ] Owner can share the tournament with other users by adding their email in the tournament configuration. Only the tournament owner and the users with whom the tournament is shared can edit the tournament. All users with access to the tournament can view it.  
 - [ ] Improve dashboard UI and add pagination for tournaments list and filter by sport category
-- [ ] Configure matches number of rounds in tournament settings. E.g. Best of 3, Best of 5, etc. 
+- [ ] pre-configured templates. Mode "Federacion". 
 - [ ] Add logo for tournaments
 - [ ] Add logo/photo for players
 - [ ] Admin can see inactive tournaments and delete them.
+- [ ] Configure matches number of rounds in tournament settings. E.g. Best of 3, Best of 5, etc. 
 
 ## Improvements
 - [ ] Improve api endpoints to send only modified data to update the match score and tournament configuration instead of sending the whole tournament data.
