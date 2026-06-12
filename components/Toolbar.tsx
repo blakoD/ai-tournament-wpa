@@ -64,8 +64,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
       <div className="max-w-6xl mx-auto px-4 py-1.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2 text-slate-900 dark:text-white">
-            <img src="/logo-light.png" alt="Trophy" className="block dark:hidden w-13 h-12" />
-            <img src="/logo-dark.png" alt="Trophy" className="hidden dark:block w-13 h-12" />
+            <img src="/logo-light.png" alt="Trophy" className="block dark:hidden border-b border-l border-slate-400/50 rounded-full h-12 w-13" />
+            <img src="/logo-dark.png" alt="Trophy" className="hidden dark:block border-b border-l border-slate-600 rounded-full h-12 w-13" />
           </Link>
         </div>
         <div className="flex items-center gap-2">
