@@ -26,7 +26,7 @@ import {
 import { supabase } from "./services/supabaseClient.js";
 
 const isTournamentEditable = (
-  summary: Pick<TournamentSummary, "ownerId" | "status">,
+  summary: Pick<TournamentSummary, "ownerId" | "status" | "isSharedWithMe" | "sharesEnabled">,
   userId: string | undefined,
   role: UserRole
 ): boolean => {
@@ -34,11 +34,19 @@ const isTournamentEditable = (
     return true;
   }
 
-  if (!userId || summary.ownerId !== userId) {
+  if (!userId) {
     return false;
   }
 
-  return summary.status !== "COMPLETED";
+  if (summary.ownerId === userId) {
+    return summary.status !== "COMPLETED";
+  }
+
+  if (summary.isSharedWithMe && summary.sharesEnabled) {
+    return summary.status !== "COMPLETED";
+  }
+
+  return false;
 };
 
 const LoadingView: React.FC = () => {

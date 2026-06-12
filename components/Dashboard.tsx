@@ -12,6 +12,7 @@ import {
 } from "../services/apiClient";
 import { UserRole } from "../types";
 import { Toolbar } from "./Toolbar";
+import { ShareModal } from "./ShareModal";
 
 interface DashboardProps {
   session: Session;
@@ -29,6 +30,7 @@ export const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProp
   const [unlockTapTimestamps, setUnlockTapTimestamps] = useState<number[]>([]);
   const [isTogglingReadOnly, setIsTogglingReadOnly] = useState(false);
   const [readOnly, setReadOnly] = useState(true);
+  const [sharingTournament, setSharingTournament] = useState<TournamentSummary | null>(null);
   const navigate = useNavigate();
   const isAdmin = role === "admin";
 
@@ -109,6 +111,13 @@ export const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProp
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <Toolbar session={session} onSignOut={onSignOut} />
+      {sharingTournament && (
+        <ShareModal
+          tournamentId={sharingTournament.id}
+          tournamentName={sharingTournament.name}
+          onClose={() => setSharingTournament(null)}
+        />
+      )}
       <div className="p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
           <header className="mb-8 flex justify-between items-center">
@@ -178,8 +187,8 @@ export const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProp
                       {ts.status === "COMPLETED" ? t("tournamentView.completed") : t("tournamentView.started")}
                     </span>
                   </div>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">{ts.title}</p>
-                  <div className="flex items-center gap-4 text-sm text-slate-500 mb-2">
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-2">{ts.title}</p>
+                  <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
                     <span>{t("dashboard.players", { count: ts.participantCount })}</span>
                     <span>•</span>
                     <span>{ts.eliminationType === "SINGLE_ELIMINATION" ? t("dashboard.bracketType") : t("dashboard.roundRobinType")}</span>
@@ -194,7 +203,29 @@ export const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProp
                     )}
                   </div>
                   {!readOnly && (
-                    <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700/50 flex justify-end">
+                    <div className="mt-3 flex justify-between items-center">
+                      {ts.ownerId === session.user.id ? (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSharingTournament(ts);
+                          }}
+                          title={t("share.title")}
+                          className="text-xs bg-slate-50 dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-slate-300 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-300 px-2 py-1 rounded transition-colors flex items-center gap-1"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                          </svg>
+                        </button>
+                      ) : (
+                        <span className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                          </svg>
+                          {t("share.sharedWithMe")}
+                        </span>
+                      )}
                       <button
                         type="button"
                         onClick={(event) => {

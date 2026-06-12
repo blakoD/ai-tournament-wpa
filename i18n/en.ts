@@ -1,7 +1,7 @@
 const en = {
   // App / Toolbar
   app: {
-    name: 'Sport Tournaments',
+    name: 'Fronton Tournaments',
     home: 'Home',
     dashboard: 'Dashboard',
     logout: 'Logout',
@@ -14,7 +14,7 @@ const en = {
   // Home Page
   home: {
     title: 'Recent Tournaments',
-    subtitle: 'Shown in read-only mode. You can only edit them from the Dashboard if you have permission.',
+    subtitle: 'You can only edit them from the Dashboard if you have permission.',
     loading: 'Loading tournaments...',
     readOnly: 'Read only',
     viewTournament: 'View tournament',
@@ -26,7 +26,7 @@ const en = {
     subtitle: 'Manage your competitions efficiently.',
     signedInAs: 'Signed in as {{email}}',
     role: 'Role: {{role}}',
-    newTournament: '+ New Tournament',
+    newTournament: 'New Tournament',
     loading: 'Loading tournaments...',
     noTournaments: 'No active tournaments found.',
     createFirst: 'Create your first one',
@@ -313,6 +313,27 @@ const en = {
       unknown: 'Unknown permission',
       unknownDesc: 'An unrecognized scope has been requested.',
     },
+  },
+
+  // Share Modal
+  share: {
+    title: 'Share Tournament',
+    shareButton: 'Share',
+    sharedWithMe: 'Shared with me',
+    enableSharing: 'Enable shared access',
+    enableSharingHint: 'Allow shared users to edit this tournament.',
+    addEmail: 'Add collaborator by email',
+    emailPlaceholder: 'collaborator@example.com',
+    add: 'Add',
+    adding: 'Adding...',
+    remove: 'Remove',
+    sharedWith: 'Shared with',
+    noShares: 'No collaborators added yet.',
+    errorLoad: 'Failed to load shares.',
+    errorAdd: 'Failed to add collaborator.',
+    errorRemove: 'Failed to remove collaborator.',
+    errorToggle: 'Failed to update sharing settings.',
+    errorInvalidEmail: 'Please enter a valid email address.',
   },
 } as const;
 

@@ -1,7 +1,7 @@
 const es = {
   // App / Toolbar
   app: {
-    name: 'Torneos Deportivos',
+    name: 'Fronton Torneos',
     home: 'Inicio',
     dashboard: 'Mis torneos',
     logout: 'Cerrar sesión',
@@ -14,7 +14,7 @@ const es = {
   // Home Page
   home: {
     title: 'Últimos torneos',
-    subtitle: 'Se muestran en modo lectura. Solo puedes editarlos desde Mis torneos si tienes permiso.',
+    subtitle: 'Solo puedes editarlos desde Mis torneos si tienes permiso.',
     loading: 'Cargando torneos...',
     readOnly: 'Solo lectura',
     viewTournament: 'Ver torneo',
@@ -26,7 +26,7 @@ const es = {
     subtitle: 'Administra tus competencias eficientemente.',
     signedInAs: 'Sesión iniciada como {{email}}',
     role: 'Rol: {{role}}',
-    newTournament: '+ Nuevo Torneo',
+    newTournament: 'Nuevo Torneo',
     loading: 'Cargando torneos...',
     noTournaments: 'No se encontraron torneos activos.',
     createFirst: 'Crea tu primer torneo',
@@ -312,6 +312,27 @@ const es = {
   confirmDialog: {
     cancel: 'Cancelar',
     confirm: 'Confirmar',
+  },
+
+  // Share Modal
+  share: {
+    title: 'Compartir Torneo',
+    shareButton: 'Compartir',
+    sharedWithMe: 'Compartido conmigo',
+    enableSharing: 'Habilitar acceso compartido',
+    enableSharingHint: 'Permitir que los usuarios compartidos editen este torneo.',
+    addEmail: 'Agregar colaborador por correo',
+    emailPlaceholder: 'colaborador@ejemplo.com',
+    add: 'Agregar',
+    adding: 'Agregando...',
+    remove: 'Quitar',
+    sharedWith: 'Compartido con',
+    noShares: 'Aún no hay colaboradores.',
+    errorLoad: 'Error al cargar los accesos compartidos.',
+    errorAdd: 'Error al agregar colaborador.',
+    errorRemove: 'Error al quitar colaborador.',
+    errorToggle: 'Error al actualizar la configuración de acceso.',
+    errorInvalidEmail: 'Por favor ingresa un correo electrónico válido.',
   },
 } as const;
 

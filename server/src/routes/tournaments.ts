@@ -186,27 +186,51 @@ const getHeaderValue = (value: string | string[] | undefined): string | undefine
 
 const getRequestContext = (request: { headers: Record<string, string | string[] | undefined> }) => {
   const userId = getHeaderValue(request.headers["x-user-id"]);
+  const userEmail = getHeaderValue(request.headers["x-user-email"]);
   const role = (getHeaderValue(request.headers["x-user-role"]) ?? "user").toLowerCase();
 
   return {
     userId,
+    userEmail,
     isAdmin: role === "admin",
   };
 };
 
-const canManageTournament = (
+const isOwnerOrAdmin = (
   context: { userId?: string; isAdmin: boolean },
-  tournament: { ownerId: string | null; status: "SETUP" | "STARTED" | "COMPLETED" }
+  tournament: { ownerId: string | null }
 ): boolean => {
+  if (context.isAdmin) return true;
+  return !!context.userId && tournament.ownerId === context.userId;
+};
+
+const canManageTournament = async (
+  context: { userId?: string; userEmail?: string; isAdmin: boolean },
+  tournament: { id: string; ownerId: string | null; status: "SETUP" | "STARTED" | "COMPLETED"; sharesEnabled: boolean }
+): Promise<boolean> => {
   if (context.isAdmin) {
     return true;
   }
 
-  if (!context.userId || tournament.ownerId !== context.userId) {
+  if (!context.userId) {
     return false;
   }
 
-  return tournament.status !== "COMPLETED";
+  if (tournament.ownerId === context.userId) {
+    return tournament.status !== "COMPLETED";
+  }
+
+  // Check if user has shared edit access
+  if (!context.userEmail || !tournament.sharesEnabled || tournament.status === "COMPLETED") {
+    return false;
+  }
+
+  const share = await prisma.tournamentShare.findFirst({
+    where: { tournamentId: tournament.id, email: context.userEmail },
+    select: { id: true },
+  });
+
+  return share !== null;
 };
 
 const getTournamentWithRelations = async (id: string): Promise<TournamentWithRelations | null> => {
@@ -238,12 +262,20 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
       return reply.code(401).send({ error: "Authentication required" });
     }
 
+    const mineWhere = parsedQuery.data.mine && context.userId
+      ? {
+          OR: [
+            { ownerId: context.userId },
+            ...(context.userEmail
+              ? [{ shares: { some: { email: context.userEmail } } }]
+              : []),
+          ],
+        }
+      : undefined;
+
     const tournaments = await prisma.tournament.findMany({
-      where: parsedQuery.data.mine
-        ? {
-            ownerId: context.userId,
-          }
-        : undefined,
+      where: mineWhere,
+      include: { shares: { select: { email: true } } },
       orderBy: { createdAt: "desc" },
       take: parsedQuery.data.limit,
     });
@@ -263,6 +295,10 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
       createdAt: tournament.createdAt.getTime(),
       startedAt: tournament.startedAt?.getTime(),
       completedAt: tournament.completedAt?.getTime(),
+      sharesEnabled: tournament.sharesEnabled,
+      isSharedWithMe: context.userEmail
+        ? tournament.shares.some((s) => s.email === context.userEmail)
+        : false,
     }));
   });
 
@@ -391,14 +427,14 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
 
     const existing = await prisma.tournament.findUnique({
       where: { id: parsedParams.data.id },
-      select: { ownerId: true, status: true },
+      select: { id: true, ownerId: true, status: true, sharesEnabled: true },
     });
 
     if (!existing) {
       return reply.code(404).send({ error: "Tournament not found" });
     }
 
-    if (!canManageTournament(context, { ownerId: existing.ownerId, status: existing.status })) {
+    if (!await canManageTournament(context, existing)) {
       return reply.code(403).send({ error: "You do not have permission to edit this tournament" });
     }
 
@@ -499,14 +535,14 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
 
     const existing = await prisma.tournament.findUnique({
       where: { id: parsedParams.data.id },
-      select: { ownerId: true, status: true },
+      select: { id: true, ownerId: true, status: true, sharesEnabled: true },
     });
 
     if (!existing) {
       return reply.code(404).send({ error: "Tournament not found" });
     }
 
-    if (!canManageTournament(context, { ownerId: existing.ownerId, status: existing.status })) {
+    if (!isOwnerOrAdmin(context, existing)) {
       return reply.code(403).send({ error: "You do not have permission to delete this tournament" });
     }
 
@@ -536,14 +572,14 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
 
     const existing = await prisma.tournament.findUnique({
       where: { id: parsedParams.data.id },
-      select: { ownerId: true, status: true },
+      select: { id: true, ownerId: true, status: true, sharesEnabled: true },
     });
 
     if (!existing) {
       return reply.code(404).send({ error: "Tournament not found" });
     }
 
-    if (!canManageTournament(context, { ownerId: existing.ownerId, status: existing.status })) {
+    if (!await canManageTournament(context, existing)) {
       return reply.code(403).send({ error: "You do not have permission to start this tournament" });
     }
 
@@ -636,14 +672,14 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
 
     const existing = await prisma.tournament.findUnique({
       where: { id: parsedParams.data.id },
-      select: { ownerId: true, status: true },
+      select: { id: true, ownerId: true, status: true, sharesEnabled: true },
     });
 
     if (!existing) {
       return reply.code(404).send({ error: "Tournament not found" });
     }
 
-    if (!canManageTournament(context, { ownerId: existing.ownerId, status: existing.status })) {
+    if (!await canManageTournament(context, existing)) {
       return reply.code(403).send({ error: "You do not have permission to edit this tournament" });
     }
 
@@ -814,14 +850,14 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
 
     const existing = await prisma.tournament.findUnique({
       where: { id: parsedParams.data.id },
-      select: { ownerId: true, status: true },
+      select: { id: true, ownerId: true, status: true, sharesEnabled: true },
     });
 
     if (!existing) {
       return reply.code(404).send({ error: "Tournament not found" });
     }
 
-    if (!canManageTournament(context, { ownerId: existing.ownerId, status: existing.status })) {
+    if (!await canManageTournament(context, existing)) {
       return reply.code(403).send({ error: "You do not have permission to edit this tournament" });
     }
 
@@ -914,5 +950,185 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
       }
       throw error;
     }
+  });
+
+  // ── Share routes ──────────────────────────────────────────────────────────
+
+  const shareIdParamsSchema = z.object({
+    id: z.string().uuid(),
+    shareId: z.string().uuid(),
+  });
+
+  const shareBodySchema = z.object({
+    email: z.string().email(),
+  });
+
+  const sharesEnabledBodySchema = z.object({
+    enabled: z.boolean(),
+  });
+
+  app.get("/api/tournaments/:id/shares", async (request, reply) => {
+    const context = getRequestContext(request);
+    const parsedParams = idParamsSchema.safeParse(request.params);
+    if (!parsedParams.success) {
+      return reply.code(400).send({ error: "Invalid tournament id" });
+    }
+
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: parsedParams.data.id },
+      select: { id: true, ownerId: true, sharesEnabled: true },
+    });
+
+    if (!tournament) {
+      return reply.code(404).send({ error: "Tournament not found" });
+    }
+
+    if (!isOwnerOrAdmin(context, tournament)) {
+      return reply.code(403).send({ error: "You do not have permission to view shares" });
+    }
+
+    const shares = await prisma.tournamentShare.findMany({
+      where: { tournamentId: parsedParams.data.id },
+      select: { id: true, email: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return {
+      sharesEnabled: tournament.sharesEnabled,
+      shares: shares.map((s) => ({ id: s.id, email: s.email, createdAt: s.createdAt.getTime() })),
+    };
+  });
+
+  app.post("/api/tournaments/:id/shares", async (request, reply) => {
+    const context = getRequestContext(request);
+    const parsedParams = idParamsSchema.safeParse(request.params);
+    if (!parsedParams.success) {
+      return reply.code(400).send({ error: "Invalid tournament id" });
+    }
+
+    const parsedBody = shareBodySchema.safeParse(request.body);
+    if (!parsedBody.success) {
+      return reply.code(400).send({ error: "Invalid email" });
+    }
+
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: parsedParams.data.id },
+      select: { id: true, ownerId: true, ownerEmail: true, sharesEnabled: true },
+    });
+
+    if (!tournament) {
+      return reply.code(404).send({ error: "Tournament not found" });
+    }
+
+    if (!isOwnerOrAdmin(context, tournament)) {
+      return reply.code(403).send({ error: "You do not have permission to share this tournament" });
+    }
+
+    if (tournament.ownerEmail && parsedBody.data.email.toLowerCase() === tournament.ownerEmail.toLowerCase()) {
+      return reply.code(400).send({ error: "Cannot share with the tournament owner" });
+    }
+
+    try {
+      await prisma.tournamentShare.create({
+        data: {
+          tournamentId: parsedParams.data.id,
+          email: parsedBody.data.email.toLowerCase(),
+        },
+      });
+    } catch (error) {
+      const prismaError = error as { code?: string };
+      if (prismaError.code === "P2002") {
+        return reply.code(409).send({ error: "This email already has access" });
+      }
+      throw error;
+    }
+
+    const shares = await prisma.tournamentShare.findMany({
+      where: { tournamentId: parsedParams.data.id },
+      select: { id: true, email: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return reply.code(201).send({
+      sharesEnabled: tournament.sharesEnabled,
+      shares: shares.map((s) => ({ id: s.id, email: s.email, createdAt: s.createdAt.getTime() })),
+    });
+  });
+
+  app.delete("/api/tournaments/:id/shares/:shareId", async (request, reply) => {
+    const context = getRequestContext(request);
+    const parsedParams = shareIdParamsSchema.safeParse(request.params);
+    if (!parsedParams.success) {
+      return reply.code(400).send({ error: "Invalid parameters" });
+    }
+
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: parsedParams.data.id },
+      select: { id: true, ownerId: true },
+    });
+
+    if (!tournament) {
+      return reply.code(404).send({ error: "Tournament not found" });
+    }
+
+    if (!isOwnerOrAdmin(context, tournament)) {
+      return reply.code(403).send({ error: "You do not have permission to manage shares" });
+    }
+
+    try {
+      await prisma.tournamentShare.delete({
+        where: { id: parsedParams.data.shareId, tournamentId: parsedParams.data.id },
+      });
+    } catch (error) {
+      const prismaError = error as { code?: string };
+      if (prismaError.code === "P2025") {
+        return reply.code(404).send({ error: "Share not found" });
+      }
+      throw error;
+    }
+
+    return reply.code(204).send();
+  });
+
+  app.put("/api/tournaments/:id/shares/enabled", async (request, reply) => {
+    const context = getRequestContext(request);
+    const parsedParams = idParamsSchema.safeParse(request.params);
+    if (!parsedParams.success) {
+      return reply.code(400).send({ error: "Invalid tournament id" });
+    }
+
+    const parsedBody = sharesEnabledBodySchema.safeParse(request.body);
+    if (!parsedBody.success) {
+      return reply.code(400).send({ error: "Invalid payload" });
+    }
+
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: parsedParams.data.id },
+      select: { id: true, ownerId: true },
+    });
+
+    if (!tournament) {
+      return reply.code(404).send({ error: "Tournament not found" });
+    }
+
+    if (!isOwnerOrAdmin(context, tournament)) {
+      return reply.code(403).send({ error: "You do not have permission to manage shares" });
+    }
+
+    await prisma.tournament.update({
+      where: { id: parsedParams.data.id },
+      data: { sharesEnabled: parsedBody.data.enabled },
+    });
+
+    const shares = await prisma.tournamentShare.findMany({
+      where: { tournamentId: parsedParams.data.id },
+      select: { id: true, email: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return {
+      sharesEnabled: parsedBody.data.enabled,
+      shares: shares.map((s) => ({ id: s.id, email: s.email, createdAt: s.createdAt.getTime() })),
+    };
   });
 };
