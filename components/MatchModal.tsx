@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ImPlus, ImMinus } from "react-icons/im";
 import { useTranslation } from 'react-i18next';
 import { Match, Participant } from '../types';
@@ -7,20 +7,27 @@ interface Props {
   match: Match;
   participants: Participant[];
   maxScore?: number;
-  onSave: (matchId: string, scoreA: number, scoreB: number) => void;
+  onSave: (matchId: string, scoreA: number, scoreB: number, signal: AbortSignal) => Promise<void>;
   onReset?: () => void;
   onClose: () => void;
   isSaving?: boolean;
 }
 
-export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16, onSave, onReset, onClose, isSaving }) => {
+export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16, onSave, onReset, onClose }) => {
   const { t } = useTranslation();
   const [sA, setSA] = useState<string>(match.scoreA?.toString() || '');
   const [sB, setSB] = useState<string>(match.scoreB?.toString() || '');
   const [fullscreen, setFullscreen] = useState(false);
 
   const [error, setError] = useState('');
-  const [showLowScoreWarning, setShowLowScoreWarning] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedRecently, setSavedRecently] = useState(false);
+
+  const abortRef = useRef<AbortController | null>(null);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const initialScoreA = useRef(match.scoreA);
+  const initialScoreB = useRef(match.scoreB);
 
   const pA = participants.find(p => p.id === match.participantAId);
   const pB = participants.find(p => p.id === match.participantBId);
@@ -38,39 +45,74 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
     return isNaN(n) ? 0 : n;
   };
 
-  const adjustScore = (side: 'A' | 'B', delta: number) => {
-    if (side === 'A') {
-      setSA(prev => String(Math.max(0, parseScore(prev) + delta)));
-    } else {
-      setSB(prev => String(Math.max(0, parseScore(prev) + delta)));
-    }
-    setShowLowScoreWarning(false);
-    setError('');
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerSave = (newSA: string, newSB: string) => {
+    const scoreA = parseInt(newSA);
+    const scoreB = parseInt(newSB);
+    if (isNaN(scoreA) || isNaN(scoreB)) return;
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+    setIsSaving(true);
+    setSavedRecently(false);
+
+    onSave(match.id, scoreA, scoreB, controller.signal)
+      .then(() => {
+        if (!controller.signal.aborted) {
+          setIsSaving(false);
+          setSavedRecently(true);
+          savedTimer.current = setTimeout(() => setSavedRecently(false), 2000);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!controller.signal.aborted) {
+          setIsSaving(false);
+          setError(err instanceof Error ? err.message : 'Failed to save');
+        }
+      });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const scheduleSave = (newSA: string, newSB: string) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => triggerSave(newSA, newSB), 600);
+  };
+
+  const flushSave = (newSA: string, newSB: string) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    triggerSave(newSA, newSB);
+  };
+
+  const adjustScore = (side: 'A' | 'B', delta: number) => {
+    let newSA = sA;
+    let newSB = sB;
+    if (side === 'A') {
+      newSA = String(Math.max(0, parseScore(sA) + delta));
+      setSA(newSA);
+    } else {
+      newSB = String(Math.max(0, parseScore(sB) + delta));
+      setSB(newSB);
+    }
     setError('');
+    scheduleSave(newSA, newSB);
+  };
 
-    const scoreA = parseInt(sA);
-    const scoreB = parseInt(sB);
-
-    if (isNaN(scoreA) || isNaN(scoreB)) {
-      setError(t('matchModal.errorInvalidScores'));
-      return;
+  const handleReset = () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    const origA = initialScoreA.current;
+    const origB = initialScoreB.current;
+    if (origA !== null && origA !== undefined && origB !== null && origB !== undefined) {
+      const a = origA.toString();
+      const b = origB.toString();
+      setSA(a);
+      setSB(b);
+      triggerSave(a, b);
+    } else {
+      onReset?.();
     }
-
-    if (scoreA === scoreB) {
-      setError(t('matchModal.errorDraws'));
-      return;
-    }
-
-    if (!showLowScoreWarning && scoreA < maxScore && scoreB < maxScore) {
-      setShowLowScoreWarning(true);
-      return;
-    }
-
-    onSave(match.id, scoreA, scoreB);
   };
 
   if (!pA || !pB) return null;
@@ -105,30 +147,37 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
             className={inputSize + ' text-center font-bold bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:border-blue-500 outline-none text-slate-900 dark:text-white'}
             value={value}
             onChange={e => {
-            onChange(e.target.value);
-            setShowLowScoreWarning(false);
-            setError('');
+              const v = e.target.value;
+              onChange(v);
+              setError('');
+              scheduleSave(
+                side === 'A' ? v : sA,
+                side === 'B' ? v : sB
+              );
             }}
+            onBlur={() => flushSave(sA, sB)}
         />
         <div className="flex gap-2">
-            <button
-                type="button"
-                onClick={() => adjustScore(side, 1)}
-                className={btnSize + ' rounded-md bg-[#296421] hover:bg-[#3a7a2a] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
-            >
-                <div className="flex items-center justify-center">
-                    <ImPlus />
-                </div>
-            </button>
-            <button
-                type="button"
-                onClick={() => adjustScore(side, -1)}
-                className={btnSize + ' rounded-md bg-[#d52525] hover:bg-[#ff4c4c] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
-            >
-                <div className="flex items-center justify-center">
-                    <ImMinus />
-                </div>
-            </button>
+          <button
+            type="button"
+            onMouseDown={e => e.preventDefault()}
+            onClick={() => adjustScore(side, 1)}
+            className={btnSize + ' rounded-md bg-[#296421] hover:bg-[#3a7a2a] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
+          >
+            <div className="flex items-center justify-center">
+              <ImPlus />
+            </div>
+          </button>
+          <button
+            type="button"
+            onMouseDown={e => e.preventDefault()}
+            onClick={() => adjustScore(side, -1)}
+            className={btnSize + ' rounded-md bg-[#d52525] hover:bg-[#ff4c4c] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
+          >
+            <div className="flex items-center justify-center">
+              <ImMinus />
+            </div>
+          </button>
         </div>
     </div>
   );
@@ -139,6 +188,18 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
         <div className="bg-slate-50 dark:bg-slate-900 px-4 py-3 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
           <h3 className={'font-bold text-slate-900 dark:text-white ' + (fullscreen ? 'text-xl' : 'text-lg')}>{t('matchModal.title')}</h3>
           <div className="flex items-center gap-2">
+            {(sA !== (initialScoreA.current?.toString() ?? '') || sB !== (initialScoreB.current?.toString() ?? '')) && (
+              <div className="flex justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className={'rounded px-4 py-1 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors'}
+                    title={t('matchModal.resetTitle')}
+                  >
+                    {t('matchModal.reset')}
+                  </button>
+              </div>
+            )}
             <button
               type="button"
               onClick={() => setFullscreen(f => !f)}
@@ -159,8 +220,7 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
           </div>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
+        <div
           className={'flex flex-col flex-1 ' + (fullscreen ? 'p-8 gap-6' : 'p-6')}
         >
             <div className={'flex flex-col ' + (fullscreen ? 'flex-1 justify-center' : '')}>
@@ -194,50 +254,23 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
                     </div>
                 )}
 
-                {showLowScoreWarning && (
-                    <div className="mb-4 p-3 bg-amber-900/50 border border-amber-700 text-amber-200 text-sm text-center rounded animate-pulse">
-                    <strong>{t('matchModal.warningTitle')}</strong> {t('matchModal.warningBody', { max: maxScore })}<br />
-                      {t('matchModal.warningConfirm')}
+                {isSaving && (
+                    <div className={'text-slate-400 text-center ' + (fullscreen ? 'text-base mb-4' : 'text-xs mb-6')}>
+                      {t('matchModal.saving')}
                     </div>
                 )}
-
-                {!showLowScoreWarning && !error && (
+                {savedRecently && !isSaving && (
+                    <div className={'text-green-400 text-center ' + (fullscreen ? 'text-base mb-4' : 'text-xs mb-6')}>
+                      {t('matchModal.saved')}
+                    </div>
+                )}
+                {!isSaving && !savedRecently && !error && (
                     <div className={'text-slate-500 text-center ' + (fullscreen ? 'text-base mb-4' : 'text-xs mb-6')}>
                       {t('matchModal.rule', { max: maxScore })}
                     </div>
                 )}
-
-                <div className="flex gap-3">
-                    {match.isCompleted && onReset && (
-                    <button
-                        type="button"
-                        onClick={onReset}
-                        className={'px-4 rounded-lg bg-red-200/50 dark:bg-red-900/20 text-red-400 font-bold hover:bg-red-900/40 border border-red-900/50 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
-                        title={t('matchModal.resetTitle')}
-                    >
-                        {t('matchModal.reset')}
-                    </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className={'flex-1 rounded-lg bg-slate-700 text-slate-300 font-bold hover:bg-slate-600 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
-                    >
-                      {t('matchModal.cancel')}
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSaving}
-                      className={'flex-1 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-colors ' + (fullscreen ? 'py-5 text-lg' : 'py-3')}
-                    >
-                      {isSaving 
-                        ? t('matchModal.saving') 
-                        : showLowScoreWarning ? t('matchModal.confirmSave') : t('matchModal.saveResult')
-                      }
-                    </button>
-                </div>
             </div>
-        </form>
+        </div>
       </div>
     </div>
   );

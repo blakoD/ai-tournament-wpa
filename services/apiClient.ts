@@ -169,11 +169,13 @@ export const startTournament = async (
 export const updateMatchResult = async (
   id: string,
   matchId: string,
-  payload: { scoreA: number; scoreB: number }
+  payload: { scoreA: number; scoreB: number },
+  signal?: AbortSignal
 ): Promise<Tournament> =>
   request(`/tournaments/${id}/matches/${matchId}/result`, {
     method: "POST",
     body: JSON.stringify(payload),
+    signal,
   });
 
 export const swapMatchParticipant = async (

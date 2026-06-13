@@ -127,8 +127,8 @@ const TournamentRoute = ({ session, role }: TournamentRouteProps) => {
     return persisted;
   };
 
-  const handleMatchResult = async (tournamentId: string, matchId: string, scoreA: number, scoreB: number): Promise<Tournament> => {
-    const persisted = await updateMatchResult(tournamentId, matchId, { scoreA, scoreB });
+  const handleMatchResult = async (tournamentId: string, matchId: string, scoreA: number, scoreB: number, signal?: AbortSignal): Promise<Tournament> => {
+    const persisted = await updateMatchResult(tournamentId, matchId, { scoreA, scoreB }, signal);
     setTournament(persisted);
     return persisted;
   };

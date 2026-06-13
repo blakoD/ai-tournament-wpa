@@ -17,7 +17,7 @@ interface Props {
   tournament: Tournament;
   readOnly: boolean;
   onUpdate: (t: Tournament) => Promise<Tournament>;
-  onMatchResult: (tournamentId: string, matchId: string, scoreA: number, scoreB: number) => Promise<Tournament>;
+  onMatchResult: (tournamentId: string, matchId: string, scoreA: number, scoreB: number, signal?: AbortSignal) => Promise<Tournament>;
   onSwapParticipant: (tournamentId: string, matchId: string, slot: 'A' | 'B', newParticipantId: string) => Promise<Tournament>;
 }
 
@@ -142,15 +142,15 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
     }
   };
 
-  const handleMatchSave = async (matchId: string, scoreA: number, scoreB: number) => {
+  const handleMatchSave = async (matchId: string, scoreA: number, scoreB: number, signal: AbortSignal) => {
     if (!canEdit) return;
     setIsSaving(true);
     setSaveError(null);
     try {
-      await onMatchResult(tournament.id, matchId, scoreA, scoreB);
+      await onMatchResult(tournament.id, matchId, scoreA, scoreB, signal);
       setHistory(prev => [...prev, tournament]);
-      setSelectedMatch(null);
     } catch (updateError) {
+      if (signal.aborted) return;
       setSaveError(updateError instanceof Error ? updateError.message : 'Failed to save match result.');
       throw updateError;
     } finally {

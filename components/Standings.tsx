@@ -78,8 +78,8 @@ export const Standings: React.FC<Props> = ({
                     {showGroups && <th className="px-4 py-3 w-16 text-center border-l border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500" title={t('standings.globalRank')}>{t('standings.gp')}</th>}
                     <th className="px-4 py-3">{t('standings.player')}</th>
                     {mode === 'global' && <th className="px-4 py-3 text-center w-16">{t('standings.groupCol')}</th>}
-                    <th className="px-4 py-3 text-center w-16">{t('standings.wins')}</th>
                     <th className="px-4 py-3 text-center w-16">{t('standings.matchesPlayed')}</th>
+                    <th className="px-4 py-3 text-center w-16">{t('standings.wins')}</th>
                     <th className="px-4 py-3 text-center w-16">{t('standings.pointsFor')}</th>
                     <th className="px-4 py-3 text-center w-16">{t('standings.pointsAgainst')}</th>
                     <th className="px-4 py-3 text-center w-16">{t('standings.diff')}</th>
@@ -143,8 +143,8 @@ export const Standings: React.FC<Props> = ({
                                 </span>
                             </td>
                         )}
-                        <td className="px-4 py-3 text-center font-bold text-emerald-400 dark:text-emerald-400">{p.wins}</td>
                         <td className="px-4 py-3 text-center text-slate-500 dark:text-slate-400">{p.matchesPlayed}</td>
+                        <td className="px-4 py-3 text-center font-bold text-emerald-400 dark:text-emerald-400">{p.wins}</td>
                         <td className="px-4 py-3 text-center text-slate-700 dark:text-slate-300">{p.pointsFor}</td>
                         <td className="px-4 py-3 text-center text-slate-500">{p.pointsAgainst}</td>
                         <td className={`px-4 py-3 text-center font-medium ${ (p.pointsFor - p.pointsAgainst) > 0 ? 'text-blue-400' : 'text-red-400' }`}>

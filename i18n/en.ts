@@ -104,6 +104,7 @@ const en = {
     vs: 'VS',
     saveResult: 'Save',
     saving: 'Saving...',
+    saved: '✓ Saved',
     confirmSave: 'Confirm & Save',
     reset: 'Reset',
     cancel: 'Cancel',
@@ -158,8 +159,8 @@ const en = {
     globalRank: 'Global Rank',
     player: 'Player',
     groupCol: 'Group',
-    wins: 'G',
-    matchesPlayed: 'PJ',
+    matchesPlayed: 'P',
+    wins: 'W',
     pointsFor: 'PF',
     pointsAgainst: 'PC',
     diff: 'Diff',
@@ -167,7 +168,7 @@ const en = {
     sorting: 'Sorting: Wins > Points For > Diff',
     qualifiedZone: 'Qualified Zone (Top {{count}} per Group)',
     rename: 'Rename',
-    gp: 'Gp',
+    gp: 'GP',
   },
 
   // TournamentConfig

@@ -666,10 +666,6 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
       return reply.code(400).send({ error: "Invalid match result payload" });
     }
 
-    if (parsedBody.data.scoreA === parsedBody.data.scoreB) {
-      return reply.code(400).send({ error: "Draws are not allowed" });
-    }
-
     const existing = await prisma.tournament.findUnique({
       where: { id: parsedParams.data.id },
       select: { id: true, ownerId: true, status: true, sharesEnabled: true },

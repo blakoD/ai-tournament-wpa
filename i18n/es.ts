@@ -104,6 +104,7 @@ const es = {
     vs: 'VS',
     saveResult: 'Guardar',
     saving: 'Guardando...',
+    saved: '✓ Guardado',
     confirmSave: 'Confirmar y Guardar',
     reset: 'Reiniciar',
     cancel: 'Cancelar',
@@ -158,8 +159,8 @@ const es = {
     globalRank: 'Pos. General',
     player: 'Jugador',
     groupCol: 'Grupo',
+    matchesPlayed: 'J',
     wins: 'G',
-    matchesPlayed: 'PJ',
     pointsFor: 'PF',
     pointsAgainst: 'PC',
     diff: 'Dif',
@@ -167,7 +168,7 @@ const es = {
     sorting: 'Orden: Ganados > Puntos A Favor > Diferencia',
     qualifiedZone: 'Zona Clasificada (Top {{count}} por Grupo)',
     rename: 'Renombrar',
-    gp: 'Gp',
+    gp: 'PG',
   },
 
   // TournamentConfig
