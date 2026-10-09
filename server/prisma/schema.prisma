@@ -40,11 +40,27 @@ model Tournament {
   startedAt        DateTime?        @map("started_at")
   completedAt      DateTime?        @map("completed_at")
   maxScore         Int              @default(16) @map("max_score")
+  sharesEnabled    Boolean          @default(true) @map("shares_enabled")
 
   participants Participant[]
   matches      Match[]
+  shares       TournamentShare[]
 
   @@map("tournaments")
+}
+
+model TournamentShare {
+  id           String     @id @default(uuid()) @db.Uuid
+  tournamentId String     @map("tournament_id") @db.Uuid
+  email        String
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, email])
+  @@index([tournamentId])
+  @@index([email])
+  @@map("tournament_shares")
 }
 
 model AppParameter {

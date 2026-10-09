@@ -1,7 +1,7 @@
 const en = {
   // App / Toolbar
   app: {
-    name: 'Sport Tournaments',
+    name: 'Fronton Tournaments',
     home: 'Home',
     dashboard: 'Dashboard',
     logout: 'Logout',
@@ -14,7 +14,7 @@ const en = {
   // Home Page
   home: {
     title: 'Recent Tournaments',
-    subtitle: 'Shown in read-only mode. You can only edit them from the Dashboard if you have permission.',
+    subtitle: 'You can only edit them from the Dashboard if you have permission.',
     loading: 'Loading tournaments...',
     readOnly: 'Read only',
     viewTournament: 'View tournament',
@@ -26,7 +26,7 @@ const en = {
     subtitle: 'Manage your competitions efficiently.',
     signedInAs: 'Signed in as {{email}}',
     role: 'Role: {{role}}',
-    newTournament: '+ New Tournament',
+    newTournament: 'New Tournament',
     loading: 'Loading tournaments...',
     noTournaments: 'No active tournaments found.',
     createFirst: 'Create your first one',
@@ -104,6 +104,7 @@ const en = {
     vs: 'VS',
     saveResult: 'Save',
     saving: 'Saving...',
+    saved: '✓ Saved',
     confirmSave: 'Confirm & Save',
     reset: 'Reset',
     cancel: 'Cancel',
@@ -158,8 +159,8 @@ const en = {
     globalRank: 'Global Rank',
     player: 'Player',
     groupCol: 'Group',
-    wins: 'G',
-    matchesPlayed: 'PJ',
+    matchesPlayed: 'P',
+    wins: 'W',
     pointsFor: 'PF',
     pointsAgainst: 'PC',
     diff: 'Diff',
@@ -167,7 +168,7 @@ const en = {
     sorting: 'Sorting: Wins > Points For > Diff',
     qualifiedZone: 'Qualified Zone (Top {{count}} per Group)',
     rename: 'Rename',
-    gp: 'Gp',
+    gp: 'GP',
   },
 
   // TournamentConfig
@@ -179,8 +180,8 @@ const en = {
     officialTitle: 'Official Title',
     description: 'Description (Optional)',
     matchSettings: 'Match Settings',
-    maxScore: 'Max Score (points to win)',
-    maxScoreNote: 'Used in match score validation. Default: 16',
+    maxScore: 'Points to Win',
+    maxScoreNote: 'Default: 16',
     participants: 'Participants',
     locked: 'Locked — tournament has started',
     noParticipants: 'No participants yet.',
@@ -313,6 +314,27 @@ const en = {
       unknown: 'Unknown permission',
       unknownDesc: 'An unrecognized scope has been requested.',
     },
+  },
+
+  // Share Modal
+  share: {
+    title: 'Share Tournament',
+    shareButton: 'Share',
+    sharedWithMe: 'Shared with me',
+    enableSharing: 'Enable shared access',
+    enableSharingHint: 'Allow shared users to edit this tournament.',
+    addEmail: 'Add collaborator by email',
+    emailPlaceholder: 'collaborator@example.com',
+    add: 'Add',
+    adding: 'Adding...',
+    remove: 'Remove',
+    sharedWith: 'Shared with',
+    noShares: 'No collaborators added yet.',
+    errorLoad: 'Failed to load shares.',
+    errorAdd: 'Failed to add collaborator.',
+    errorRemove: 'Failed to remove collaborator.',
+    errorToggle: 'Failed to update sharing settings.',
+    errorInvalidEmail: 'Please enter a valid email address.',
   },
 } as const;
 

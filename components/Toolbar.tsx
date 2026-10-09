@@ -53,24 +53,38 @@ export const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
   const email = session?.user.email ?? "";
   const initials = email ? getInitials(email) : "";
 
+  const navLinks = [
+    { to: "/", label: t("app.home"), selected: location.pathname === "/" },
+    { to: "/dashboard", label: t("app.dashboard"), selected: location.pathname === "/dashboard" },
+  ];
+
+
   return (
     <header className="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-10">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 text-slate-900 dark:text-white font-bold tracking-wide">
-          <img src="/trophy.svg" alt="Trophy" className="w-7 h-7" />
-          {t("app.name")}
-        </Link>
-
-        <nav className="flex items-center gap-2 text-sm">
+      <div className="max-w-6xl mx-auto px-4 py-1.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 text-slate-900 dark:text-white">
+            <img src="/logo-light.png" alt="Trophy" className="block dark:hidden border-b border-l border-slate-400/50 rounded-full h-12 w-13" />
+            <img src="/logo-dark.png" alt="Trophy" className="hidden dark:block border-b border-l border-slate-600 rounded-full h-12 w-13" />
+          </Link>
+        </div>
+        <div className="flex items-center gap-2">
           {session && (
-            <Link
-              to="/dashboard"
-              className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              {t("app.dashboard")}
-            </Link>
+            <div className="flex items-center dark:bg-slate-900 border dark:border-slate-700 rounded-full px-1 py-1 gap-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`px-3 py-1 rounded-full text-sm transition-colors text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/20 dark:hover:bg-slate-800
+                    ${link.selected ? "bg-white dark:bg-slate-800 border dark:border-slate-700 font-bold" : ''}`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           )}
-
+        </div>
+        <nav className="flex items-center gap-2 text-sm">
           {!session ? (
             <Link
               to="/signin"
@@ -81,10 +95,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
             </Link>
           ) : (
             <div className="relative" ref={userMenuRef}>
+              {/* Login / User menu */}
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((open) => !open)}
-                className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center justify-center transition-colors select-none"
+                className="border border-slate-300 dark:border-slate-500 dark:hover:bg-slate-600 dark:text-white flex font-bold h-8 hover:bg-slate-100 items-center justify-center rounded-full select-none text-slate-600 text-xs transition-colors w-8"
                 title={email}
               >
                 {initials}
@@ -105,7 +120,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
               )}
             </div>
           )}
-
+          {/* Kebab menu */}
           <div className="relative" ref={kebabRef}>
             <button
               type="button"

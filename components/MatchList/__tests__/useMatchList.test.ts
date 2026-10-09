@@ -1,7 +1,12 @@
+import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { useMatchList } from '../useMatchList';
 import { Match, Participant } from '../../../types';
+
+const wrapper = ({ children }: { children: React.ReactNode }) =>
+  React.createElement(MemoryRouter, null, children);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -50,8 +55,8 @@ describe('sortByRound', () => {
     ];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     act(() => { result.current.handleSortModeChange('round'); });
 
@@ -83,8 +88,8 @@ describe('sortByRound', () => {
     ];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants })
-    );
+      useMatchList({ matches, participants }),
+    { wrapper });
 
     act(() => { result.current.handleSortModeChange('round'); });
 
@@ -100,8 +105,8 @@ describe('sortByRound', () => {
     ];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     act(() => { result.current.handleSortModeChange('round'); });
 
@@ -149,8 +154,8 @@ describe('sortByRound', () => {
     ];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants })
-    );
+      useMatchList({ matches, participants }),
+    { wrapper });
 
     act(() => { result.current.handleSortModeChange('round'); });
 
@@ -175,6 +180,64 @@ describe('sortByRound', () => {
 // ---------------------------------------------------------------------------
 
 describe('sortByGroup', () => {
+  it('4 players / 1 group — group by <group> position. A1vsA2, A3vsA4, A1vA3, A2vA4, A1vsA4, A2vsA3', () => {
+    const participants = [
+      makeParticipant({ id: 'p1', group: 'A', groupSort: 1 }),
+      makeParticipant({ id: 'p2', group: 'A', groupSort: 2 }),
+      makeParticipant({ id: 'p3', group: 'A', groupSort: 3 }),
+      makeParticipant({ id: 'p4', group: 'A', groupSort: 4 }),
+    ];
+    
+    const matches = [
+      makeMatch({ id: 'm3', group: 'A', round: 2, participantAId: 'p1', participantBId: 'p3' }),
+      makeMatch({ id: 'm6', group: 'A', round: 3, participantAId: 'p2', participantBId: 'p3' }),
+      makeMatch({ id: 'm2', group: 'A', round: 1, participantAId: 'p3', participantBId: 'p4' }),
+      makeMatch({ id: 'm1', group: 'A', round: 1, participantAId: 'p1', participantBId: 'p2' }),
+      makeMatch({ id: 'm4', group: 'A', round: 2, participantAId: 'p2', participantBId: 'p4' }),
+      makeMatch({ id: 'm5', group: 'A', round: 3, participantAId: 'p1', participantBId: 'p4' }),
+    ];
+
+    const { result } = renderHook(() =>
+      useMatchList({ matches, participants }),
+    { wrapper });
+    const ids = result.current.sortedMatches.map(m => m.id);
+    expect(ids).toEqual(['m1', 'm2', 'm3', 'm4', 'm5', 'm6']);
+  });
+
+   it('8 players / 2 group — group by <group> position.', () => {
+    const participants = [
+      makeParticipant({ id: 'p1', group: 'A', groupSort: 1 }),
+      makeParticipant({ id: 'p2', group: 'A', groupSort: 2 }),
+      makeParticipant({ id: 'p3', group: 'A', groupSort: 3 }),
+      makeParticipant({ id: 'p4', group: 'A', groupSort: 4 }),
+      makeParticipant({ id: 'p5', group: 'B', groupSort: 1 }),
+      makeParticipant({ id: 'p6', group: 'B', groupSort: 2 }),
+      makeParticipant({ id: 'p7', group: 'B', groupSort: 3 }),
+      makeParticipant({ id: 'p8', group: 'B', groupSort: 4 }),
+    ];
+    
+    const matches = [
+      makeMatch({ id: 'm4', group: 'A', round: 2, participantAId: 'p2', participantBId: 'p4' }),
+      makeMatch({ id: 'm3', group: 'A', round: 2, participantAId: 'p1', participantBId: 'p3' }),
+      makeMatch({ id: 'm1', group: 'A', round: 1, participantAId: 'p1', participantBId: 'p2' }),
+      makeMatch({ id: 'm5', group: 'A', round: 3, participantAId: 'p1', participantBId: 'p4' }),
+      makeMatch({ id: 'm2', group: 'A', round: 1, participantAId: 'p3', participantBId: 'p4' }),
+      makeMatch({ id: 'm10', group: 'B', round: 2, participantAId: 'p6', participantBId: 'p8' }),
+      makeMatch({ id: 'm6', group: 'A', round: 3, participantAId: 'p2', participantBId: 'p3' }),
+      makeMatch({ id: 'm7', group: 'B', round: 1, participantAId: 'p5', participantBId: 'p6' }),
+      makeMatch({ id: 'm11', group: 'B', round: 3, participantAId: 'p5', participantBId: 'p8' }),
+      makeMatch({ id: 'm12', group: 'B', round: 3, participantAId: 'p6', participantBId: 'p7' }),
+      makeMatch({ id: 'm9', group: 'B', round: 2, participantAId: 'p5', participantBId: 'p7' }),
+      makeMatch({ id: 'm8', group: 'B', round: 1, participantAId: 'p7', participantBId: 'p8' }),
+    ];
+
+    const { result } = renderHook(() =>
+      useMatchList({ matches, participants }),
+    { wrapper });
+    const ids = result.current.sortedMatches.map(m => m.id);
+    expect(ids).toEqual(['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11', 'm12']);
+  });
+
   it('orders matches by group alphabetically then by round', () => {
     const matches = [
       makeMatch({ id: 'C1', group: 'C', round: 1 }),
@@ -185,8 +248,8 @@ describe('sortByGroup', () => {
 
     // sortMode defaults to 'group'
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     const ids = result.current.sortedMatches.map(m => m.id);
     expect(ids).toEqual(['A1', 'A2', 'B1', 'C1']);
@@ -199,8 +262,8 @@ describe('sortByGroup', () => {
     ];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     const ids = result.current.sortedMatches.map(m => m.id);
     expect(ids).toEqual(['grpA', 'grpB']);
@@ -213,8 +276,8 @@ describe('sortByGroup', () => {
     ];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     const ids = result.current.sortedMatches.map(m => m.id);
     expect(ids[0]).toBe('hasGroup');
@@ -235,8 +298,8 @@ describe('groupedByRound', () => {
     ];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     expect(Object.keys(result.current.groupedByRound).map(Number)).toEqual(
       expect.arrayContaining([1, 2])
@@ -251,8 +314,8 @@ describe('groupedByRound', () => {
     const matches = [makeMatch({ id: 'noRound' })]; // round defaults to 1
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     expect(result.current.groupedByRound[1]).toHaveLength(1);
     expect(result.current.groupedByRound[1][0].id).toBe('noRound');
@@ -260,8 +323,8 @@ describe('groupedByRound', () => {
 
   it('returns an empty object when there are no matches', () => {
     const { result } = renderHook(() =>
-      useMatchList({ matches: [], participants: noParticipants })
-    );
+      useMatchList({ matches: [], participants: noParticipants }),
+    { wrapper });
 
     expect(result.current.groupedByRound).toEqual({});
   });
@@ -280,8 +343,8 @@ describe('groupedByGroup', () => {
     ];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     expect(Object.keys(result.current.groupedByGroup)).toEqual(
       expect.arrayContaining(['A', 'B'])
@@ -296,8 +359,8 @@ describe('groupedByGroup', () => {
     const matches = [makeMatch({ id: 'gA', group: 'Group A', round: 1 })];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     // normalised key should be 'A', not 'GROUP A'
     expect(result.current.groupedByGroup['A']).toBeDefined();
@@ -308,8 +371,8 @@ describe('groupedByGroup', () => {
     const matches = [makeMatch({ id: 'noGroup', group: undefined })];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     expect(result.current.groupedByGroup['ZZZ']).toBeDefined();
     expect(result.current.groupedByGroup['ZZZ'][0].id).toBe('noGroup');
@@ -329,8 +392,8 @@ describe('orderedGroupKeys', () => {
     ];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     expect(result.current.orderedGroupKeys).toEqual(['A', 'B', 'C']);
   });
@@ -343,8 +406,8 @@ describe('orderedGroupKeys', () => {
     ];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     const keys = result.current.orderedGroupKeys;
     expect(keys[keys.length - 1]).toBe('ZZZ');
@@ -359,16 +422,16 @@ describe('orderedGroupKeys', () => {
     ];
 
     const { result } = renderHook(() =>
-      useMatchList({ matches, participants: noParticipants })
-    );
+      useMatchList({ matches, participants: noParticipants }),
+    { wrapper });
 
     expect(result.current.orderedGroupKeys).toEqual(['1', '2', '10']);
   });
 
   it('returns an empty array when there are no matches', () => {
     const { result } = renderHook(() =>
-      useMatchList({ matches: [], participants: noParticipants })
-    );
+      useMatchList({ matches: [], participants: noParticipants }),
+    { wrapper });
 
     expect(result.current.orderedGroupKeys).toEqual([]);
   });

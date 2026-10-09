@@ -82,7 +82,17 @@ export function useMatchList({ matches, participants, onReorderMatches, readOnly
       const gA = normalizeGroup(a.group);
       const gB = normalizeGroup(b.group);
       if (gA !== gB) return gA.localeCompare(gB, undefined, { numeric: true });
-      return (a.round || 1) - (b.round || 1);
+      const roundDiff = (a.round || 1) - (b.round || 1);
+      if (roundDiff !== 0) return roundDiff;
+      const slotA = Math.min(
+        a.participantAId ? (groupSortMap.get(a.participantAId) ?? 9999) : 9999,
+        a.participantBId ? (groupSortMap.get(a.participantBId) ?? 9999) : 9999,
+      );
+      const slotB = Math.min(
+        b.participantAId ? (groupSortMap.get(b.participantAId) ?? 9999) : 9999,
+        b.participantBId ? (groupSortMap.get(b.participantBId) ?? 9999) : 9999,
+      );
+      return slotA - slotB;
     });
 
   const sortedMatches = useMemo(() => {

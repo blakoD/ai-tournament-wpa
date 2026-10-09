@@ -17,6 +17,8 @@ export interface TournamentSummary {
   createdAt: number;
   startedAt?: number | null;
   completedAt?: number | null;
+  sharesEnabled?: boolean;
+  isSharedWithMe?: boolean;
 }
 
 interface TournamentWritePayload {
@@ -167,11 +169,13 @@ export const startTournament = async (
 export const updateMatchResult = async (
   id: string,
   matchId: string,
-  payload: { scoreA: number; scoreB: number }
+  payload: { scoreA: number; scoreB: number },
+  signal?: AbortSignal
 ): Promise<Tournament> =>
   request(`/tournaments/${id}/matches/${matchId}/result`, {
     method: "POST",
     body: JSON.stringify(payload),
+    signal,
   });
 
 export const swapMatchParticipant = async (
@@ -182,4 +186,37 @@ export const swapMatchParticipant = async (
   request(`/tournaments/${id}/matches/${matchId}/swap-participant`, {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+
+// ── Share API ─────────────────────────────────────────────────────────────────
+
+export interface TournamentShare {
+  id: string;
+  email: string;
+  createdAt: number;
+}
+
+export interface TournamentSharesResponse {
+  sharesEnabled: boolean;
+  shares: TournamentShare[];
+}
+
+export const getTournamentShares = async (id: string): Promise<TournamentSharesResponse> =>
+  request(`/tournaments/${id}/shares`);
+
+export const addTournamentShare = async (id: string, email: string): Promise<TournamentSharesResponse> =>
+  request(`/tournaments/${id}/shares`, {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+
+export const removeTournamentShare = async (id: string, shareId: string): Promise<void> =>
+  request(`/tournaments/${id}/shares/${shareId}`, {
+    method: "DELETE",
+  });
+
+export const setTournamentSharesEnabled = async (id: string, enabled: boolean): Promise<TournamentSharesResponse> =>
+  request(`/tournaments/${id}/shares/enabled`, {
+    method: "PUT",
+    body: JSON.stringify({ enabled }),
   });
