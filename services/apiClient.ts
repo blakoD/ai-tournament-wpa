@@ -39,7 +39,8 @@ interface TournamentWritePayload {
   matches: Match[];
 }
 
-const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, "") ?? "";
+const API_ORIGIN =
+  ((window.__ENV__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL) as string | undefined)?.replace(/\/+$/, "") ?? "";
 const API_BASE = `${API_ORIGIN}/api`;
 const HEALTH_ENDPOINT = `${API_ORIGIN}/health`;
 
