@@ -31,19 +31,20 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
       rounds.push(roundsMap[i] || []);
   }
 
+  const isThirdPlace = (m: Match) => m.label === '3rd vs 4th';
+  // With earlier rounds, the final stays centred on the semifinal connectors and the
+  // 3rd-place match hangs below it; the scroller reserves room for it via bottom padding.
+  const anchorThirdPlace = rounds.length > 1 && matches.some(isThirdPlace);
+
   return (
-    <div className="overflow-x-auto min-h-[400px] snap-x snap-mandatory">
-      <div className="flex gap-6 sm:gap-12 justify-center min-w-max px-2 sm:px-4 py-6 sm:py-8">
+    <div className="overflow-x-auto snap-x snap-mandatory">
+      <div className={`flex gap-6 sm:gap-12 justify-center min-w-max px-2 sm:px-4 pt-6 sm:pt-8 ${anchorThirdPlace ? 'pb-40 sm:pb-44' : 'pb-2 sm:pb-4'}`}>
           {rounds.map((roundMatches, rIndex) => {
               const isFinalRound = roundMatches.some(m => m.isFinal);
-              return (
-                <div key={rIndex} className="flex flex-col justify-around relative snap-start">
-                    {/* Round Label */}
-                    <div className="absolute -top-6 sm:-top-8 left-0 w-full text-center font-bold text-slate-400 dark:text-slate-500 uppercase text-sm">
-                        {!isFinalRound && ((rIndex === rounds.length - 2 && roundMatches.length === 2) ? t('bracketView.semiFinals') : t('bracketView.round', { number: rIndex + 1 }))}
-                    </div>
+              const finalMatch = roundMatches.find(m => m.isFinal);
+              const thirdPlaceMatch = roundMatches.find(isThirdPlace);
 
-                    {roundMatches.map(m => {
+              const renderMatch = (m: Match) => {
                         const pA = participants.find(p => p.id === m.participantAId);
                         const pB = participants.find(p => p.id === m.participantBId);
                         
@@ -105,17 +106,8 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                         const sB = m.scoreB ?? 0;
                         const isLive = !m.isCompleted && (sA > 0 || sB > 0) && sA < maxScore && sB < maxScore;
 
-                        const positionClass = isFinalRound 
-                            ? (m.isFinal ? 'relative mb-9' : 'relative sm:absolute sm:mt-[350px] sm:w-full')
-                            : 'relative';
-
                         return (
-                            <div key={m.id} 
-                                 className={`
-                                    flex flex-col items-center my-4
-                                    ${positionClass}
-                                `}
-                            >
+                            <div key={m.id} className="relative flex flex-col items-center">
                                 {/* Match Label */}
                                 {m.label && (
                                     <div className={`
@@ -159,7 +151,29 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                                 </div>
                             </div>
                         );
-                    })}
+              };
+
+              return (
+                <div key={rIndex} className={`flex flex-col relative snap-start ${isFinalRound ? 'justify-center' : 'justify-around'}`}>
+                    {/* Round Label */}
+                    <div className="absolute -top-6 sm:-top-8 left-0 w-full text-center font-bold text-slate-400 dark:text-slate-500 uppercase text-sm">
+                        {!isFinalRound && ((rIndex === rounds.length - 2 && roundMatches.length === 2) ? t('bracketView.semiFinals') : t('bracketView.round', { number: rIndex + 1 }))}
+                    </div>
+
+                    {isFinalRound && finalMatch ? (
+                        <div className="relative my-4">
+                            {renderMatch(finalMatch)}
+                            {thirdPlaceMatch && (
+                                <div className={anchorThirdPlace ? 'absolute top-full inset-x-0 mt-8 sm:mt-10' : 'mt-8 sm:mt-10'}>
+                                    {renderMatch(thirdPlaceMatch)}
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        roundMatches.map(m => (
+                            <div key={m.id} className="my-4">{renderMatch(m)}</div>
+                        ))
+                    )}
                 </div>
               );
           })}

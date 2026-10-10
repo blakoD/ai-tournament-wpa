@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { RiDeleteBinFill } from 'react-icons/ri';
+import { RiDeleteBinFill, RiSettings3Line, RiTrophyLine, RiLayoutGridLine, RiMedalLine } from 'react-icons/ri';
 import { Tournament, Match, StageType, TournamentStatus, Participant, EliminationType } from '../types';
 import { calculateStandings, startNextStage, generateId } from '../services/tournamentLogic';
 import { Standings } from './Standings';
 import { MatchList } from './MatchList/MatchList';
+import { normalizeGroupKey } from './MatchList/useMatchList';
 import { BracketView } from './BracketView';
 import { Podium } from './Podium';
 import { MatchModal } from './MatchModal';
@@ -13,6 +14,13 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { NextStageModal } from './NextStageModal';
 import { TournamentConfig } from './TournamentConfig';
 import { VscClearAll } from 'react-icons/vsc';
+import { TbTournament } from 'react-icons/tb';
+
+const pillBase = 'inline-flex items-center gap-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-800';
+const pillPadding = 'pl-2.5 pr-3 h-8 sm:h-9';
+const pillState = (active: boolean) => active
+  ? 'bg-blue-600 text-white shadow-sm'
+  : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700';
 
 interface Props {
   tournament: Tournament;
@@ -429,7 +437,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
     <div className="bg-slate-50 dark:bg-slate-900 min-h-screen">
       {/* Header */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 pt-2 sm:pt-4">
+        <div className="max-w-5xl lg:max-w-7xl mx-auto px-3 sm:px-4 pt-2 sm:pt-4">
           <div className="flex items-center gap-1.5 sm:gap-3 mb-2 sm:mb-4">
             <button
               onClick={() => navigate('/')}
@@ -500,36 +508,52 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
               <button
                 onClick={() => setActiveTab('config')}
-                className={`rounded-full px-3 py-1 sm:py-1.5 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'config' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                className={`${pillBase} w-8 h-8 sm:w-9 sm:h-9 justify-center ${pillState(activeTab === 'config')}`}
+                title={t('tournamentView.configTab')}
+                aria-label={t('tournamentView.configTab')}
               >
-                {t('tournamentView.configTab')}
+                <RiSettings3Line className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
               </button>
               <button
                 onClick={() => setActiveTab('global-standings')}
-                className={`rounded-full px-3 py-1 sm:py-1.5 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'global-standings' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                className={`${pillBase} ${pillPadding} ${pillState(activeTab === 'global-standings')}`}
               >
-                {t('tournamentView.globalStandingsTab')}
+                <RiTrophyLine className="w-4 h-4 shrink-0" />
+                {t('tournamentView.tabStandings')}
               </button>
-              {Array.from(new Set(tournament.matches.map(m => m.stageNumber))).sort((a, b) => a - b).map(stageNum => {
-                const stageMatches = tournament.matches.filter(m => m.stageNumber === stageNum);
-                const stageType = stageMatches[0]?.stage;
-                const label = stageType === StageType.SE ? t('tournamentView.bracket') : t('tournamentView.stage', { number: stageNum });
-                return (
-                  <button
-                    key={stageNum}
-                    onClick={() => setActiveTab(`stage-${stageNum}`)}
-                    className={`rounded-full px-3 py-1 sm:py-1.5 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === `stage-${stageNum}` ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
+              {(() => {
+                const stageNums = Array.from(new Set(tournament.matches.map(m => m.stageNumber))).sort((a, b) => a - b);
+                const stageTypeOf = (n: number) => tournament.matches.find(m => m.stageNumber === n)?.stage;
+                return stageNums.map(stageNum => {
+                  const stageType = stageTypeOf(stageNum);
+                  const isSE = stageType === StageType.SE;
+                  // Number repeated formats: "Groups", "Groups 2", ...
+                  const sameTypeIndex = stageNums.filter(n => n <= stageNum && stageTypeOf(n) === stageType).length;
+                  // A bracket holding the final match (or a lone match) is the Finals stage
+                  const stageMatches = tournament.matches.filter(m => m.stageNumber === stageNum);
+                  const isFinals = isSE && (stageMatches.some(m => m.isFinal || m.label === 'Final') || stageMatches.length === 1);
+                  const baseLabel = isFinals ? t('tournamentView.tabFinals') : isSE ? t('tournamentView.tabPlayoffs') : t('tournamentView.tabGroups');
+                  const label = !isFinals && sameTypeIndex > 1 ? `${baseLabel} ${sameTypeIndex}` : baseLabel;
+                  const Icon = isFinals ? RiMedalLine : isSE ? TbTournament : RiLayoutGridLine;
+                  return (
+                    <button
+                      key={stageNum}
+                      onClick={() => setActiveTab(`stage-${stageNum}`)}
+                      className={`${pillBase} ${pillPadding} ${pillState(activeTab === `stage-${stageNum}`)}`}
+                      title={t('tournamentView.stage', { number: stageNum })}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      {label}
+                    </button>
+                  );
+                });
+              })()}
             </div>
             {canEdit && history.length > 0 && (
               <button
                 onClick={handleUndo}
                 disabled={isSaving}
-                className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600"
+                className="shrink-0 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600"
                 title="Undo last action"
               >
                 ↺
@@ -540,7 +564,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
               <div className="relative shrink-0" ref={kebabRef}>
                 <button
                   onClick={() => setIsKebabOpen(prev => !prev)}
-                  className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400"
+                  className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400"
                   title="Stage actions"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -580,7 +604,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      <div className="max-w-5xl lg:max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {saveError && (
           <div className="mb-4 rounded border border-red-700/60 bg-red-700/20 dark:bg-red-900/30 p-3 text-sm text-red-700 dark:text-red-200">{saveError}</div>
         )}
@@ -610,6 +634,31 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
           const isLastStage = stageNum === currentStageNumber;
 
           const isRR = stageType === StageType.RR;
+          const stageStandings = isRR
+            ? calculateStandings(
+                tournament.participants.filter(p =>
+                  stageMatches.some(m => m.participantAId === p.id || m.participantBId === p.id)
+                ),
+                stageMatches,
+                stageType,
+                stageNum
+              )
+            : [];
+          const standingsProps = {
+            qualifiesByGroup: tournament.qualifiesByGroup,
+            groupDescriptions: tournament.groupDescriptions,
+            onReplaceParticipant: handleReplaceParticipant,
+            allowEdits: canEdit && isLastStage && hasStep2,
+          };
+          // Desktop standings column rendered by MatchList: one group beside its matches, or all groups
+          const renderStageStandings = (groupKey: string | null) => (
+            <Standings
+              {...standingsProps}
+              participants={groupKey ? stageStandings.filter(p => normalizeGroupKey(p.group) === groupKey) : stageStandings}
+              compact
+              embedded={groupKey !== null}
+            />
+          );
           const segmentClass = (active: boolean) =>
             `flex-1 py-1.5 rounded-md transition-colors ${active ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`;
 
@@ -651,27 +700,16 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                     readOnly={!canEdit}
                     maxScore={tournament.maxScore ?? 16}
                     groupDescriptions={tournament.groupDescriptions}
+                    renderStandings={isRR ? renderStageStandings : undefined}
                   />
                 </div>
               )}
 
+              {/* Below lg: standings stacked under the matches (mobile: behind the switch) */}
               {isRR && (
-                <div className={`${stageSection !== 'standings' ? 'hidden sm:block' : ''} sm:mt-12 sm:border-t dark:border-slate-800 sm:pt-8`}>
+                <div className={`${stageSection !== 'standings' ? 'hidden sm:block' : ''} lg:hidden sm:mt-12 sm:border-t dark:border-slate-800 sm:pt-8`}>
                   <h3 className="hidden sm:block text-xl font-bold text-slate-500 dark:text-white mb-6">{t('tournamentView.standingsSection')}</h3>
-                  <Standings
-                    participants={calculateStandings(
-                      tournament.participants.filter(p =>
-                        stageMatches.some(m => m.participantAId === p.id || m.participantBId === p.id)
-                      ),
-                      stageMatches,
-                      stageType,
-                      stageNum
-                    )}
-                    qualifiesByGroup={tournament.qualifiesByGroup}
-                    groupDescriptions={tournament.groupDescriptions}
-                    onReplaceParticipant={handleReplaceParticipant}
-                    allowEdits={canEdit && isLastStage && hasStep2}
-                  />
+                  <Standings {...standingsProps} participants={stageStandings} />
                 </div>
               )}
             </div>

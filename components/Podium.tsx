@@ -69,7 +69,7 @@ export const Podium: React.FC<Props> = ({ matches, participants }) => {
   return (
     <section
       aria-label={t('podium.title')}
-      className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm px-3 pt-4 sm:px-8 sm:pt-6 overflow-hidden"
+      className="mt-6 sm:mt-10 max-w-2xl mx-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm px-3 pt-4 sm:px-8 sm:pt-6 overflow-hidden"
     >
       <h3 className="text-center text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-4 sm:mb-6 flex items-center justify-center gap-2">
         <span aria-hidden="true">🏆</span>
