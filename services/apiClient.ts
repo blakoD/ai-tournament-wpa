@@ -31,6 +31,7 @@ interface TournamentWritePayload {
   eliminationType: EliminationType;
   status: TournamentStatus;
   maxScore: number;
+  groupDescriptions: Record<string, string> | null;
   createdAt: number;
   startedAt?: number | null;
   completedAt?: number | null;
@@ -98,6 +99,7 @@ const toWritePayload = (tournament: Tournament): TournamentWritePayload => ({
   eliminationType: tournament.eliminationType,
   status: tournament.status,
   maxScore: tournament.maxScore ?? 16,
+  groupDescriptions: tournament.groupDescriptions ?? null,
   createdAt: tournament.createdAt,
   startedAt: tournament.startedAt,
   completedAt: tournament.completedAt,

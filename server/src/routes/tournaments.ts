@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { Prisma } from "@prisma/client";
 import type { Match as DbMatch, Participant as DbParticipant } from "@prisma/client";
 import { z } from "zod";
 
@@ -59,6 +60,7 @@ const tournamentWriteSchema = z.object({
   eliminationType: z.enum(["SINGLE_ELIMINATION", "ROUND_ROBIN_2"]),
   status: z.enum(["SETUP", "STARTED", "COMPLETED"]).default("SETUP"),
   maxScore: z.number().int().min(1).default(16),
+  groupDescriptions: z.record(z.string(), z.string().max(200)).nullable().optional(),
   createdAt: z.number().int().positive().optional(),
   startedAt: z.number().int().positive().nullable().optional(),
   completedAt: z.number().int().positive().nullable().optional(),
@@ -103,6 +105,7 @@ type TournamentWithRelations = {
   startedAt: Date | null;
   completedAt: Date | null;
   maxScore: number;
+  groupDescriptions: Prisma.JsonValue | null;
   participants: DbParticipant[];
   matches: DbMatch[];
 };
@@ -124,6 +127,28 @@ const toNullableDate = (timestamp: number | null | undefined): Date | null | und
   return new Date(timestamp);
 };
 
+// Normalizes group descriptions: trims values and drops empty entries.
+const normalizeGroupDescriptions = (value: unknown): Record<string, string> | undefined => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+  const result: Record<string, string> = {};
+  for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof raw !== "string") continue;
+    const trimmed = raw.trim();
+    if (trimmed) result[key] = trimmed;
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+};
+
+// Converts the incoming payload value to a Prisma JSON input (undefined = leave unchanged).
+const toGroupDescriptionsInput = (
+  value: Record<string, string> | null | undefined
+): Prisma.InputJsonValue | typeof Prisma.DbNull | undefined => {
+  if (value === undefined) return undefined;
+  return normalizeGroupDescriptions(value) ?? Prisma.DbNull;
+};
+
 const mapTournament = (tournament: TournamentWithRelations) => ({
   id: tournament.id,
   ownerId: tournament.ownerId ?? undefined,
@@ -140,6 +165,7 @@ const mapTournament = (tournament: TournamentWithRelations) => ({
   startedAt: tournament.startedAt?.getTime(),
   completedAt: tournament.completedAt?.getTime(),
   maxScore: tournament.maxScore,
+  groupDescriptions: normalizeGroupDescriptions(tournament.groupDescriptions),
   participants: tournament.participants.map((participant: DbParticipant) => ({
     id: participant.id,
     name: participant.name,
@@ -328,6 +354,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
             eliminationType: parsedBody.data.eliminationType,
             status: parsedBody.data.status,
             maxScore: parsedBody.data.maxScore,
+            groupDescriptions: toGroupDescriptionsInput(parsedBody.data.groupDescriptions),
             createdAt: toOptionalDate(parsedBody.data.createdAt),
             startedAt: toNullableDate(parsedBody.data.startedAt),
             completedAt: toNullableDate(parsedBody.data.completedAt),
@@ -452,6 +479,7 @@ export const registerTournamentRoutes = async (app: FastifyInstance): Promise<vo
             eliminationType: parsedBody.data.eliminationType,
             status: parsedBody.data.status,
             maxScore: parsedBody.data.maxScore,
+            groupDescriptions: toGroupDescriptionsInput(parsedBody.data.groupDescriptions),
             createdAt: toOptionalDate(parsedBody.data.createdAt),
             startedAt: toNullableDate(parsedBody.data.startedAt),
             completedAt: toNullableDate(parsedBody.data.completedAt),

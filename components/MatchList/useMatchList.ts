@@ -9,6 +9,36 @@ interface UseMatchListOptions {
   readOnly?: boolean;
 }
 
+/**
+ * A match is "in progress" when it is not completed, at least one side has scored,
+ * and neither side has reached the max score yet.
+ */
+export const isMatchInProgress = (m: Match, maxScore: number): boolean => {
+  if (m.isCompleted) return false;
+  const a = m.scoreA ?? 0;
+  const b = m.scoreB ?? 0;
+  return (a > 0 || b > 0) && a < maxScore && b < maxScore;
+};
+
+/** Normalizes a group key ('Group A', 'a', 'A') to the uppercase letter used for display. */
+export const normalizeGroupKey = (group?: string): string => {
+  if (!group) return 'ZZZ';
+  return group.replace(/^group\s+/i, '').trim().toUpperCase();
+};
+
+/** Looks up a group description regardless of how the group key is formatted. */
+export const getGroupDescription = (
+  groupDescriptions: Record<string, string> | undefined,
+  groupKey: string
+): string | undefined => {
+  if (!groupDescriptions) return undefined;
+  const direct = groupDescriptions[groupKey]?.trim();
+  if (direct) return direct;
+  const normalized = normalizeGroupKey(groupKey);
+  const match = Object.entries(groupDescriptions).find(([key]) => normalizeGroupKey(key) === normalized);
+  return match?.[1]?.trim() || undefined;
+};
+
 export function useMatchList({ matches, participants, onReorderMatches, readOnly = false }: UseMatchListOptions) {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -26,14 +56,12 @@ export function useMatchList({ matches, participants, onReorderMatches, readOnly
   // Track last non-custom sort so Custom can inherit that order as initial state
   const prevSortModeRef = useRef<'round' | 'group'>('group');
 
-  const normalizeGroup = (group?: string): string => {
-    if (!group) return 'ZZZ';
-    return group.replace(/^group\s+/i, '').trim().toUpperCase();
-  };
+  const normalizeGroup = normalizeGroupKey;
 
-  // Compute group position labels (A1, B2, etc.) for participants in this stage
-  const groupPositionMap = useMemo(() => {
+  // Compute group position labels (A1, B2, etc.) and seed numbers for participants in this stage
+  const { groupPositionMap, groupSeedMap } = useMemo(() => {
     const map: Record<string, string> = {};
+    const seeds: Record<string, number> = {};
     const matchParticipantIds = new Set(
       matches.flatMap(m => [m.participantAId, m.participantBId]).filter((id): id is string => !!id)
     );
@@ -47,9 +75,12 @@ export function useMatchList({ matches, participants, onReorderMatches, readOnly
       });
     Object.entries(groupBuckets).forEach(([g, ps]) => {
       const sorted = [...ps].sort((a, b) => (a.groupSort ?? 9999) - (b.groupSort ?? 9999));
-      sorted.forEach((p, idx) => { map[p.id] = `${g}${idx + 1}`; });
+      sorted.forEach((p, idx) => {
+        map[p.id] = `${g}${idx + 1}`;
+        seeds[p.id] = idx + 1;
+      });
     });
-    return map;
+    return { groupPositionMap: map, groupSeedMap: seeds };
   }, [participants, matches]);
 
   // Maps participant ID → groupSort value for efficient sort key lookup
@@ -148,19 +179,22 @@ export function useMatchList({ matches, participants, onReorderMatches, readOnly
     }
   };
 
-  const handleDrop = () => {
-    if (dragIndex === null || dragOverIndex === null || dragIndex === dragOverIndex) {
-      setDragIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
+  const moveMatch = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex || toIndex < 0 || toIndex >= sortedMatches.length) return;
     const reordered = [...sortedMatches];
-    const [moved] = reordered.splice(dragIndex, 1);
-    reordered.splice(dragOverIndex, 0, moved);
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
     onReorderMatches?.(reordered.map((m, idx) => ({ ...m, sortOrder: idx })));
+  };
+
+  const handleDrop = () => {
+    if (dragIndex !== null && dragOverIndex !== null) moveMatch(dragIndex, dragOverIndex);
     setDragIndex(null);
     setDragOverIndex(null);
   };
+
+  const handleMoveUp = (idx: number) => moveMatch(idx, idx - 1);
+  const handleMoveDown = (idx: number) => moveMatch(idx, idx + 1);
 
   const handleDragStart = (idx: number) => setDragIndex(idx);
 
@@ -181,6 +215,7 @@ export function useMatchList({ matches, participants, onReorderMatches, readOnly
     dragOverIndex,
     canDrag,
     groupPositionMap,
+    groupSeedMap,
     sortedMatches,
     groupedByRound,
     groupedByGroup,
@@ -188,6 +223,8 @@ export function useMatchList({ matches, participants, onReorderMatches, readOnly
     handleSortModeChange,
     handleSetViewMode,
     handleDrop,
+    handleMoveUp,
+    handleMoveDown,
     handleDragStart,
     handleDragOver,
     handleDragEnd,

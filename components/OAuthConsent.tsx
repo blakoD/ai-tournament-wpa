@@ -34,6 +34,14 @@ function isAllowedRedirectUri(raw: string): boolean {
   }
 }
 
+function getHostname(raw: string): string {
+  try {
+    return new URL(raw).hostname;
+  } catch {
+    return raw;
+  }
+}
+
 /** Scope labels that the consent UI knows how to display. */
 const SCOPE_META: Record<string, { labelKey: string; descriptionKey: string }> = {
   "tournament:read": {
@@ -205,34 +213,32 @@ export const OAuthConsent: React.FC<OAuthConsentProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center px-3 py-4 sm:px-4 sm:py-12">
       <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
         {/* Header */}
-        <div className="bg-blue-600 px-8 py-6 text-center">
-          <FiShield className="w-10 h-10 text-white mx-auto mb-3" />
+        <div className="bg-blue-600 px-5 py-4 sm:px-8 sm:py-6 text-center">
+          <FiShield className="w-8 h-8 sm:w-10 sm:h-10 text-white mx-auto mb-3" />
           <h1 className="text-xl font-bold text-white">{t("oauth.title")}</h1>
           <p className="text-blue-100 text-sm mt-1">{t("oauth.subtitle")}</p>
         </div>
 
         {/* Body */}
-        <div className="px-8 py-6">
+        <div className="px-5 py-4 sm:px-8 sm:py-6">
           {/* Requesting app + user */}
-          <div className="mb-6">
+          <div className="mb-4">
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">
               {t("oauth.requestingApp")}
             </p>
             <p className="font-semibold text-slate-900 dark:text-white text-lg break-all">
               {params.clientId}
             </p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 break-all">
-              {t("oauth.redirectsTo")} {params.redirectUri}
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 break-all" title={params.redirectUri}>
+              {t("oauth.redirectsTo")} {getHostname(params.redirectUri)}
             </p>
           </div>
 
-          <div className="border-t border-slate-100 dark:border-slate-800 mb-6" />
-
           {/* User identity */}
-          <div className="mb-6 bg-slate-50 dark:bg-slate-800/50 rounded-lg px-4 py-3">
+          <div className="mb-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg px-4 py-3">
             <p className="text-xs text-slate-400 dark:text-slate-500 mb-0.5">
               {t("oauth.signingInAs")}
             </p>
@@ -242,7 +248,7 @@ export const OAuthConsent: React.FC<OAuthConsentProps> = ({
           </div>
 
           {/* Scopes */}
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
               {t("oauth.willBeAbleTo")}
             </p>

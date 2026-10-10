@@ -41,6 +41,7 @@ model Tournament {
   completedAt      DateTime?        @map("completed_at")
   maxScore         Int              @default(16) @map("max_score")
   sharesEnabled    Boolean          @default(true) @map("shares_enabled")
+  groupDescriptions Json?           @map("group_descriptions")
 
   participants Participant[]
   matches      Match[]

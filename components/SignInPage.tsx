@@ -33,30 +33,10 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onClose, onSwitchMode })
     navigate("/dashboard");
   };
 
-  const handleGoogleSignIn = async () => {
-    setError(null);
-
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin + window.location.pathname + "#/dashboard",
-      },
-    });
-
-    if (oauthError) {
-      setError(oauthError.message);
-    }
-  };
-
   const card = (
-    <div className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-xl">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('signIn.title')}</h1>
-        <p className="text-slate-500 dark:text-slate-400 mb-6">{t('signIn.subtitle')}</p>
-
-        <div className="relative mb-4">
-          <div className="h-px bg-slate-200 dark:bg-slate-700" />
-          <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 px-2 text-xs text-slate-400 dark:text-slate-500"></span>
-        </div>
+    <div className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6 shadow-xl">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('signIn.title')}</h1>
+        <p className="text-slate-500 dark:text-slate-400 mb-4 sm:mb-6">{t('signIn.subtitle')}</p>
 
         <form onSubmit={handleEmailSignIn} className="space-y-4">
           <div>
@@ -87,7 +67,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onClose, onSwitchMode })
             />
           </div>
 
-          {error && <p className="text-sm text-red-300">{error}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-300">{error}</p>}
 
           <button
             type="submit"
@@ -112,7 +92,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({ onClose, onSwitchMode })
   if (onClose) return card;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-3 sm:p-6">
       {card}
     </div>
   );

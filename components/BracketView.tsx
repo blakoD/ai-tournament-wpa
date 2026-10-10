@@ -8,9 +8,11 @@ interface Props {
   onMatchClick: (match: Match) => void;
   onParticipantSwap?: (matchId: string, slot: 'A' | 'B', newParticipantId: string) => void;
     readOnly?: boolean;
+  /** Score needed to win a match; used to detect matches in progress. */
+  maxScore?: number;
 }
 
-export const BracketView: React.FC<Props> = ({ matches, participants, onMatchClick, onParticipantSwap, readOnly = false }) => {
+export const BracketView: React.FC<Props> = ({ matches, participants, onMatchClick, onParticipantSwap, readOnly = false, maxScore = 16 }) => {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<{matchId: string, slot: 'A' | 'B'} | null>(null);
   // Group by Round
@@ -30,14 +32,14 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
   }
 
   return (
-    <div className="overflow-x-auto min-h-[400px]">
-      <div className="flex gap-12 justify-center min-w-max px-4 py-8">
+    <div className="overflow-x-auto min-h-[400px] snap-x snap-mandatory">
+      <div className="flex gap-6 sm:gap-12 justify-center min-w-max px-2 sm:px-4 py-6 sm:py-8">
           {rounds.map((roundMatches, rIndex) => {
               const isFinalRound = roundMatches.some(m => m.isFinal);
               return (
-                <div key={rIndex} className="flex flex-col justify-around relative">
+                <div key={rIndex} className="flex flex-col justify-around relative snap-start">
                     {/* Round Label */}
-                    <div className="absolute -top-8 left-0 w-full text-center font-bold text-slate-400 dark:text-slate-500 uppercase text-sm">
+                    <div className="absolute -top-6 sm:-top-8 left-0 w-full text-center font-bold text-slate-400 dark:text-slate-500 uppercase text-sm">
                         {!isFinalRound && ((rIndex === rounds.length - 2 && roundMatches.length === 2) ? t('bracketView.semiFinals') : t('bracketView.round', { number: rIndex + 1 }))}
                     </div>
 
@@ -83,7 +85,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                                         {p?.name || t('bracketView.tbd')}
                                         {onParticipantSwap && !readOnly && !m.isCompleted && (
                                             <button
-                                                className="opacity-0 group-hover/player:opacity-100 text-slate-500 hover:text-blue-400 transition-opacity px-1"
+                                                className="opacity-100 sm:opacity-0 sm:group-hover/player:opacity-100 text-slate-500 hover:text-blue-400 transition-opacity px-2 py-1 -my-1"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setEditing({ matchId: m.id, slot });
@@ -99,8 +101,12 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                             );
                         };
 
+                        const sA = m.scoreA ?? 0;
+                        const sB = m.scoreB ?? 0;
+                        const isLive = !m.isCompleted && (sA > 0 || sB > 0) && sA < maxScore && sB < maxScore;
+
                         const positionClass = isFinalRound 
-                            ? (m.isFinal ? 'relative mb-9' : 'absolute mt-[350px] w-full') 
+                            ? (m.isFinal ? 'relative mb-9' : 'relative sm:absolute sm:mt-[350px] sm:w-full')
                             : 'relative';
 
                         return (
@@ -114,7 +120,7 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                                 {m.label && (
                                     <div className={`
                                             text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider 
-                                            ${m.isFinal && 'text-[15px] text-yellow-500'}
+                                            ${m.isFinal ? 'text-[15px] text-yellow-500' : ''}
                                         `}
                                     >
                                         {m.label}
@@ -130,18 +136,25 @@ export const BracketView: React.FC<Props> = ({ matches, participants, onMatchCli
                                     }}
                                     className={`
                                         rounded-lg border shadow-sm transition-all z-10 relative ${readOnly ? 'cursor-default' : 'cursor-pointer'}
-                                        ${m.isFinal ? 'w-[280px] text-base border-2 border-yellow-500' : 'w-[280px] text-sm'}
+                                        ${isLive ? 'live-ring' : ''}
+                                        ${m.isFinal ? 'w-[200px] sm:w-[280px] text-base border-2 border-yellow-500' : 'w-[200px] sm:w-[280px] text-sm'}
                                         ${m.isCompleted 
                                             ? 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500' 
                                             : 'bg-slate-50 dark:bg-slate-900 border-blue-200 dark:border-blue-900/50 hover:border-blue-500 hover:shadow-blue-900/20'}
                                     `}
                                 >
+                                    {isLive && (
+                                        <span className="absolute -top-2.5 right-2 z-20 inline-flex items-center gap-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide leading-none text-white shadow-sm">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-white motion-safe:animate-pulse" aria-hidden="true" />
+                                            {t('common.live')}
+                                        </span>
+                                    )}
                                     {renderParticipant('A', pA, m.scoreA)}
                                     {renderParticipant('B', pB, m.scoreB)}
 
                                     {/* Connector Lines */}
                                     {rIndex < rounds.length - 1 && (
-                                        <div className="absolute -right-6 w-6 h-px bg-slate-300 dark:bg-slate-600 top-1/2" />
+                                        <div className="absolute -right-3 w-3 sm:-right-6 sm:w-6 h-px bg-slate-300 dark:bg-slate-600 top-1/2" />
                                     )}
                                 </div>
                             </div>

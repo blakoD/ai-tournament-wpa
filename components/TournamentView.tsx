@@ -7,6 +7,7 @@ import { calculateStandings, startNextStage, generateId } from '../services/tour
 import { Standings } from './Standings';
 import { MatchList } from './MatchList/MatchList';
 import { BracketView } from './BracketView';
+import { Podium } from './Podium';
 import { MatchModal } from './MatchModal';
 import { ConfirmDialog } from './ConfirmDialog';
 import { NextStageModal } from './NextStageModal';
@@ -25,6 +26,8 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string>('global-standings');
+  // Mobile-only switch between matches and standings in round-robin stages
+  const [stageSection, setStageSection] = useState<'matches' | 'standings'>('matches');
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [isNextStageModalOpen, setIsNextStageModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -417,58 +420,63 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Reset the mobile matches/standings switch when changing tabs
+  useEffect(() => {
+    setStageSection('matches');
+  }, [activeTab]);
+
   return (
     <div className="bg-slate-50 dark:bg-slate-900 min-h-screen">
       {/* Header */}
       <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-4 pt-4">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/')}
-                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 p-2 rounded-full transition-colors"
-                title={t('tournamentView.backToDashboard')}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-              </button>
-              <div>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <h1
-                    className="text-2xl font-bold text-slate-900 dark:text-white"
-                    title="Tournament"
-                  >
-                    {tournament.name}
-                  </h1>
-                </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{tournament.title}</p>
-                <div className="flex items-center gap-1.5 mt-1">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 pt-2 sm:pt-4">
+          <div className="flex items-center gap-1.5 sm:gap-3 mb-2 sm:mb-4">
+            <button
+              onClick={() => navigate('/')}
+              className="shrink-0 -ml-1.5 sm:ml-0 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 p-1.5 sm:p-2 rounded-full transition-colors"
+              title={t('common.back')}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <h1
+                  className="min-w-0 max-w-full truncate text-lg sm:text-2xl font-bold leading-tight text-slate-900 dark:text-white"
+                  title={tournament.name}
+                >
+                  {tournament.name}
+                </h1>
+                <div className="flex items-center gap-1">
                   {canEdit && (
-                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-900/30 border border-blue-400/50 dark:border-blue-600/50 px-1.5 py-0.5 rounded-xl">
+                    <span className="text-[10px] sm:text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-900/30 border border-blue-400/50 dark:border-blue-600/50 px-1.5 py-px rounded-xl">
                       {t('tournamentView.owner')}
                     </span>
                   )}
                   {tournament.status === TournamentStatus.STARTED && (
-                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-900/30 border border-blue-400/50 dark:border-blue-600/50 px-1.5 py-0.5 rounded-xl">
+                    <span className="text-[10px] sm:text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-900/30 border border-blue-400/50 dark:border-blue-600/50 px-1.5 py-px rounded-xl">
                       {t('tournamentView.started')}
                     </span>
                   )}
                   {tournament.status === TournamentStatus.COMPLETED && (
-                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100/40 dark:bg-emerald-900/30 border border-emerald-500/50 dark:border-emerald-700/50 px-1.5 py-0.5 rounded-xl">
+                    <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100/40 dark:bg-emerald-900/30 border border-emerald-500/50 dark:border-emerald-700/50 px-1.5 py-px rounded-xl">
                       {t('tournamentView.completed')}
                     </span>
                   )}
                 </div>
               </div>
+              {tournament.title && tournament.title.trim() !== tournament.name.trim() && (
+                <p className="truncate text-xs sm:text-sm text-slate-500 dark:text-slate-400">{tournament.title}</p>
+              )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="shrink-0 flex items-center gap-1.5 sm:gap-2">
               {isSaving && <span className="text-xs text-blue-400">{t('tournamentView.saving')}</span>}
               {canEdit && isCurrentStageComplete && !isFinalStage && tournament.status !== TournamentStatus.COMPLETED && (
                 <button
                   onClick={() => setIsNextStageModalOpen(true)}
                   disabled={isSaving}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded font-bold shadow-lg shadow-emerald-900/20 animate-pulse"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm sm:text-base px-2.5 py-1.5 sm:px-4 sm:py-2 rounded font-bold shadow-lg shadow-emerald-900/20 animate-pulse whitespace-nowrap"
                 >
                   {t('tournamentView.nextStage')}
                 </button>
@@ -477,27 +485,28 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                 <button
                   onClick={handleFinalizeTournament}
                   disabled={isSaving}
-                  className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold shadow-lg shadow-blue-900/20"
+                  className="bg-blue-600 hover:bg-blue-500 text-white text-sm sm:text-base px-2.5 py-1.5 sm:px-4 sm:py-2 rounded font-bold shadow-lg shadow-blue-900/20 whitespace-nowrap"
                 >
-                  {t('tournamentView.finalizeTournament')}
+                  <span className="sm:hidden">{t('tournamentView.finalize')}</span>
+                  <span className="hidden sm:inline">{t('tournamentView.finalizeTournament')}</span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Tabs scrollable tabs | row: Undo | kebab */}
-          <div className="flex items-center gap-x-2 text-sm font-medium">
-            {/* Scrollable tabs */}
-            <div className="flex flex-wrap items-center gap-x-4 overflow-x-auto flex-1 min-w-0">
+          {/* Tabs (wrapping pills) | Undo | kebab */}
+          <div className="flex items-start gap-x-2 pb-2 sm:pb-3 text-sm font-medium">
+            {/* Wrapping pill tabs */}
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
               <button
                 onClick={() => setActiveTab('config')}
-                className={`shrink-0 pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'config' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                className={`rounded-full px-3 py-1 sm:py-1.5 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'config' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
               >
                 {t('tournamentView.configTab')}
               </button>
               <button
                 onClick={() => setActiveTab('global-standings')}
-                className={`shrink-0 pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'global-standings' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                className={`rounded-full px-3 py-1 sm:py-1.5 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'global-standings' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
               >
                 {t('tournamentView.globalStandingsTab')}
               </button>
@@ -509,7 +518,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                   <button
                     key={stageNum}
                     onClick={() => setActiveTab(`stage-${stageNum}`)}
-                    className={`shrink-0 pb-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === `stage-${stageNum}` ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                    className={`rounded-full px-3 py-1 sm:py-1.5 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === `stage-${stageNum}` ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                   >
                     {label}
                   </button>
@@ -520,7 +529,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
               <button
                 onClick={handleUndo}
                 disabled={isSaving}
-                className="shrink-0 w-8 h-8 flex items-center justify-center rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 mb-1"
+                className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600"
                 title="Undo last action"
               >
                 ↺
@@ -531,7 +540,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
               <div className="relative shrink-0" ref={kebabRef}>
                 <button
                   onClick={() => setIsKebabOpen(prev => !prev)}
-                  className="w-8 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400"
+                  className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400"
                   title="Stage actions"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -571,7 +580,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {saveError && (
           <div className="mb-4 rounded border border-red-700/60 bg-red-700/20 dark:bg-red-900/30 p-3 text-sm text-red-700 dark:text-red-200">{saveError}</div>
         )}
@@ -600,41 +609,55 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
           const stageType = stageMatches[0]?.stage;
           const isLastStage = stageNum === currentStageNumber;
 
+          const isRR = stageType === StageType.RR;
+          const segmentClass = (active: boolean) =>
+            `flex-1 py-1.5 rounded-md transition-colors ${active ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400'}`;
+
           return (
             <div>
-              {stageType !== StageType.SE && (
-                <h2 className="text-lg font-bold text-slate-500 dark:text-slate-400 mb-4">
-                  {t('tournamentView.stageMatches', { number: stageNum })}
-                </h2>
-              )}
-              {stageType === StageType.SE ? (
-                <BracketView
-                  matches={stageMatches}
-                  participants={tournament.participants.map(p => ({
-                    ...p,
-                    globalRank: standings.find(s => s.id === p.id)?.globalRank
-                  }))}
-                  onMatchClick={setSelectedMatch}
-                  onParticipantSwap={handleParticipantSwap}
-                  readOnly={!canEdit}
-                />
-              ) : (
-                <MatchList
-                  matches={stageMatches}
-                  participants={tournament.participants}
-                  onMatchClick={setSelectedMatch}
-                  onReorderMatches={canEdit ? handleReorderMatches : undefined}
-                  readOnly={!canEdit}
-                  maxScore={tournament.maxScore ?? 16}
-                />
+              {isRR && (
+                <div className="sm:hidden flex p-1 mb-3 bg-slate-200/70 dark:bg-slate-800 rounded-lg text-sm font-medium">
+                  <button onClick={() => setStageSection('matches')} className={segmentClass(stageSection === 'matches')}>
+                    {t('tournamentView.matchesSection')}
+                  </button>
+                  <button onClick={() => setStageSection('standings')} className={segmentClass(stageSection === 'standings')}>
+                    {t('tournamentView.standingsSection')}
+                  </button>
+                </div>
               )}
 
-              {stageType === StageType.RR && (
-                <div className="mt-12 border-t dark:border-slate-800 pt-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-slate-500 dark:text-white">{t('tournamentView.stageStandings')}</h3>
-                    <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">{t('tournamentView.stage', { number: stageNum })}</span>
-                  </div>
+              {stageType === StageType.SE ? (
+                <>
+                  <BracketView
+                    matches={stageMatches}
+                    participants={tournament.participants.map(p => ({
+                      ...p,
+                      globalRank: standings.find(s => s.id === p.id)?.globalRank
+                    }))}
+                    onMatchClick={setSelectedMatch}
+                    onParticipantSwap={handleParticipantSwap}
+                    readOnly={!canEdit}
+                    maxScore={tournament.maxScore ?? 16}
+                  />
+                  <Podium matches={stageMatches} participants={tournament.participants} />
+                </>
+              ) : (
+                <div className={isRR && stageSection !== 'matches' ? 'hidden sm:block' : ''}>
+                  <MatchList
+                    matches={stageMatches}
+                    participants={tournament.participants}
+                    onMatchClick={setSelectedMatch}
+                    onReorderMatches={canEdit ? handleReorderMatches : undefined}
+                    readOnly={!canEdit}
+                    maxScore={tournament.maxScore ?? 16}
+                    groupDescriptions={tournament.groupDescriptions}
+                  />
+                </div>
+              )}
+
+              {isRR && (
+                <div className={`${stageSection !== 'standings' ? 'hidden sm:block' : ''} sm:mt-12 sm:border-t dark:border-slate-800 sm:pt-8`}>
+                  <h3 className="hidden sm:block text-xl font-bold text-slate-500 dark:text-white mb-6">{t('tournamentView.standingsSection')}</h3>
                   <Standings
                     participants={calculateStandings(
                       tournament.participants.filter(p =>
@@ -645,6 +668,7 @@ export const TournamentView: React.FC<Props> = ({ tournament, readOnly, onUpdate
                       stageNum
                     )}
                     qualifiesByGroup={tournament.qualifiesByGroup}
+                    groupDescriptions={tournament.groupDescriptions}
                     onReplaceParticipant={handleReplaceParticipant}
                     allowEdits={canEdit && isLastStage && hasStep2}
                   />

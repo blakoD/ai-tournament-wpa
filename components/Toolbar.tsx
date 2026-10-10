@@ -54,36 +54,36 @@ export const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
   const initials = email ? getInitials(email) : "";
 
   const navLinks = [
-    { to: "/", label: t("app.home"), selected: location.pathname === "/" },
-    { to: "/dashboard", label: t("app.dashboard"), selected: location.pathname === "/dashboard" },
+    { to: "/", label: t("app.home"), selected: location.pathname === "/", hideOnMobile: true },
+    { to: "/dashboard", label: t("app.dashboard"), selected: location.pathname === "/dashboard", hideOnMobile: false },
   ];
 
 
   return (
     <header className="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-10">
-      <div className="max-w-6xl mx-auto px-4 py-1.5 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-1 sm:py-1.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2 text-slate-900 dark:text-white">
-            <img src="/logo-light.png" alt="Trophy" className="block dark:hidden border-b border-l border-slate-400/50 rounded-full h-12 w-13" />
-            <img src="/logo-dark.png" alt="Trophy" className="hidden dark:block border-b border-l border-slate-600 rounded-full h-12 w-13" />
+            <img src="/logo-light.png" alt="Trophy" className="block dark:hidden border-b border-l border-slate-400/50 rounded-full h-9 sm:h-12 w-auto" />
+            <img src="/logo-dark.png" alt="Trophy" className="hidden dark:block border-b border-l border-slate-600 rounded-full h-9 sm:h-12 w-auto" />
           </Link>
         </div>
-        <div className="flex items-center gap-2">
-          {session && (
+        {session && (
+          <div className="flex items-center gap-2">
             <div className="flex items-center dark:bg-slate-900 border dark:border-slate-700 rounded-full px-1 py-1 gap-2">
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`px-3 py-1 rounded-full text-sm transition-colors text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/20 dark:hover:bg-slate-800
-                    ${link.selected ? "bg-white dark:bg-slate-800 border dark:border-slate-700 font-bold" : ''}`}
+                  className={`${link.hideOnMobile ? "hidden sm:inline-flex" : "inline-flex"} px-3 py-1 rounded-full text-sm border transition-colors text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/20 dark:hover:bg-slate-800
+                    ${link.selected ? "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-bold" : "border-transparent"}`}
                 >
                   {link.label}
                 </Link>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
         <nav className="flex items-center gap-2 text-sm">
           {!session ? (
             <Link
@@ -99,7 +99,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((open) => !open)}
-                className="border border-slate-300 dark:border-slate-500 dark:hover:bg-slate-600 dark:text-white flex font-bold h-8 hover:bg-slate-100 items-center justify-center rounded-full select-none text-slate-600 text-xs transition-colors w-8"
+                className="border border-slate-300 dark:border-slate-500 dark:hover:bg-slate-600 dark:text-white flex font-bold hover:bg-slate-100 items-center justify-center rounded-full select-none text-slate-600 text-xs transition-colors w-9 h-9"
                 title={email}
               >
                 {initials}
@@ -125,8 +125,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({ session, onSignOut }) => {
             <button
               type="button"
               onClick={() => setKebabOpen((open) => !open)}
-              className="dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 dark:border-slate-600 hover:text-slate-900 dark:hover:text-white p-1.5 rounded-md transition-colors"
+              className="border border-transparent dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 dark:border-slate-600 hover:text-slate-900 dark:hover:text-white p-2 rounded-md transition-colors"
               title="More options"
+              aria-label="More options"
             >
               <FiMoreVertical className="w-4 h-4" />
             </button>

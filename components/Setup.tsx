@@ -4,10 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { generateId, generateRoundRobinMatches, generateBracket } from '../services/tournamentLogic';
 import { Tournament, TournamentStatus, EliminationType, StageType, Participant } from '../types';
 import { createTournament, listTournaments, startTournament } from '../services/apiClient';
+import { Modal } from './Modal';
 
 interface GroupDef {
   id: string;
   name: string;
+  description?: string; // Optional label, typically the group's start time
 }
 
 export const Setup: React.FC = () => {
@@ -185,6 +187,10 @@ export const Setup: React.FC = () => {
       setGroups(groups.map(g => g.id === gid ? { ...g, name: val } : g));
   };
 
+  const updateGroupDescription = (gid: string, val: string) => {
+      setGroups(groups.map(g => g.id === gid ? { ...g, description: val } : g));
+  };
+
   // Open modal and buffer current assignments
   const openGroupModal = (gid: string) => {
       setTempAssignments({ ...assignments });
@@ -243,6 +249,19 @@ export const Setup: React.FC = () => {
       });
   };
 
+  // Move player `pIdx` to the position currently held by `targetPIdx` within a group
+  const moveGroupMember = (groupId: string, pIdx: number, targetPIdx: number) => {
+      setGroupMemberOrder(prev => {
+          const order = [...(prev[groupId] || [])];
+          const fromIdx = order.indexOf(pIdx);
+          const toIdx = order.indexOf(targetPIdx);
+          if (fromIdx === -1 || toIdx === -1) return prev;
+          const [moved] = order.splice(fromIdx, 1);
+          order.splice(toIdx, 0, moved);
+          return { ...prev, [groupId]: order };
+      });
+  };
+
   const handleMemberDrop = (groupId: string) => {
       if (
           !dragInfo ||
@@ -255,15 +274,7 @@ export const Setup: React.FC = () => {
           setDragOverInfo(null);
           return;
       }
-      setGroupMemberOrder(prev => {
-          const order = [...(prev[groupId] || [])];
-          const fromIdx = order.indexOf(dragInfo.pIdx);
-          const toIdx = order.indexOf(dragOverInfo.pIdx);
-          if (fromIdx === -1 || toIdx === -1) return prev;
-          const [moved] = order.splice(fromIdx, 1);
-          order.splice(toIdx, 0, moved);
-          return { ...prev, [groupId]: order };
-      });
+      moveGroupMember(groupId, dragInfo.pIdx, dragOverInfo.pIdx);
       setDragInfo(null);
       setDragOverInfo(null);
   };
@@ -326,6 +337,15 @@ export const Setup: React.FC = () => {
       };
     });
 
+    // Keyed by the same value stored in participant.group (the group name)
+    const groupDescriptions: Record<string, string> = {};
+    if (elimType !== EliminationType.SINGLE_ELIMINATION) {
+      for (const g of groups) {
+        const d = g.description?.trim();
+        if (d) groupDescriptions[g.name] = d;
+      }
+    }
+
     let matches = [];
     if (elimType === EliminationType.SINGLE_ELIMINATION) {
         matches = generateBracket(tId, participants, 1);
@@ -346,7 +366,8 @@ export const Setup: React.FC = () => {
       participants,
       matches,
       createdAt: Date.now(),
-      startedAt: Date.now()
+      startedAt: Date.now(),
+      groupDescriptions: Object.keys(groupDescriptions).length > 0 ? groupDescriptions : undefined,
     };
 
       setIsSubmitting(true);
@@ -373,37 +394,20 @@ export const Setup: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl my-8">
-      <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">{t('setup.title')}</h2>
+    <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-none sm:rounded-xl border border-x-0 sm:border-x border-slate-200 dark:border-slate-700 shadow-none sm:shadow-xl my-0 sm:my-8">
+      <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-slate-900 dark:text-white">{t('setup.title')}</h2>
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Basic Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('setup.tournamentName')}</label>
-            <input
-              type="text"
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
-              placeholder={t('setup.namePlaceholder')}
-              value={name}
-              onChange={e => handleTournamentNameChange(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-2">
-              {t('setup.urlSlug')}
-              {!slugManuallyEdited && slug && (
-                <span className="text-[10px] font-semibold text-blue-400 bg-blue-200/20 dark:bg-blue-900/30 border border-blue-700/40 px-1.5 py-0.5 rounded">{t('setup.auto')}</span>
-              )}
-            </label>
-            <input
-              type="text"
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
-              placeholder={t('setup.slugPlaceholder')}
-              value={slug}
-              onChange={e => handleSlugChange(e.target.value)}
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('setup.tournamentName')}</label>
+          <input
+            type="text"
+            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
+            placeholder={t('setup.namePlaceholder')}
+            value={name}
+            onChange={e => handleTournamentNameChange(e.target.value)}
+          />
         </div>
 
         <div>
@@ -416,7 +420,23 @@ export const Setup: React.FC = () => {
             onChange={e => setTitle(e.target.value)}
           />
         </div>
-        
+
+        <div>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-2">
+            {t('setup.urlSlug')}
+            {!slugManuallyEdited && slug && (
+              <span className="text-[10px] font-semibold text-blue-400 bg-blue-200/20 dark:bg-blue-900/30 border border-blue-700/40 px-1.5 py-0.5 rounded">{t('setup.auto')}</span>
+            )}
+          </label>
+          <input
+            type="text"
+            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-2 py-1.5 text-xs text-slate-900 dark:text-white focus:border-blue-500 outline-none"
+            placeholder={t('setup.slugPlaceholder')}
+            value={slug}
+            onChange={e => handleSlugChange(e.target.value)}
+          />
+        </div>
+
         <div>
             <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{t('setup.description')}</label>
             <textarea
@@ -427,7 +447,7 @@ export const Setup: React.FC = () => {
         </div>
 
         {/* Configuration */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
           <div>
             <label className="block text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-1">{t('setup.startFormat')}</label>
             <select 
@@ -455,7 +475,7 @@ export const Setup: React.FC = () => {
             </select>
           </div>
           {elimType !== EliminationType.SINGLE_ELIMINATION && (
-            <div>
+            <div className="col-span-2 md:col-span-1">
             <label className="block text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-1">{t('setup.qualifiesByGroup')}</label>
               <select 
                 className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-900 dark:text-white"
@@ -478,14 +498,14 @@ export const Setup: React.FC = () => {
                <button
                  type="button"
                  onClick={() => setBulkMode(false)}
-                 className={`px-3 py-1 rounded text-xs font-medium transition-all ${!bulkMode ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                 className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${!bulkMode ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                >
                  {t('setup.bulkImportIndividual')}
                </button>
                <button
                  type="button"
                  onClick={switchToBulkMode}
-                 className={`px-3 py-1 rounded text-xs font-medium transition-all ${bulkMode ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                 className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${bulkMode ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                >
                  {t('setup.bulkImport')}
                </button>
@@ -502,7 +522,7 @@ export const Setup: React.FC = () => {
                  onChange={e => setBulkText(e.target.value)}
                  autoFocus
                />
-               <div className="flex items-center justify-between gap-3">
+               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                  <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -513,14 +533,14 @@ export const Setup: React.FC = () => {
                    <button
                      type="button"
                      onClick={() => setBulkMode(false)}
-                     className="px-3 py-1.5 rounded border border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs transition-colors"
+                     className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 rounded border border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs transition-colors"
                    >
                      {t('common.cancel')}
                    </button>
                    <button
                      type="button"
                      onClick={handleBulkApply}
-                     className="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow transition-colors"
+                     className="flex-1 sm:flex-none px-4 py-2 sm:py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow transition-colors"
                    >
                      {t('setup.bulkImportApply')}
                    </button>
@@ -528,16 +548,16 @@ export const Setup: React.FC = () => {
                </div>
              </div>
            ) : (
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                {names.map((pName, i) => {
                  return (
                   <div key={i} className="flex items-center gap-2">
-                      <span className="w-6 text-slate-400 dark:text-slate-500 text-sm font-mono text-right">#{i + 1}</span>
-                      <div className="flex-1 relative">
-                          <input 
+                      <span className="w-7 shrink-0 text-slate-400 dark:text-slate-500 text-sm font-mono text-right">#{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                          <input
                               type="text"
                               placeholder={t('setup.player', { number: i + 1 })}
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 pr-16 text-slate-900 dark:text-white text-sm focus:border-blue-500 outline-none"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-900 dark:text-white text-sm focus:border-blue-500 outline-none"
                               value={pName}
                               onChange={e => handleNameChange(i, e.target.value)}
                           />
@@ -578,19 +598,27 @@ export const Setup: React.FC = () => {
                                   {groups.length > 1 && (
                                       <button 
                                           onClick={() => removeGroup(g.id)}
-                                          className="text-slate-500 hover:text-red-400 text-xs"
+                                          className="shrink-0 px-2 py-1 -my-1 rounded text-slate-500 hover:text-red-400 text-xs"
                                           title={t('setup.removeGroup')}
                                       >
                                           {t('setup.removeGroup')}
                                       </button>
                                   )}
                               </div>
-                              
+                              <input
+                                  className="w-full mb-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-700 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-500 outline-none"
+                                  value={g.description ?? ''}
+                                  onChange={e => updateGroupDescription(g.id, e.target.value)}
+                                  placeholder={t('setup.groupDescriptionPlaceholder')}
+                                  aria-label={t('setup.groupDescription')}
+                                  maxLength={60}
+                              />
+
                               <div className="flex flex-wrap gap-2 mb-3">
                                   {memberOrder.length === 0 ? (
                                       <span className="text-xs text-slate-300 italic">{t('setup.noPlayersAssigned')}</span>
                                   ) : (
-                                      memberOrder.map((pIdx) => (
+                                      memberOrder.map((pIdx, orderIdx) => (
                                           <span
                                               key={pIdx}
                                               draggable
@@ -598,11 +626,36 @@ export const Setup: React.FC = () => {
                                               onDragOver={(e) => { e.preventDefault(); setDragOverInfo({ pIdx, groupId: g.id }); }}
                                               onDrop={(e) => { e.preventDefault(); handleMemberDrop(g.id); }}
                                               onDragEnd={() => { setDragInfo(null); setDragOverInfo(null); }}
-                                              className={`text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 cursor-grab select-none transition-all
+                                              className={`inline-flex items-center gap-1 text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1 sm:px-2 py-0.5 sm:py-1 rounded border border-slate-200 dark:border-slate-700 sm:cursor-grab select-none transition-all
                                                   ${dragInfo?.pIdx === pIdx ? 'opacity-30' : ''}
                                                   ${dragOverInfo?.pIdx === pIdx && dragInfo?.groupId === g.id && dragInfo?.pIdx !== pIdx ? 'ring-1 ring-blue-500 bg-slate-200 dark:bg-slate-700' : ''}`}
                                           >
-                                            <span className="text-slate-600">⠿</span> {names[pIdx]}
+                                            {/* Mobile-only reorder controls (HTML5 drag has no touch support) */}
+                                            <button
+                                                type="button"
+                                                onClick={() => moveGroupMember(g.id, pIdx, memberOrder[orderIdx - 1])}
+                                                disabled={orderIdx === 0}
+                                                className="sm:hidden p-1.5 -my-0.5 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
+                                                aria-label={t('setup.moveLeft')}
+                                                title={t('setup.moveLeft')}
+                                            >
+                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                                                </svg>
+                                            </button>
+                                            <span className="hidden sm:inline text-slate-600">⠿</span> {names[pIdx]}
+                                            <button
+                                                type="button"
+                                                onClick={() => moveGroupMember(g.id, pIdx, memberOrder[orderIdx + 1])}
+                                                disabled={orderIdx === memberOrder.length - 1}
+                                                className="sm:hidden p-1.5 -my-0.5 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
+                                                aria-label={t('setup.moveRight')}
+                                                title={t('setup.moveRight')}
+                                            >
+                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
                                           </span>
                                       ))
                                   )}
@@ -621,40 +674,51 @@ export const Setup: React.FC = () => {
           </div>
         )}
 
-        {error && (
-          <div className="p-3 bg-red-200/50 dark:bg-red-900/50 border border-red-600 text-red-600 dark:text-red-200 rounded text-sm">
-            {error}
+        {/* Footer: sticky on mobile so Start is always reachable */}
+        <div className="sticky bottom-0 z-10 -mx-4 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 sm:static sm:mx-0 sm:px-0 sm:pt-4 sm:pb-0 space-y-2 sm:space-y-4">
+          {error && (
+            <div className="p-2 sm:p-3 bg-red-200/50 dark:bg-red-900/50 border border-red-600 text-red-600 dark:text-red-200 rounded text-xs sm:text-sm">
+              {error}
+            </div>
+          )}
+          <div className="flex justify-end gap-2 sm:gap-4">
+            <button
+              onClick={() => navigate('/')}
+              className="flex-1 sm:flex-none px-4 py-2 rounded border border-slate-300 dark:border-slate-700 sm:border-0 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              {t('common.cancel')}
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="flex-[2] sm:flex-none px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded shadow-lg shadow-blue-900/20 transition-all"
+            >
+              {isSubmitting ? t('setup.starting') : t('setup.startTournament')}
+            </button>
           </div>
-        )}
-
-        <div className="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-4">
-          <button 
-            onClick={() => navigate('/')}
-            className="px-4 py-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-          >
-            {t('common.cancel')}
-          </button>
-          <button 
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded shadow-lg shadow-blue-900/20 transition-all"
-          >
-            {isSubmitting ? t('setup.starting') : t('setup.startTournament')}
-          </button>
         </div>
       </div>
 
       {/* Modal for Group Selection */}
       {activeGroupModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 w-full max-w-md rounded-xl shadow-2xl flex flex-col max-h-[80vh] animate-in fade-in zoom-in duration-200">
-                <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                        <h3 className="font-bold text-slate-900 dark:text-white">
-                            {t('setup.manageGroup', { name: groups.find(g => g.id === activeGroupModal)?.name })}
-                        </h3>
-                        <button onClick={closeGroupModal} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">✕</button>
-                </div>
-                <div className="p-2 overflow-y-auto flex-1 space-y-1">
+        <Modal
+            onClose={closeGroupModal}
+            size="md"
+            title={t('setup.manageGroup', { name: groups.find(g => g.id === activeGroupModal)?.name })}
+            titleClassName="text-base"
+            bodyClassName="p-2 space-y-1"
+            footerClassName="bg-slate-50 dark:bg-slate-900/30"
+            footer={
+                <>
+                    <button onClick={closeGroupModal} className="flex-1 py-2 rounded border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        {t('common.cancel')}
+                    </button>
+                    <button onClick={saveGroupModal} className="flex-1 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-colors">
+                        {t('setup.done')}
+                    </button>
+                </>
+            }
+        >
                     {names.map((pName, i) => {
                         // Use tempAssignments to show state inside modal
                         const assignedGid = tempAssignments[i];
@@ -684,17 +748,7 @@ export const Setup: React.FC = () => {
                             </label>
                         )
                     })}
-                </div>
-                <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 rounded-b-xl flex gap-3">
-                    <button onClick={closeGroupModal} className="flex-1 py-2 rounded border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        {t('common.cancel')}
-                    </button>
-                    <button onClick={saveGroupModal} className="flex-1 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-colors">
-                        {t('setup.done')}
-                    </button>
-                </div>
-            </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

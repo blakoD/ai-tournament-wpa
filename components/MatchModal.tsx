@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { ImPlus, ImMinus } from "react-icons/im";
 import { useTranslation } from 'react-i18next';
 import { Match, Participant } from '../types';
+import { Modal } from './Modal';
 
 interface Props {
   match: Match;
@@ -12,6 +13,59 @@ interface Props {
   onClose: () => void;
   isSaving?: boolean;
 }
+
+interface ScoreControlProps {
+  value: string;
+  fullscreen: boolean;
+  autoFocus?: boolean;
+  onChange: (v: string) => void;
+  onBlur: () => void;
+  onAdjust: (delta: number) => void;
+}
+
+// Defined outside MatchModal so the input keeps its identity (and focus / mobile keyboard) across re-renders.
+const ScoreControl: React.FC<ScoreControlProps> = ({ value, fullscreen, autoFocus, onChange, onBlur, onAdjust }) => {
+  const btnSize = fullscreen ? 'w-16 h-16 text-3xl' : 'w-12 h-12 text-md';
+  const inputSize = fullscreen ? 'w-28 h-24 text-6xl sm:w-36 sm:h-32 sm:text-7xl' : 'w-20 h-16 text-3xl';
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+        <input
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoFocus={autoFocus}
+            min="0"
+            className={inputSize + ' text-center font-bold bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:border-blue-500 outline-none text-slate-900 dark:text-white'}
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            onBlur={onBlur}
+        />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onMouseDown={e => e.preventDefault()}
+            onClick={() => onAdjust(1)}
+            className={btnSize + ' rounded-md bg-[#296421] hover:bg-[#3a7a2a] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
+          >
+            <div className="flex items-center justify-center">
+              <ImPlus />
+            </div>
+          </button>
+          <button
+            type="button"
+            onMouseDown={e => e.preventDefault()}
+            onClick={() => onAdjust(-1)}
+            className={btnSize + ' rounded-md bg-[#d52525] hover:bg-[#ff4c4c] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
+          >
+            <div className="flex items-center justify-center">
+              <ImMinus />
+            </div>
+          </button>
+        </div>
+    </div>
+  );
+};
 
 export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16, onSave, onReset, onClose }) => {
   const { t } = useTranslation();
@@ -31,14 +85,6 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
 
   const pA = participants.find(p => p.id === match.participantAId);
   const pB = participants.find(p => p.id === match.participantBId);
-
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
 
   const parseScore = (val: string) => {
     const n = parseInt(val);
@@ -100,6 +146,16 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
     scheduleSave(newSA, newSB);
   };
 
+  const handleScoreInput = (side: 'A' | 'B', v: string) => {
+    if (side === 'A') setSA(v);
+    else setSB(v);
+    setError('');
+    scheduleSave(
+      side === 'A' ? v : sA,
+      side === 'B' ? v : sB
+    );
+  };
+
   const handleReset = () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     const origA = initialScoreA.current;
@@ -117,135 +173,88 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
 
   if (!pA || !pB) return null;
 
-  const overlayClass = fullscreen
-    ? 'fixed inset-0 z-50 flex items-center justify-center bg-black animate-in fade-in duration-200'
-    : 'fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200';
+  const isDirty = sA !== (initialScoreA.current?.toString() ?? '') || sB !== (initialScoreB.current?.toString() ?? '');
 
-  const cardClass = fullscreen
-    ? 'bg-white dark:bg-slate-800 w-full h-full flex flex-col overflow-hidden'
-    : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden';
-
-  const btnSize = fullscreen ? 'w-16 h-16 text-3xl' : 'w-10 h-10 text-md';
-  const inputSize = fullscreen ? 'w-36 h-32 text-7xl' : 'w-20 h-16 text-3xl';
-
-  const ScoreControl = ({
-    side,
-    value,
-    onChange,
-    autoFocus,
-  }: {
-    side: 'A' | 'B';
-    value: string;
-    onChange: (v: string) => void;
-    autoFocus?: boolean;
-  }) => (
-    <div className="flex flex-col items-center gap-3">
-        <input
-            type="number"
-            autoFocus={autoFocus}
-            min="0"
-            className={inputSize + ' text-center font-bold bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:border-blue-500 outline-none text-slate-900 dark:text-white'}
-            value={value}
-            onChange={e => {
-              const v = e.target.value;
-              onChange(v);
-              setError('');
-              scheduleSave(
-                side === 'A' ? v : sA,
-                side === 'B' ? v : sB
-              );
-            }}
-            onBlur={() => flushSave(sA, sB)}
-        />
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onMouseDown={e => e.preventDefault()}
-            onClick={() => adjustScore(side, 1)}
-            className={btnSize + ' rounded-md bg-[#296421] hover:bg-[#3a7a2a] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
-          >
-            <div className="flex items-center justify-center">
-              <ImPlus />
-            </div>
-          </button>
-          <button
-            type="button"
-            onMouseDown={e => e.preventDefault()}
-            onClick={() => adjustScore(side, -1)}
-            className={btnSize + ' rounded-md bg-[#d52525] hover:bg-[#ff4c4c] active:scale-95 border border-slate-600 text-white font-bold transition-all select-none'}
-          >
-            <div className="flex items-center justify-center">
-              <ImMinus />
-            </div>
-          </button>
-        </div>
-    </div>
+  const fullscreenToggle = (
+    <button
+      type="button"
+      onClick={() => setFullscreen(f => !f)}
+      className="p-2 -m-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+      title={fullscreen ? t('matchModal.exitFullscreen') : t('matchModal.fullscreen')}
+      aria-label={fullscreen ? t('matchModal.exitFullscreen') : t('matchModal.fullscreen')}
+    >
+      {fullscreen ? (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M15 9h4.5M15 9V4.5M9 15H4.5M9 15v4.5M15 15h4.5M15 15v4.5" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+        </svg>
+      )}
+    </button>
   );
 
-  return (
-    <div className={overlayClass}>
-      <div className={cardClass}>
-        <div className="bg-slate-50 dark:bg-slate-900 px-4 py-3 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
-          <h3 className={'font-bold text-slate-900 dark:text-white ' + (fullscreen ? 'text-xl' : 'text-lg')}>{t('matchModal.title')}</h3>
-          <div className="flex items-center gap-2">
-            {(sA !== (initialScoreA.current?.toString() ?? '') || sB !== (initialScoreB.current?.toString() ?? '')) && (
-              <div className="flex justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className={'rounded px-4 py-1 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors'}
-                    title={t('matchModal.resetTitle')}
-                  >
-                    {t('matchModal.reset')}
-                  </button>
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => setFullscreen(f => !f)}
-              className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 rounded transition-colors"
-              title={fullscreen ? t('matchModal.exitFullscreen') : t('matchModal.fullscreen')}
-            >
-              {fullscreen ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M15 9h4.5M15 9V4.5M9 15H4.5M9 15v4.5M15 15h4.5M15 15v4.5" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
-                </svg>
-              )}
-            </button>
-            <button onClick={onClose} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">✕</button>
-          </div>
-        </div>
+  const statusClass = fullscreen ? 'text-base mb-4' : 'text-xs mb-2';
 
-        <div
-          className={'flex flex-col flex-1 ' + (fullscreen ? 'p-8 gap-6' : 'p-6')}
-        >
+  return (
+    <Modal
+      onClose={onClose}
+      size="md"
+      fullScreen={fullscreen}
+      title={t('matchModal.title')}
+      titleClassName={fullscreen ? 'text-xl' : 'text-lg'}
+      headerClassName="bg-slate-50 dark:bg-slate-900"
+      headerActions={fullscreenToggle}
+      bodyClassName={'flex flex-col ' + (fullscreen ? 'p-4 sm:p-8 gap-6' : 'p-4')}
+    >
             <div className={'flex flex-col ' + (fullscreen ? 'flex-1 justify-center' : '')}>
-                <div className={'flex justify-between items-center gap-4 ' + (fullscreen ? 'mb-12' : 'mb-2')}>
-                    <div className="flex-1 text-center">
-                        <div className={'font-bold text-blue-400 ' + (fullscreen ? 'text-3xl' : 'text-xl')}>{pA.name}</div>
+                <div className={'flex justify-between items-center gap-2 sm:gap-4 ' + (fullscreen ? 'mb-6 sm:mb-12' : 'mb-2')}>
+                    <div className="flex-1 min-w-0 text-center">
+                        <div className={'font-bold text-slate-900 dark:text-white break-words ' + (fullscreen ? 'text-2xl sm:text-3xl' : 'text-lg sm:text-xl')}>{pA.name}</div>
                     </div>
-                    <div className={'text-slate-500 font-bold ' + (fullscreen ? 'text-md' : 'text-xs')}>{t('matchModal.vs')}</div>
-                    <div className="flex-1 text-center">
-                        <div className={'font-bold text-red-400 ' + (fullscreen ? 'text-3xl' : 'text-xl')}>{pB.name}</div>
+                    <div className={'text-slate-500 font-bold shrink-0 ' + (fullscreen ? 'text-md' : 'text-xs')}>{t('matchModal.vs')}</div>
+                    <div className="flex-1 min-w-0 text-center">
+                        <div className={'font-bold text-slate-900 dark:text-white break-words ' + (fullscreen ? 'text-2xl sm:text-3xl' : 'text-lg sm:text-xl')}>{pB.name}</div>
                     </div>
                 </div>
-                <div className={'flex justify-between items-center gap-4 ' + (fullscreen ? 'mb-4' : 'mb-8 mt-4')}>
+                <div className={'flex justify-between items-center gap-2 sm:gap-4 ' + (fullscreen ? 'mb-4' : 'mb-4 mt-2')}>
                     <div className="flex-1 flex justify-center">
-                        <ScoreControl side="A" value={sA} onChange={setSA} />
+                        <ScoreControl
+                          value={sA}
+                          fullscreen={fullscreen}
+                          onChange={v => handleScoreInput('A', v)}
+                          onBlur={() => flushSave(sA, sB)}
+                          onAdjust={delta => adjustScore('A', delta)}
+                        />
                     </div>
-                    <div 
-                        className={'text-slate-700 font-bold ' + (fullscreen ? 'text-5xl mt-8' : 'text-2xl mt-3')} 
+                    <div
+                        className={'text-slate-700 font-bold ' + (fullscreen ? 'text-5xl mt-8' : 'text-2xl mt-3')}
                         style={{ alignSelf: 'baseline' }}>
                             -
                     </div>
                     <div className="flex-1 flex justify-center">
-                        <ScoreControl side="B" value={sB} onChange={setSB} />
+                        <ScoreControl
+                          value={sB}
+                          fullscreen={fullscreen}
+                          onChange={v => handleScoreInput('B', v)}
+                          onBlur={() => flushSave(sA, sB)}
+                          onAdjust={delta => adjustScore('B', delta)}
+                        />
                     </div>
                 </div>
+                {isDirty && (
+                    <div className="flex justify-center mb-2">
+                        <button
+                          type="button"
+                          onClick={handleReset}
+                          className="px-3 py-1.5 rounded text-sm text-slate-500 dark:text-slate-400 underline underline-offset-2 hover:text-slate-900 dark:hover:text-white transition-colors"
+                          title={t('matchModal.resetTitle')}
+                        >
+                          {t('matchModal.reset')}
+                        </button>
+                    </div>
+                )}
             </div>
             <div className="mt-auto">
                 {error && (
@@ -255,23 +264,21 @@ export const MatchModal: React.FC<Props> = ({ match, participants, maxScore = 16
                 )}
 
                 {isSaving && (
-                    <div className={'text-slate-400 text-center ' + (fullscreen ? 'text-base mb-4' : 'text-xs mb-6')}>
+                    <div className={'text-slate-400 text-center ' + statusClass}>
                       {t('matchModal.saving')}
                     </div>
                 )}
                 {savedRecently && !isSaving && (
-                    <div className={'text-green-400 text-center ' + (fullscreen ? 'text-base mb-4' : 'text-xs mb-6')}>
+                    <div className={'text-green-400 text-center ' + statusClass}>
                       {t('matchModal.saved')}
                     </div>
                 )}
                 {!isSaving && !savedRecently && !error && (
-                    <div className={'text-slate-500 text-center ' + (fullscreen ? 'text-base mb-4' : 'text-xs mb-6')}>
+                    <div className={'text-slate-500 text-center ' + statusClass}>
                       {t('matchModal.rule', { max: maxScore })}
                     </div>
                 )}
             </div>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

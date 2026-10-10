@@ -2,7 +2,7 @@ import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { useMatchList } from '../useMatchList';
+import { useMatchList, isMatchInProgress, getGroupDescription } from '../useMatchList';
 import { Match, Participant } from '../../../types';
 
 const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -434,5 +434,36 @@ describe('orderedGroupKeys', () => {
     { wrapper });
 
     expect(result.current.orderedGroupKeys).toEqual([]);
+  });
+});
+
+describe('isMatchInProgress', () => {
+  it('is false when no score has been entered', () => {
+    expect(isMatchInProgress(makeMatch({ id: 'm1' }), 16)).toBe(false);
+    expect(isMatchInProgress(makeMatch({ id: 'm1', scoreA: 0, scoreB: 0 }), 16)).toBe(false);
+  });
+
+  it('is true when at least one score > 0 and both are below maxScore', () => {
+    expect(isMatchInProgress(makeMatch({ id: 'm1', scoreA: 3, scoreB: 0 }), 16)).toBe(true);
+    expect(isMatchInProgress(makeMatch({ id: 'm1', scoreA: 15, scoreB: 15 }), 16)).toBe(true);
+  });
+
+  it('is false once a side reaches maxScore or the match is completed', () => {
+    expect(isMatchInProgress(makeMatch({ id: 'm1', scoreA: 16, scoreB: 4 }), 16)).toBe(false);
+    expect(isMatchInProgress(makeMatch({ id: 'm1', scoreA: 5, scoreB: 3, isCompleted: true }), 16)).toBe(false);
+  });
+});
+
+describe('getGroupDescription', () => {
+  it('matches keys regardless of "Group" prefix or case', () => {
+    expect(getGroupDescription({ 'Group A': '10:00' }, 'A')).toBe('10:00');
+    expect(getGroupDescription({ b: ' 11:30 ' }, 'B')).toBe('11:30');
+    expect(getGroupDescription({ A: '10:00' }, 'A')).toBe('10:00');
+  });
+
+  it('returns undefined for missing or blank descriptions', () => {
+    expect(getGroupDescription(undefined, 'A')).toBeUndefined();
+    expect(getGroupDescription({ A: '   ' }, 'A')).toBeUndefined();
+    expect(getGroupDescription({ A: '10:00' }, 'C')).toBeUndefined();
   });
 });

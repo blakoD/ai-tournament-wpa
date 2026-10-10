@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Match, Participant } from '../../types';
-import { useMatchList } from './useMatchList';
+import { useMatchList, isMatchInProgress as isInProgressMatch, getGroupDescription } from './useMatchList';
 
 interface Props {
   matches: Match[];
@@ -10,9 +10,10 @@ interface Props {
   onReorderMatches?: (reorderedMatches: Match[]) => void;
   readOnly?: boolean;
   maxScore?: number;
+  groupDescriptions?: Record<string, string>;
 }
 
-export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick, onReorderMatches, readOnly = false, maxScore = 16 }) => {
+export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick, onReorderMatches, readOnly = false, maxScore = 16, groupDescriptions }) => {
   const { t } = useTranslation();
   const {
     sortMode,
@@ -21,6 +22,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
     dragOverIndex,
     canDrag,
     groupPositionMap,
+    groupSeedMap,
     sortedMatches,
     groupedByRound,
     groupedByGroup,
@@ -28,17 +30,52 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
     handleSortModeChange,
     handleSetViewMode,
     handleDrop,
+    handleMoveUp,
+    handleMoveDown,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
   } = useMatchList({ matches, participants, onReorderMatches, readOnly });
 
+  const isMatchInProgress = (m: Match) => isInProgressMatch(m, maxScore);
+
+  // "Group A" + optional muted description (e.g. start time) on a single line
+  const renderGroupHeader = (groupKey: string, labelClassName: string) => {
+    if (groupKey === 'ZZZ') return <span className={labelClassName}>{t('matchList.withoutGroup')}</span>;
+    const description = getGroupDescription(groupDescriptions, groupKey);
+    return (
+      <span className="flex items-baseline gap-1.5 min-w-0">
+        <span className={`${labelClassName} whitespace-nowrap shrink-0`}>{t('matchList.groupLabel', { name: groupKey })}</span>
+        {description && (
+          <>
+            <span className="text-slate-300 dark:text-slate-600 shrink-0" aria-hidden="true">·</span>
+            <span className="font-normal normal-case tracking-normal text-slate-400 dark:text-slate-500 truncate min-w-0" title={description}>{description}</span>
+          </>
+        )}
+      </span>
+    );
+  };
+
+  const livePill = (
+    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-300/70 dark:border-amber-500/40 px-1.5 py-px text-[9px] sm:text-[10px] font-bold uppercase tracking-wide leading-none whitespace-nowrap">
+      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true"></span>
+      {t('common.live')}
+    </span>
+  );
+
+  // In group sort mode the separator already names the group, so badges only show the seed number
+  const getPositionLabel = (participantId: string | null | undefined) => {
+    if (!participantId) return '?';
+    if (sortMode === 'group') return groupSeedMap[participantId] ? String(groupSeedMap[participantId]) : '?';
+    return (groupPositionMap[participantId] || '?').replace(/^group\s+/i, '').trim().toUpperCase();
+  };
+
   return (
     <div className="">
       {/* Controls */}
-      <div className="flex justify-end items-center gap-3 mb-3">
-        <label className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
-          {t('matchList.orderBy')}
+      <div className="flex justify-end items-center gap-2 sm:gap-3 mb-3">
+        <label className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2" title={t('matchList.orderBy')}>
+          <span className="hidden sm:inline">{t('matchList.orderBy')}</span>
           <select
             value={sortMode}
             onChange={(e) => handleSortModeChange(e.target.value as 'round' | 'group' | 'custom')}
@@ -60,7 +97,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
               <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
               <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
             </svg>
-            {t('matchList.cards')}
+            <span className="hidden sm:inline">{t('matchList.cards')}</span>
           </button>
           <button
             onClick={() => handleSetViewMode('list')}
@@ -71,7 +108,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
               <rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="14" height="2" rx="1"/>
               <rect x="1" y="12" width="14" height="2" rx="1"/>
             </svg>
-            {t('matchList.list')}
+            <span className="hidden sm:inline">{t('matchList.list')}</span>
           </button>
         </div>
       </div>
@@ -80,17 +117,17 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
       {viewMode === 'list' && (
         <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           {canDrag && (
-            <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900/70 border-b border-slate-200 dark:border-slate-700 text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5 select-none">
+            <div className="hidden sm:flex px-3 py-1.5 bg-slate-50 dark:bg-slate-900/70 border-b border-slate-200 dark:border-slate-700 text-xs text-slate-400 dark:text-slate-500 items-center gap-1.5 select-none">
               <span className="text-slate-400 dark:text-slate-600 text-base leading-none">⢷</span> {t('matchList.dragHint')}
             </div>
           )}
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-xs uppercase border-b border-slate-200 dark:border-slate-700">
+            <thead className="hidden sm:table-header-group bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 text-xs uppercase border-b border-slate-200 dark:border-slate-700">
               <tr>
-                {canDrag && <th className="w-8"></th>}
-                <th className="px-1 md:px-3 py-2 w-10 text-center text-slate-400 dark:text-slate-600">#</th>
+                {canDrag && <th className="hidden sm:table-cell w-8"></th>}
+                <th className="px-1 md:px-3 py-2 w-6 sm:w-10 text-center text-slate-400 dark:text-slate-600">#</th>
                 <th className="px-1 md:px-3 py-2 text-right"></th>
-                <th className="px-0 md:px-3 py-2 w-28 text-center">{t('matchList.score')}</th>
+                <th className="px-0 md:px-3 py-2 w-16 sm:w-28 text-center">{t('matchList.score')}</th>
                 <th className="px-1 md:px-3 py-2 text-left"></th>
               </tr>
             </thead>
@@ -98,11 +135,11 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
               {sortedMatches.map((m, idx) => {
                 const pA = participants.find(p => p.id === m.participantAId);
                 const pB = participants.find(p => p.id === m.participantBId);
-                const posA = m.participantAId ? (groupPositionMap[m.participantAId] || '?') : '?';
-                const posB = m.participantBId ? (groupPositionMap[m.participantBId] || '?') : '?';
+                const posA = getPositionLabel(m.participantAId);
+                const posB = getPositionLabel(m.participantBId);
                 const isDragging = dragIndex === idx;
                 const isDragOver = dragOverIndex === idx && dragIndex !== idx;
-                const isInProgress = ((m.scoreA ?? 0) > 0 || (m.scoreB ?? 0) > 0) && (m.scoreA ?? 0) < maxScore && (m.scoreB ?? 0) < maxScore;
+                const isInProgress = isMatchInProgress(m);
 
                 // Section separator logic
                 const getSectionKey = (match: Match) => {
@@ -125,10 +162,12 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                     {showSeparator && (
                       <tr className="bg-slate-100 dark:bg-slate-900/60">
                         <td
-                          colSpan={canDrag ? 5 : 4}
-                          className="px-3 py-0.5 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
+                          colSpan={canDrag ? 6 : 4}
+                          className="px-3 py-0.5 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider max-w-0"
                         >
-                          {separatorLabel}
+                          {sortMode === 'group' && currentKey
+                            ? renderGroupHeader(currentKey, '')
+                            : <span className="whitespace-nowrap">{separatorLabel}</span>}
                         </td>
                       </tr>
                     )}
@@ -145,49 +184,85 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
                       readOnly ? 'cursor-default' : 'cursor-pointer',
                       isDragging ? 'opacity-30 bg-slate-200 dark:bg-slate-700' : '',
                       isDragOver ? 'bg-blue-50 dark:bg-blue-900/20 border-t-2 border-t-blue-500' : '',
-                      !isDragging && !isDragOver ? (m.isCompleted ? 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50' : 'bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-700/30') : '',
-                    isInProgress && !isDragging && !isDragOver ? 'row-in-progress' : '',
+                      !isDragging && !isDragOver
+                        ? (isInProgress
+                          // Live: static amber accent bar on the left edge + faint amber tint
+                          ? 'bg-amber-50/70 dark:bg-amber-500/[0.06] hover:bg-amber-50 dark:hover:bg-amber-500/10 shadow-[inset_3px_0_0_0_rgb(245,158,11)]'
+                          : m.isCompleted ? 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50' : 'bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-700/30')
+                        : '',
                     ].join(' ')}
                   >
                     {canDrag && (
-                      <td className="px-2 text-center text-slate-400 dark:text-slate-600 cursor-grab active:cursor-grabbing select-none text-base leading-none">
+                      <td className="hidden sm:table-cell px-2 text-center text-slate-400 dark:text-slate-600 cursor-grab active:cursor-grabbing select-none text-base leading-none">
                         ⠿
                       </td>
                     )}
-                    <td className="px-0 md:px-2 py-2.5 text-center font-mono text-xs text-slate-400 dark:text-slate-500">{idx + 1}</td>
+                    {canDrag && (
+                      <td className="sm:hidden w-6 pl-1 py-0.5">
+                        <div className="flex flex-col items-center">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleMoveUp(idx); }}
+                            disabled={idx === 0}
+                            title={t('matchList.moveUp')}
+                            aria-label={t('matchList.moveUp')}
+                            className="px-1.5 py-0.5 text-[10px] leading-none text-slate-400 dark:text-slate-500 hover:text-blue-500 disabled:opacity-30"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleMoveDown(idx); }}
+                            disabled={idx === sortedMatches.length - 1}
+                            title={t('matchList.moveDown')}
+                            aria-label={t('matchList.moveDown')}
+                            className="px-1.5 py-0.5 text-[10px] leading-none text-slate-400 dark:text-slate-500 hover:text-blue-500 disabled:opacity-30"
+                          >
+                            ▼
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                    <td className="px-0 md:px-2 py-2 sm:py-2.5 w-6 sm:w-10 text-center font-mono text-xs text-slate-400 dark:text-slate-500">{idx + 1}</td>
                     {/* Team A */}
-                    <td className="px-1 md:px-2 py-2.5">
-                      <div className="flex items-center justify-end gap-2">
-                        <span className={`font-medium max-w-[130px] text-right ${m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                    <td className="px-1 md:px-2 py-2 sm:py-2.5">
+                      <div className="flex items-center justify-end gap-1 sm:gap-2">
+                        <span className={`font-medium min-w-0 truncate max-w-[90px] sm:max-w-[160px] text-right ${m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-200'}`}>
                           {pA?.name || t('matchList.tbd')}
                         </span>
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700/50 shrink-0">
-                          {posA.replace(/^group\s+/i, '').trim().toUpperCase()}
+                          {posA}
                         </span>
                       </div>
                     </td>
                     {/* Score */}
-                    <td className="px-0 md:px-2 py-2.5 text-center w-[15%]">
+                    <td className="px-0 md:px-2 py-2 sm:py-2.5 w-16 sm:w-28 text-center">
                       {m.isCompleted ? (
                         <span className="font-mono font-bold text-slate-900 dark:text-white text-sm tabular-nums">
-                          <span className={`${m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white'}`}>{m.scoreA}</span> 
+                          <span className={`${m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white'}`}>{m.scoreA}</span>
                           {` – `}
                           <span className={`${m.winnerId === m.participantBId ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white'}`}>{m.scoreB}</span>
                         </span>
+                      ) : isInProgress ? (
+                        <span className="flex flex-col items-center gap-0.5">
+                          <span className="font-mono font-bold text-sm tabular-nums text-amber-600 dark:text-amber-400">
+                            {`${m.scoreA ?? 0}–${m.scoreB ?? 0}`}
+                          </span>
+                          {livePill}
+                        </span>
                       ) : (
-                          <span className="text-slate-400 dark:text-slate-600 text-xs flex items-center justify-center gap-1.5">
+                        <span className="text-slate-400 dark:text-slate-600 text-xs">
                           {t('matchList.vs')}
-                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse inline-block"></span>
                         </span>
                       )}
                     </td>
                     {/* Team B */}
-                    <td className="px-1 md:px-2 py-2.5">
-                      <div className="flex items-center gap-2">
+                    <td className="px-1 md:px-2 py-2 sm:py-2.5">
+                      <div className="flex items-center gap-1 sm:gap-2">
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700/50 shrink-0">
-                          {posB.replace(/^group\s+/i, '').trim().toUpperCase()}
+                          {posB}
                         </span>
-                        <span className={`font-medium max-w-[130px] text-left ${m.winnerId === m.participantBId ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                        <span className={`font-medium min-w-0 truncate max-w-[90px] sm:max-w-[160px] text-left ${m.winnerId === m.participantBId ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-200'}`}>
                           {pB?.name || t('matchList.tbd')}
                         </span>
                       </div>
@@ -211,7 +286,7 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
             }))
           : orderedGroupKeys.map(groupKey => ({
               key: `group-${groupKey}`,
-              header: groupKey === 'ZZZ' ? t('matchList.withoutGroup') : t('matchList.groupLabel', { name: groupKey }),
+              header: renderGroupHeader(groupKey, ''),
               sectionMatches: groupedByGroup[groupKey],
             }));
 
@@ -220,64 +295,65 @@ export const MatchList: React.FC<Props> = ({ matches, participants, onMatchClick
             ? (m.group ? (m.group.startsWith('Group') ? m.group : t('matchList.groupLabel', { name: m.group })) : null)
             : t('matchList.roundLabel', { number: m.round || 1 });
 
-        return sections.map(({ key, header, sectionMatches }) => (
-          <div key={key}>
-            <h3 className="text-sm font-bold text-slate-500 dark:text-slate-500 uppercase my-3 ml-1">{header}</h3>
-            <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {sectionMatches.map((m, idx) => {
-                const pA = participants.find(p => p.id === m.participantAId);
-                const pB = participants.find(p => p.id === m.participantBId);
-                const badge = getBadge(m);
-                const isInProgress = ((m.scoreA ?? 0) > 0 || (m.scoreB ?? 0) > 0) && (m.scoreA ?? 0) < maxScore && (m.scoreB ?? 0) < maxScore;
-                return (
-                  <div
-                    key={m.id}
-                    onClick={() => { if (!readOnly) onMatchClick(m); }}
-                    className={`relative rounded-lg border p-3 transition-all ${readOnly ? 'cursor-default' : 'cursor-pointer'} ${
-                      isInProgress
-                        ? 'bg-white/95 dark:bg-slate-800/50 shadow-sm card-in-progress'
-                        : m.isCompleted
-                          ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 opacity-80 hover:opacity-100'
-                          : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30'
-                    }`}
-                  >
-                    {(badge || !m.isCompleted) && (
-                      <div className="flex">
+        return (
+          <div>
+            {sections.map(({ key, header, sectionMatches }) => (
+              <div key={key} className="mt-4 first:mt-0">
+                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-500 uppercase mb-2 ml-1 whitespace-nowrap min-w-0">{header}</h3>
+                <div className="grid gap-2 sm:gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                  {sectionMatches.map((m, idx) => {
+                    const pA = participants.find(p => p.id === m.participantAId);
+                    const pB = participants.find(p => p.id === m.participantBId);
+                    const badge = getBadge(m);
+                    const isInProgress = isMatchInProgress(m);
+                    return (
+                      <div
+                        key={m.id}
+                        onClick={() => { if (!readOnly) onMatchClick(m); }}
+                        className={`relative rounded-lg border p-3 transition-all ${readOnly ? 'cursor-default' : 'cursor-pointer'} ${
+                          isInProgress
+                            // Live: amber ring pulses on a pseudo-element (.live-ring in index.html), content stays still
+                            ? 'live-ring bg-white dark:bg-slate-800 border-amber-300/70 dark:border-amber-500/40 shadow-sm'
+                            : m.isCompleted
+                              ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 opacity-80 hover:opacity-100'
+                              : 'bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30'
+                        }`}
+                      >
+                        <div className="flex">
                           <div className="font-mono text-xs text-slate-400 dark:text-slate-500">#{idx + 1}</div>
-                        <div className="flex flex-1 justify-center items-center mb-2 h-4">
-                          {badge && (
-                            <span className="text-[10px] font-bold text-slate-500 uppercase bg-slate-100 dark:bg-slate-900/50 px-1.5 py-0.5 mr-2 rounded border border-slate-200 dark:border-slate-700/50">
-                              {badge}
-                            </span>
-                          )}
-                          {!m.isCompleted && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                          )}
+                          <div className="flex flex-1 justify-center items-center mb-2 h-4">
+                            {badge && (
+                              <span className="text-[10px] font-bold text-slate-500 uppercase bg-slate-100 dark:bg-slate-900/50 px-1.5 py-0.5 mr-2 rounded border border-slate-200 dark:border-slate-700/50">
+                                {badge}
+                              </span>
+                            )}
+                            {isInProgress && livePill}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center gap-2 mb-2">
+                          <span className={`font-medium min-w-0 truncate ${m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                            {pA?.name || t('matchList.tbd')}
+                          </span>
+                          <span className={`font-mono text-lg font-bold shrink-0 ${m.isCompleted ? (m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white') : isInProgress ? 'text-amber-600 dark:text-amber-400' : 'text-slate-300 dark:text-slate-600'}`}>
+                            {m.scoreA ?? '-'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center gap-2">
+                          <span className={`font-medium min-w-0 truncate ${m.winnerId === m.participantBId ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                            {pB?.name || t('matchList.tbd')}
+                          </span>
+                          <span className={`font-mono text-lg font-bold shrink-0 ${m.isCompleted ? (m.winnerId === m.participantBId ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white') : isInProgress ? 'text-amber-600 dark:text-amber-400' : 'text-slate-300 dark:text-slate-600'}`}>
+                            {m.scoreB ?? '-'}
+                          </span>
                         </div>
                       </div>
-                    )}
-                    <div className="flex justify-between items-center mb-2">
-                      <span className={`font-medium ${m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                        {pA?.name || t('matchList.tbd')}
-                      </span>
-                      <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantAId ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white') : 'text-slate-300 dark:text-slate-600'}`}>
-                        {m.scoreA ?? '-'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className={`font-medium ${m.winnerId === m.participantBId ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                        {pB?.name || t('matchList.tbd')}
-                      </span>
-                      <span className={`font-mono text-lg font-bold ${m.isCompleted ? (m.winnerId === m.participantBId ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white') : 'text-slate-300 dark:text-slate-600'}`}>
-                        {m.scoreB ?? '-'}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
-        ));
+        );
       })()}
     </div>
   );

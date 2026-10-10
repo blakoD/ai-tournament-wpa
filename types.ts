@@ -72,4 +72,5 @@ export interface Tournament {
   startedAt?: number | null;
   completedAt?: number | null;
   maxScore?: number;
+  groupDescriptions?: Record<string, string>; // Optional per-group label (e.g. start time), keyed like participant.group
 }

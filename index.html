@@ -6,29 +6,57 @@
     <title>Tournament Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      @keyframes match-progress {
-        0%, 100% { 
-          border-color: rgba(59, 130, 246, 0.35); 
-          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); 
-        }
-        50% { 
-          border-color: rgba(90, 27, 214, 0.85); 
-          box-shadow: 0 0 12px 3px rgba(90, 27, 214, 0.22); 
-        }
-        /* 50%, 80% { 
-          border-color: rgba(156, 59, 246, 0.35); 
-          box-shadow: 0 0 0 0 rgba(156, 59, 246, 0); 
-        } */
+      /* Bracket card "live" ring: pulses on a pseudo-element so text stays still. */
+      @keyframes live-ring {
+        0%, 100% { opacity: 0.35; box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        50%      { opacity: 1;    box-shadow: 0 0 10px 2px rgba(245, 158, 11, 0.35); }
+      }
+      .live-ring { position: relative; }
+      .live-ring::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: inherit;
+        border: 2px solid rgb(245, 158, 11);
+        pointer-events: none;
+        animation: live-ring 1.8s ease-in-out infinite;
+      }
 
+      /* Modal open/close: bottom sheet slides from off-screen on phones,
+         taskbar-style rise + scale from `sm` up. */
+      @keyframes modal-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes modal-fade-out { from { opacity: 1; } to { opacity: 0; } }
+      @keyframes modal-sheet-in  { from { transform: translateY(100%); } to { transform: translateY(0); } }
+      @keyframes modal-sheet-out { from { transform: translateY(0); } to { transform: translateY(100%); } }
+      @keyframes modal-pop-in {
+        from { opacity: 0; transform: translateY(24px) scale(0.96); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
       }
-      .card-in-progress {
-        animation: match-progress 2.5s ease-in-out infinite;
+      @keyframes modal-pop-out {
+        from { opacity: 1; transform: translateY(0) scale(1); }
+        to   { opacity: 0; transform: translateY(24px) scale(0.96); }
       }
-      @keyframes row-progress {
-        50%       { box-shadow: inset 42px 0 0 0 rgb(199 168 226 / 30%); }
+      .modal-overlay-in  { animation: modal-fade-in 200ms ease-out both; }
+      .modal-overlay-out { animation: modal-fade-out 180ms ease-in both; }
+      .modal-panel-in  { animation: modal-sheet-in 250ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+      .modal-panel-out { animation: modal-sheet-out 180ms ease-in both; }
+      @media (min-width: 640px) {
+        .modal-panel-in  { animation: modal-pop-in 230ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .modal-panel-out { animation: modal-pop-out 180ms ease-in both; }
       }
-      .row-in-progress {
-        animation: row-progress 2.5s ease-in-out infinite;
+
+      /* Podium entrance */
+      @keyframes podium-rise {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .podium-rise { animation: podium-rise 500ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .modal-overlay-in, .modal-overlay-out,
+        .modal-panel-in, .modal-panel-out,
+        .podium-rise, .live-ring::after { animation: none !important; }
+        .live-ring::after { opacity: 1; }
       }
     </style>
     <script>

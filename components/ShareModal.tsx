@@ -7,6 +7,7 @@ import {
   setTournamentSharesEnabled,
   TournamentShare,
 } from "../services/apiClient";
+import { Modal } from "./Modal";
 
 interface ShareModalProps {
   tournamentId: string;
@@ -25,7 +26,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tournamentId, tournament
   const [isTogglingEnabled, setIsTogglingEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const backdropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadShares = async () => {
@@ -43,18 +43,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tournamentId, tournament
     };
     void loadShares();
   }, [tournamentId, t]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === backdropRef.current) onClose();
-  };
 
   const handleAdd = async () => {
     const email = emailInput.trim().toLowerCase();
@@ -115,36 +103,28 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tournamentId, tournament
   };
 
   return (
-    <div
-      ref={backdropRef}
-      onClick={handleBackdropClick}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    <Modal
+      onClose={onClose}
+      size="md"
+      title={t("share.title")}
+      subtitle={<span className="block truncate max-w-xs">{tournamentName}</span>}
+      bodyClassName="p-4 sm:p-5 space-y-5"
+      footerClassName="sm:justify-end"
+      footer={
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
+        >
+          {t("common.done")}
+        </button>
+      }
     >
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t("share.title")}</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-xs">{tournamentName}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded"
-            aria-label={t("common.cancel")}
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="p-5 space-y-5">
           {/* Enable/Disable toggle */}
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("share.enableSharing")}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{t("share.enableSharingHint")}</p>
+              <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">{t("share.enableSharingHint")}</p>
             </div>
             <button
               type="button"
@@ -152,7 +132,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tournamentId, tournament
               aria-checked={sharesEnabled}
               disabled={isTogglingEnabled || isLoading}
               onClick={() => void handleToggleEnabled()}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`relative inline-flex shrink-0 h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                 sharesEnabled ? "bg-blue-600" : "bg-slate-300 dark:bg-slate-600"
               }`}
             >
@@ -178,7 +158,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tournamentId, tournament
                 onKeyDown={handleKeyDown}
                 placeholder={t("share.emailPlaceholder")}
                 disabled={isAdding}
-                className="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60"
+                className="flex-1 min-w-0 px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60"
               />
               <button
                 onClick={() => void handleAdd()}
@@ -207,17 +187,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tournamentId, tournament
             ) : shares.length === 0 ? (
               <p className="text-sm text-slate-400 py-4 text-center">{t("share.noShares")}</p>
             ) : (
-              <ul className="space-y-2 max-h-48 overflow-y-auto">
+              <ul className="space-y-2">
                 {shares.map((share) => (
                   <li
                     key={share.id}
-                    className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700"
+                    className="flex items-center justify-between gap-2 pl-3 pr-1 py-1 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700"
                   >
                     <span className="text-sm text-slate-800 dark:text-slate-200 truncate">{share.email}</span>
                     <button
                       onClick={() => void handleRemove(share.id)}
                       disabled={removingId === share.id}
-                      className="shrink-0 text-xs text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="shrink-0 p-2 rounded text-xs text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label={t("share.remove")}
                     >
                       {removingId === share.id ? (
@@ -236,18 +216,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({ tournamentId, tournament
               </ul>
             )}
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-end p-5 pt-0">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
-          >
-            {t("common.cancel")}
-          </button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

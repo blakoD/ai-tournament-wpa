@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Participant, EliminationType, Match, StageType } from '../types';
 import { calculateStandings } from '../services/tournamentLogic';
+import { Modal } from './Modal';
 
 interface Props {
   participants: Participant[];
@@ -133,90 +134,132 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
   // Order by wins, points in favor, points against (already done by calculateStandings sortFn)
   const sortedStandings = [...displayedStandings].sort((a, b) => (a.globalRank || 999) - (b.globalRank || 999));
   
+  const showGroupCount = nextFormat === EliminationType.ROUND_ROBIN_2 && selectedIds.length >= 2;
+  const cellClass = 'px-2 sm:px-4 py-2 sm:py-3';
+  const headClass = 'px-2 sm:px-4 py-2';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 w-full max-w-2xl rounded-xl shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
-        <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('nextStageModal.title')}</h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">{t('nextStageModal.subtitle')}</p>
-        </div>
-
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">{t('nextStageModal.nextFormat')}</label>
-            <select 
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-3 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
-              value={nextFormat}
-              onChange={e => setNextFormat(e.target.value as EliminationType)}
+    <Modal
+      onClose={onClose}
+      size="2xl"
+      fullScreenOnMobile
+      closeOnBackdrop={false}
+      title={t('nextStageModal.title')}
+      titleClassName="text-lg sm:text-2xl"
+      subtitle={t('nextStageModal.subtitle')}
+      bodyClassName="p-4 sm:p-6 space-y-4"
+      footerClassName="flex-col"
+      footer={
+        <>
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            {t('nextStageModal.selected', { count: selectedIds.length })}
+            {nextFormat === EliminationType.SINGLE_ELIMINATION && !isManualFinals && selectedIds.length % 2 !== 0 && (
+              <span className="text-amber-500 ml-2">{t('nextStageModal.bracketEven')}</span>
+            )}
+            {isManualFinals && (
+                <span className="ml-2">
+                    {t('nextStageModal.finalCount', { count: Object.values(finalAssignments).filter(v => v === 'Final').length })}
+                    {t('nextStageModal.thirdCount', { count: Object.values(finalAssignments).filter(v => v === '3rd vs 4th').length })}
+                </span>
+            )}
+          </p>
+          <div className="flex gap-2 sm:gap-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-3 rounded border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
             >
-              <option value={EliminationType.SINGLE_ELIMINATION}>{t('nextStageModal.bracket')}</option>
-              <option value={EliminationType.ROUND_ROBIN_2}>{t('nextStageModal.roundRobin')}</option>
-            </select>
+              {t('nextStageModal.cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={!canConfirm}
+              className={`flex-1 py-3 font-bold rounded shadow-lg transition-colors ${
+                canConfirm
+                  ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-blue-900/20'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+              }`}
+            >
+              {t('nextStageModal.confirmNextStage')}
+            </button>
           </div>
-
-          {nextFormat === EliminationType.ROUND_ROBIN_2 && selectedIds.length >= 2 && (
-            <div className="animate-in slide-in-from-top-2 duration-200">
-              <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">{t('nextStageModal.numberOfGroups')}</label>
-              <select 
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-3 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
-                value={groupCount}
-                onChange={e => setGroupCount(parseInt(e.target.value))}
+        </>
+      }
+    >
+          <div className="grid grid-cols-2 gap-3">
+            <div className={showGroupCount ? '' : 'col-span-2'}>
+              <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">{t('nextStageModal.nextFormat')}</label>
+              <select
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
+                value={nextFormat}
+                onChange={e => setNextFormat(e.target.value as EliminationType)}
               >
-                {Array.from({ length: Math.floor(selectedIds.length / 2) }, (_, i) => i + 1).map(num => (
-                  <option key={num} value={num}>{num === 1 ? t('nextStageModal.group', { count: num }) : t('nextStageModal.groups', { count: num })}</option>
-                ))}
+                <option value={EliminationType.SINGLE_ELIMINATION}>{t('nextStageModal.bracket')}</option>
+                <option value={EliminationType.ROUND_ROBIN_2}>{t('nextStageModal.roundRobin')}</option>
               </select>
             </div>
-          )}
+
+            {showGroupCount && (
+              <div className="animate-in slide-in-from-top-2 duration-200">
+                <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">{t('nextStageModal.numberOfGroups')}</label>
+                <select
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded p-2 text-slate-900 dark:text-white focus:border-blue-500 outline-none"
+                  value={groupCount}
+                  onChange={e => setGroupCount(parseInt(e.target.value))}
+                >
+                  {Array.from({ length: Math.floor(selectedIds.length / 2) }, (_, i) => i + 1).map(num => (
+                    <option key={num} value={num}>{num === 1 ? t('nextStageModal.group', { count: num }) : t('nextStageModal.groups', { count: num })}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
 
           <div>
-            <div className="flex justify-between items-center mb-3">
+            <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-2 mb-3">
               <label className="block text-sm font-medium text-slate-500 dark:text-slate-400">{t('nextStageModal.selectQualified')}</label>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 {canShowManualFinals && (
-                    <div className="flex items-center gap-2">
-                        <input 
-                        type="checkbox" 
-                        id="manualFinals" 
-                        checked={isManualFinals} 
+                    <label htmlFor="manualFinals" className="flex items-center gap-2 py-1.5 pr-1 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                        <input
+                        type="checkbox"
+                        id="manualFinals"
+                        checked={isManualFinals}
                         onChange={(e) => setIsManualFinals(e.target.checked)}
-                        className="rounded border-slate-400 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 rounded border-slate-400 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-blue-600 focus:ring-blue-500"
                         />
-                        <label htmlFor="manualFinals" className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
-                          {t('nextStageModal.finals')}
-                        </label>
-                    </div>
+                        {t('nextStageModal.finals')}
+                    </label>
                 )}
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="checkbox" 
-                    id="showAll" 
-                    checked={showAllParticipants} 
+                <label htmlFor="showAll" className="flex items-center gap-2 py-1.5 pr-1 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    id="showAll"
+                    checked={showAllParticipants}
                     onChange={(e) => setShowAllParticipants(e.target.checked)}
-                    className="rounded border-slate-400 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-blue-600 focus:ring-blue-500"
+                    className="w-4 h-4 rounded border-slate-400 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-blue-600 focus:ring-blue-500"
                   />
-                  <label htmlFor="showAll" className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
-                    {t('nextStageModal.showAll')}
-                  </label>
-                </div>
+                  {t('nextStageModal.showAll')}
+                </label>
               </div>
             </div>
-            <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 uppercase text-xs font-bold">
                   <tr>
-                    <th className="px-4 py-2 w-10"></th>
-                    <th className="px-4 py-2 w-12 text-center">{t('nextStageModal.rank')}</th>
-                    <th className="px-4 py-2">{t('nextStageModal.player')}</th>
-                    <th className="px-4 py-2 text-center">{t('nextStageModal.wins')}</th>
-                    <th className="px-4 py-2 text-center">{t('nextStageModal.diff')}</th>
-                    {isRR && <th className="px-4 py-2 text-center">{t('nextStageModal.prevGroup')}</th>}
-                    {isRR && <th className="px-4 py-2 w-12 text-center">{t('nextStageModal.pos')}</th>}
+                    <th className={`${headClass} w-10`}></th>
+                    <th className={`${headClass} w-12 text-center`}>{t('nextStageModal.rank')}</th>
+                    <th className={headClass}>{t('nextStageModal.player')}</th>
+                    <th className={`${headClass} text-center`}>{t('nextStageModal.wins')}</th>
+                    <th className={`${headClass} text-center`}>{t('nextStageModal.diff')}</th>
+                    {isRR && <th className={`${headClass} text-center`}>{t('nextStageModal.prevGroup')}</th>}
+                    {isRR && <th className={`${headClass} hidden sm:table-cell w-12 text-center`}>{t('nextStageModal.pos')}</th>}
                     {nextFormat === EliminationType.ROUND_ROBIN_2 && groupCount > 1 && (
-                      <th className="px-4 py-2 text-center">{t('nextStageModal.nextGroup')}</th>
+                      <th className={`${headClass} text-center`}>{t('nextStageModal.nextGroup')}</th>
                     )}
                     {isManualFinals && (
-                        <th className="px-4 py-2 text-center">{t('nextStageModal.match')}</th>
+                        <th className={`${headClass} text-center`}>{t('nextStageModal.match')}</th>
                     )}
                   </tr>
                 </thead>
@@ -229,31 +272,31 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
                         className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                         onClick={() => toggleParticipant(p.id)}
                       >
-                        <td className="px-4 py-3">
+                        <td className={cellClass}>
                           <div className={`w-5 h-5 rounded border flex items-center justify-center ${isSelected ? 'bg-blue-600 border-blue-600' : 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-600'}`}>
                             {isSelected && <span className="text-white text-xs">✓</span>}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center font-mono text-slate-400 dark:text-slate-400">
+                        <td className={`${cellClass} text-center font-mono text-slate-400 dark:text-slate-400`}>
                             #{p.globalRank}
                         </td>
-                        <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{p.name}</td>
-                        <td className="px-4 py-3 text-center text-emerald-400 font-bold">{p.wins}</td>
-                        <td className="px-4 py-3 text-center text-slate-400">{p.pointsFor - p.pointsAgainst}</td>
+                        <td className={`${cellClass} font-medium text-slate-900 dark:text-white`}>{p.name}</td>
+                        <td className={`${cellClass} text-center text-emerald-400 font-bold`}>{p.wins}</td>
+                        <td className={`${cellClass} text-center text-slate-400`}>{p.pointsFor - p.pointsAgainst}</td>
                         {isRR && (
-                          <td className="px-4 py-3 text-center">
-                            <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-900 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                              {p.group}
+                          <td className={`${cellClass} text-center`}>
+                            <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-900 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                              {p.group}<span className="sm:hidden">·{p.rank}</span>
                             </span>
                           </td>
                         )}
                         {isRR && (
-                          <td className="px-4 py-3 text-center font-mono text-slate-400">
+                          <td className={`${cellClass} hidden sm:table-cell text-center font-mono text-slate-400`}>
                             {p.rank}
                           </td>
                         )}
                         {nextFormat === EliminationType.ROUND_ROBIN_2 && groupCount > 1 && (
-                          <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                          <td className={`${cellClass} text-center`} onClick={(e) => e.stopPropagation()}>
                             {isSelected ? (
                               <select 
                                 className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded text-xs text-slate-900 dark:text-white p-1 outline-none focus:border-blue-500"
@@ -270,10 +313,10 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
                           </td>
                         )}
                         {isManualFinals && (
-                            <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                            <td className={`${cellClass} text-center`} onClick={(e) => e.stopPropagation()}>
                                 {isSelected ? (
-                                    <select 
-                                        className="bg-slate-900 border border-slate-700 rounded text-xs text-white p-1 outline-none focus:border-blue-500"
+                                    <select
+                                        className="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded text-xs text-slate-900 dark:text-white p-1 outline-none focus:border-blue-500"
                                         value={finalAssignments[p.id] || ''}
                                         onChange={(e) => setFinalAssignments(prev => ({ ...prev, [p.id]: e.target.value }))}
                                     >
@@ -292,42 +335,7 @@ export const NextStageModal: React.FC<Props> = ({ participants, matches, onConfi
                 </tbody>
               </table>
             </div>
-            <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
-              {t('nextStageModal.selected', { count: selectedIds.length })} 
-              {nextFormat === EliminationType.SINGLE_ELIMINATION && !isManualFinals && selectedIds.length % 2 !== 0 && (
-                <span className="text-amber-500 ml-2">{t('nextStageModal.bracketEven')}</span>
-              )}
-              {isManualFinals && (
-                  <span className="ml-2">
-                      {t('nextStageModal.finalCount', { count: Object.values(finalAssignments).filter(v => v === 'Final').length })} 
-                      {t('nextStageModal.thirdCount', { count: Object.values(finalAssignments).filter(v => v === '3rd vs 4th').length })}
-                  </span>
-              )}
-            </p>
           </div>
-        </div>
-
-
-        <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex gap-4">
-          <button 
-            onClick={onClose}
-            className="flex-1 py-3 rounded border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-          >
-            {t('nextStageModal.cancel')}
-          </button>
-          <button 
-            onClick={handleConfirm}
-            disabled={!canConfirm}
-            className={`flex-1 py-3 font-bold rounded shadow-lg transition-colors ${
-              canConfirm 
-                ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-blue-900/20' 
-                : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-            }`}
-          >
-            {t('nextStageModal.confirmNextStage')}
-          </button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

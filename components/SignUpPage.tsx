@@ -41,9 +41,9 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onClose, onSwitchMode })
   };
 
   const card = (
-    <div className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-xl">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('signUp.title')}</h1>
-        <p className="text-slate-500 dark:text-slate-400 mb-6">{t('signUp.subtitle')}</p>
+    <div className="w-full max-w-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 sm:p-6 shadow-xl">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('signUp.title')}</h1>
+        <p className="text-slate-500 dark:text-slate-400 mb-4 sm:mb-6">{t('signUp.subtitle')}</p>
 
         <form onSubmit={handleSignUp} className="space-y-4">
           <div>
@@ -75,8 +75,8 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onClose, onSwitchMode })
             />
           </div>
 
-          {error && <p className="text-sm text-red-300">{error}</p>}
-          {success && <p className="text-sm text-emerald-300">{success}</p>}
+          {error && <p className="text-sm text-red-600 dark:text-red-300">{error}</p>}
+          {success && <p className="text-sm text-emerald-600 dark:text-emerald-300">{success}</p>}
 
           <button
             type="submit"
@@ -101,7 +101,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onClose, onSwitchMode })
   if (onClose) return card;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-3 sm:p-6">
       {card}
     </div>
   );

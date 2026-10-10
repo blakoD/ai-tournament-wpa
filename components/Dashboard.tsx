@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FiShare2, FiTrash2, FiUsers } from "react-icons/fi";
 import {
   deleteTournament,
   getReadOnlyParameter,
@@ -57,7 +58,7 @@ export const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProp
 
   const formatDate = (timestamp?: number | null) => {
     if (!timestamp) return "";
-    return new Date(timestamp).toLocaleString();
+    return new Date(timestamp).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
   };
 
   const handleDeleteTournament = async (tournamentId: string, tournamentName: string) => {
@@ -118,29 +119,31 @@ export const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProp
           onClose={() => setSharingTournament(null)}
         />
       )}
-      <div className="p-4 md:p-8">
+      <div className="px-3 py-4 sm:p-6 md:p-8">
         <div className="max-w-4xl mx-auto">
-          <header className="mb-8 flex justify-between items-center">
-            <div>
-              <h1
-                onClick={() => {
-                  void handleToggleActionsFromTitle();
-                }}
-                className={`text-3xl font-bold text-slate-900 dark:text-white mb-2 select-none ${isAdmin ? "cursor-pointer" : ""}`}
-              >
-                {t("dashboard.title")}
-              </h1>
-              <p className="text-slate-500 dark:text-slate-400">{t("dashboard.subtitle")}</p>
-              { isAdmin && 
-                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-900/30 border border-blue-400/50 dark:border-blue-600/50 px-1.5 py-0.5 rounded-xl">
-                  Admin
-                </span> 
-              }
+          <header className="mb-4 sm:mb-8 flex justify-between items-center gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 sm:mb-2">
+                <h1
+                  onClick={() => {
+                    void handleToggleActionsFromTitle();
+                  }}
+                  className={`text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white select-none ${isAdmin ? "cursor-pointer" : ""}`}
+                >
+                  {t("dashboard.title")}
+                </h1>
+                { isAdmin &&
+                  <span className="shrink-0 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-900/30 border border-blue-400/50 dark:border-blue-600/50 px-1.5 py-0.5 rounded-xl">
+                    Admin
+                  </span>
+                }
+              </div>
+              <p className="hidden sm:block text-slate-500 dark:text-slate-400">{t("dashboard.subtitle")}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => navigate("/create")}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-blue-900/20"
+                className="bg-blue-600 hover:bg-blue-500 text-white px-3 sm:px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors shadow-lg shadow-blue-900/20"
               >
                 {t("dashboard.newTournament")}
               </button>
@@ -148,15 +151,15 @@ export const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProp
           </header>
 
           {isLoading ? (
-            <div className="text-center py-20 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div className="text-center py-10 sm:py-20 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
               <p className="text-slate-600 dark:text-slate-300">{t("dashboard.loading")}</p>
             </div>
           ) : error ? (
-            <div className="text-center py-20 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-700/60 px-6">
+            <div className="text-center py-10 sm:py-20 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-700/60 px-6">
               <p className="text-red-600 dark:text-red-300 font-medium">{error}</p>
             </div>
           ) : tournaments.length === 0 ? (
-            <div className="text-center py-20 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div className="text-center py-10 sm:py-20 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
               <p className="text-slate-500 dark:text-slate-400 mb-4">{t("dashboard.noTournaments")}</p>
               <button
                 onClick={() => navigate("/create")}
@@ -173,27 +176,75 @@ export const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProp
                   onClick={() => navigate(`/tournament/${ts.urlSlug}`)}
                   className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-xl hover:border-blue-500/50 dark:hover:bg-slate-800/80 cursor-pointer transition-all group"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <div className="flex justify-between items-start gap-2 mb-2">
+                    <h3 className="min-w-0 break-words text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {ts.name}
                     </h3>
-                    <span
-                      className={`ml-1 px-1 py-1 rounded-lg text-xs text-center uppercase ${
-                        ts.status === "COMPLETED"
-                          ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                          : "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300"
-                      }`}
-                    >
-                      {ts.status === "COMPLETED" ? t("tournamentView.completed") : t("tournamentView.started")}
-                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {!readOnly && ts.ownerId !== session.user.id && (
+                        <span
+                          className="p-2 text-blue-600 dark:text-blue-400"
+                          title={t("share.sharedWithMe")}
+                          aria-label={t("share.sharedWithMe")}
+                          role="img"
+                        >
+                          <FiUsers className="w-4 h-4" />
+                        </span>
+                      )}
+                      {!readOnly && ts.ownerId === session.user.id && (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSharingTournament(ts);
+                          }}
+                          title={t("share.title")}
+                          aria-label={t("share.title")}
+                          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
+                        >
+                          <FiShare2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleDeleteTournament(ts.id, ts.name);
+                          }}
+                          disabled={deletingTournamentId === ts.id}
+                          title={deletingTournamentId === ts.id ? t("dashboard.deleting") : t("dashboard.delete")}
+                          aria-label={deletingTournamentId === ts.id ? t("dashboard.deleting") : t("dashboard.delete")}
+                          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-300 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          <FiTrash2 className={`w-4 h-4 ${deletingTournamentId === ts.id ? "animate-pulse" : ""}`} />
+                        </button>
+                      )}
+                      <span
+                        className={`ml-1 shrink-0 whitespace-nowrap px-1 py-1 rounded-lg text-xs text-center uppercase ${
+                          ts.status === "COMPLETED"
+                            ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                            : "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300"
+                        }`}
+                      >
+                        {ts.status === "COMPLETED" ? t("tournamentView.completed") : t("tournamentView.started")}
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-2">{ts.title}</p>
-                  <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
+                  {ts.title?.trim() && ts.title.trim() !== ts.name.trim() && (
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-2 break-words">{ts.title}</p>
+                  )}
+                  {ts.description?.trim() && (
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-2 break-words line-clamp-2" title={ts.description}>
+                      {ts.description}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-slate-500 mb-2">
                     <span>{t("dashboard.players", { count: ts.participantCount })}</span>
                     <span>•</span>
                     <span>{ts.eliminationType === "SINGLE_ELIMINATION" ? t("dashboard.bracketType") : t("dashboard.roundRobinType")}</span>
                   </div>
-                  <div className="text-xs text-slate-500 border-t border-slate-200 dark:border-slate-700/50 pt-2 flex gap-2">
+                  <div className="text-xs text-slate-500 border-t border-slate-200 dark:border-slate-700/50 pt-2 flex flex-wrap gap-x-2 gap-y-0.5">
                     <span>{t("dashboard.started", { date: formatDate(ts.startedAt) })}</span>
                     {ts.completedAt && (
                       <>
@@ -202,43 +253,6 @@ export const Dashboard = ({ session, role, userEmail, onSignOut }: DashboardProp
                       </>
                     )}
                   </div>
-                  {!readOnly && (
-                    <div className="mt-3 flex justify-between items-center">
-                      {ts.ownerId === session.user.id ? (
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setSharingTournament(ts);
-                          }}
-                          title={t("share.title")}
-                          className="text-xs bg-slate-50 dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-slate-300 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-300 px-2 py-1 rounded transition-colors flex items-center gap-1"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                          </svg>
-                        </button>
-                      ) : (
-                        <span className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                          </svg>
-                          {t("share.sharedWithMe")}
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void handleDeleteTournament(ts.id, ts.name);
-                        }}
-                        disabled={deletingTournamentId === ts.id}
-                        className="text-xs bg-slate-50 dark:bg-slate-900 hover:bg-red-50 dark:hover:bg-red-900/30 border border-slate-300 dark:border-slate-600 hover:border-red-400 dark:hover:border-red-500 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-300 px-3 py-1 rounded transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                      >
-                        {deletingTournamentId === ts.id ? t("dashboard.deleting") : t("dashboard.delete")}
-                      </button>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

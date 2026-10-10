@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Session } from "@supabase/supabase-js";
-import { HashRouter, Location, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
+import { HashRouter, Link, Location, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { ThemeProvider } from './services/themeContext';
 
@@ -51,12 +51,28 @@ const isTournamentEditable = (
 
 const LoadingView: React.FC = () => {
   const { t } = useTranslation();
-  return <div className="p-8 text-center text-slate-400">{t('common.loading')}</div>;
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6 sm:p-8 text-center text-slate-500 dark:text-slate-400">
+      {t('common.loading')}
+    </div>
+  );
+};
+
+const MessageView: React.FC<{ message: string; isError?: boolean }> = ({ message, isError = false }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center gap-4 p-6 sm:p-8 text-center">
+      <p className={isError ? 'text-red-600 dark:text-red-300' : 'text-slate-600 dark:text-slate-300'}>{message}</p>
+      <Link to="/" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium">
+        {t('common.goHome')}
+      </Link>
+    </div>
+  );
 };
 
 const NotFoundView: React.FC = () => {
   const { t } = useTranslation();
-  return <div className="p-8 text-center text-slate-400">{t('common.tournamentNotFound')}</div>;
+  return <MessageView message={t('common.tournamentNotFound')} />;
 };
 
 const CheckingSessionView: React.FC = () => {
@@ -140,7 +156,7 @@ const TournamentRoute = ({ session, role }: TournamentRouteProps) => {
   };
 
   if (isLoading) return <LoadingView />;
-  if (error) return <div className="p-8 text-center text-red-300">{error}</div>;
+  if (error) return <MessageView message={error} isError />;
   if (!tournament) return <NotFoundView />;
 
   return (
